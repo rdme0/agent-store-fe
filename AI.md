@@ -29,7 +29,7 @@ Apply this workflow to every task that changes production code under `src/`.
 4. The coordinator creates a fresh, read-only verifier agent using `$agent-store-fe-style-verifier` and passes only the handoff and current worktree.
 5. The verifier reviews only developer-owned production changes and reports findings.
 6. If a blocking finding exists, send only that finding to the same developer for the smallest refactor and retest.
-7. Create a fresh verifier after every refactor. Stop after two refactor cycles and report remaining risk.
+7. Create a fresh verifier after every refactor. Continue the developer→fresh-verifier cycle until all blocking findings are resolved; do not impose a fixed cycle limit. If a finding cannot be resolved safely, report the concrete blocker and request direction.
 8. Complete only when the final verifier has no blocking findings and relevant tests pass.
 
 For FE/BE contract changes, update and verify the BE OpenAPI contract first, then regenerate FE API types and review the generated diff.
