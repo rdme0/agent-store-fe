@@ -1,7 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { disableAgentVersion, getAgentBySlug, publishAgentVersion } from '../entities/agent/api'
-import type { AgentVersionModel } from '../entities/agent/model'
+import { getActiveVersion, type AgentVersionModel } from '../entities/agent/model'
+import { DependencyEditor } from '../features/dependencies/DependencyEditor'
+import { QuotePanel } from '../features/dependencies/QuotePanel'
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : 'Agent 정보를 불러오지 못했습니다.'
@@ -75,6 +77,10 @@ export function AgentDetailPage() {
           />
         ))}
       </div>
+      {agent.versions.filter((version) => version.status === 'DRAFT').map((version) => (
+        <DependencyEditor agent={agent} key={version.id} slug={slug} version={version} />
+      ))}
+      {getActiveVersion(agent) ? <QuotePanel slug={slug} version={getActiveVersion(agent)!} /> : null}
       <button className="text-link-button" onClick={() => navigate('/agents')} type="button">목록으로 돌아가기</button>
     </section>
   )

@@ -4,6 +4,30 @@ export type ClientOptions = {
     baseUrl: `${string}://${string}` | (string & {});
 };
 
+export type QuoteSnapshot = {
+    version: {
+        id: string;
+        agentId: string;
+        agentSlug: string;
+        semver: string;
+        endpoint: string;
+        priceAtomic: string;
+        network: string;
+        asset: string;
+        payTo: string;
+    };
+    dependencies: Array<{
+        dependencyId: string;
+        targetAgentId: string;
+        targetAgentSlug: string;
+        versionConstraint: string;
+        required: boolean;
+        maxPriceAtomic: string;
+        maxCalls: number;
+        resolved?: QuoteSnapshot;
+    }>;
+};
+
 export type GetHealthData = {
     body?: never;
     path?: never;
@@ -62,6 +86,17 @@ export type GetApiAgentsErrors = {
      * Default Response
      */
     409: {
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+        };
+        traceId: string;
+    };
+    /**
+     * Default Response
+     */
+    422: {
         error: {
             code: string;
             message: string;
@@ -173,6 +208,17 @@ export type PostApiAgentsErrors = {
     /**
      * Default Response
      */
+    422: {
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+        };
+        traceId: string;
+    };
+    /**
+     * Default Response
+     */
     500: {
         error: {
             code: string;
@@ -252,6 +298,17 @@ export type GetApiAgentsBySlugErrors = {
      * Default Response
      */
     409: {
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+        };
+        traceId: string;
+    };
+    /**
+     * Default Response
+     */
+    422: {
         error: {
             code: string;
             message: string;
@@ -351,6 +408,17 @@ export type DeleteApiAgentsByIdErrors = {
     /**
      * Default Response
      */
+    422: {
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+        };
+        traceId: string;
+    };
+    /**
+     * Default Response
+     */
     500: {
         error: {
             code: string;
@@ -411,6 +479,17 @@ export type PatchApiAgentsByIdErrors = {
      * Default Response
      */
     409: {
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+        };
+        traceId: string;
+    };
+    /**
+     * Default Response
+     */
+    422: {
         error: {
             code: string;
             message: string;
@@ -517,6 +596,17 @@ export type PostApiAgentsByIdVersionsErrors = {
     /**
      * Default Response
      */
+    422: {
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+        };
+        traceId: string;
+    };
+    /**
+     * Default Response
+     */
     500: {
         error: {
             code: string;
@@ -586,6 +676,17 @@ export type PostApiAgentVersionsByIdPublishErrors = {
      * Default Response
      */
     409: {
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+        };
+        traceId: string;
+    };
+    /**
+     * Default Response
+     */
+    422: {
         error: {
             code: string;
             message: string;
@@ -675,6 +776,17 @@ export type PostApiAgentVersionsByIdDisableErrors = {
     /**
      * Default Response
      */
+    422: {
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+        };
+        traceId: string;
+    };
+    /**
+     * Default Response
+     */
     500: {
         error: {
             code: string;
@@ -707,6 +819,479 @@ export type PostApiAgentVersionsByIdDisableResponses = {
 };
 
 export type PostApiAgentVersionsByIdDisableResponse = PostApiAgentVersionsByIdDisableResponses[keyof PostApiAgentVersionsByIdDisableResponses];
+
+export type GetApiAgentVersionsByIdDependenciesData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/agent-versions/{id}/dependencies';
+};
+
+export type GetApiAgentVersionsByIdDependenciesErrors = {
+    /**
+     * Default Response
+     */
+    400: {
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+        };
+        traceId: string;
+    };
+    /**
+     * Default Response
+     */
+    404: {
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+        };
+        traceId: string;
+    };
+    /**
+     * Default Response
+     */
+    409: {
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+        };
+        traceId: string;
+    };
+    /**
+     * Default Response
+     */
+    422: {
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+        };
+        traceId: string;
+    };
+    /**
+     * Default Response
+     */
+    500: {
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+        };
+        traceId: string;
+    };
+};
+
+export type GetApiAgentVersionsByIdDependenciesError = GetApiAgentVersionsByIdDependenciesErrors[keyof GetApiAgentVersionsByIdDependenciesErrors];
+
+export type GetApiAgentVersionsByIdDependenciesResponses = {
+    /**
+     * Default Response
+     */
+    200: Array<{
+        id: string;
+        sourceVersionId: string;
+        targetAgentId: string;
+        targetAgentSlug: string;
+        versionConstraint: string;
+        required: boolean;
+        maxPriceAtomic: string;
+        maxCalls: number;
+        createdAt: string;
+        updatedAt: string;
+    }>;
+};
+
+export type GetApiAgentVersionsByIdDependenciesResponse = GetApiAgentVersionsByIdDependenciesResponses[keyof GetApiAgentVersionsByIdDependenciesResponses];
+
+export type PostApiAgentVersionsByIdDependenciesData = {
+    body: {
+        targetAgentId: string;
+        versionConstraint: string;
+        required?: boolean;
+        maxPriceAtomic: string;
+        maxCalls?: number;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/agent-versions/{id}/dependencies';
+};
+
+export type PostApiAgentVersionsByIdDependenciesErrors = {
+    /**
+     * Default Response
+     */
+    400: {
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+        };
+        traceId: string;
+    };
+    /**
+     * Default Response
+     */
+    404: {
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+        };
+        traceId: string;
+    };
+    /**
+     * Default Response
+     */
+    409: {
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+        };
+        traceId: string;
+    };
+    /**
+     * Default Response
+     */
+    422: {
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+        };
+        traceId: string;
+    };
+    /**
+     * Default Response
+     */
+    500: {
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+        };
+        traceId: string;
+    };
+};
+
+export type PostApiAgentVersionsByIdDependenciesError = PostApiAgentVersionsByIdDependenciesErrors[keyof PostApiAgentVersionsByIdDependenciesErrors];
+
+export type PostApiAgentVersionsByIdDependenciesResponses = {
+    /**
+     * Default Response
+     */
+    201: {
+        id: string;
+        sourceVersionId: string;
+        targetAgentId: string;
+        targetAgentSlug: string;
+        versionConstraint: string;
+        required: boolean;
+        maxPriceAtomic: string;
+        maxCalls: number;
+        createdAt: string;
+        updatedAt: string;
+    };
+};
+
+export type PostApiAgentVersionsByIdDependenciesResponse = PostApiAgentVersionsByIdDependenciesResponses[keyof PostApiAgentVersionsByIdDependenciesResponses];
+
+export type DeleteApiAgentVersionsByIdDependenciesByDependencyIdData = {
+    body?: never;
+    path: {
+        id: string;
+        dependencyId: string;
+    };
+    query?: never;
+    url: '/api/agent-versions/{id}/dependencies/{dependencyId}';
+};
+
+export type DeleteApiAgentVersionsByIdDependenciesByDependencyIdErrors = {
+    /**
+     * Default Response
+     */
+    400: {
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+        };
+        traceId: string;
+    };
+    /**
+     * Default Response
+     */
+    404: {
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+        };
+        traceId: string;
+    };
+    /**
+     * Default Response
+     */
+    409: {
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+        };
+        traceId: string;
+    };
+    /**
+     * Default Response
+     */
+    422: {
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+        };
+        traceId: string;
+    };
+    /**
+     * Default Response
+     */
+    500: {
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+        };
+        traceId: string;
+    };
+};
+
+export type DeleteApiAgentVersionsByIdDependenciesByDependencyIdError = DeleteApiAgentVersionsByIdDependenciesByDependencyIdErrors[keyof DeleteApiAgentVersionsByIdDependenciesByDependencyIdErrors];
+
+export type DeleteApiAgentVersionsByIdDependenciesByDependencyIdResponses = {
+    /**
+     * Default Response
+     */
+    204: void;
+};
+
+export type DeleteApiAgentVersionsByIdDependenciesByDependencyIdResponse = DeleteApiAgentVersionsByIdDependenciesByDependencyIdResponses[keyof DeleteApiAgentVersionsByIdDependenciesByDependencyIdResponses];
+
+export type PatchApiAgentVersionsByIdDependenciesByDependencyIdData = {
+    body: {
+        versionConstraint?: string;
+        required?: boolean;
+        maxPriceAtomic?: string;
+        maxCalls?: number;
+    };
+    path: {
+        id: string;
+        dependencyId: string;
+    };
+    query?: never;
+    url: '/api/agent-versions/{id}/dependencies/{dependencyId}';
+};
+
+export type PatchApiAgentVersionsByIdDependenciesByDependencyIdErrors = {
+    /**
+     * Default Response
+     */
+    400: {
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+        };
+        traceId: string;
+    };
+    /**
+     * Default Response
+     */
+    404: {
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+        };
+        traceId: string;
+    };
+    /**
+     * Default Response
+     */
+    409: {
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+        };
+        traceId: string;
+    };
+    /**
+     * Default Response
+     */
+    422: {
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+        };
+        traceId: string;
+    };
+    /**
+     * Default Response
+     */
+    500: {
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+        };
+        traceId: string;
+    };
+};
+
+export type PatchApiAgentVersionsByIdDependenciesByDependencyIdError = PatchApiAgentVersionsByIdDependenciesByDependencyIdErrors[keyof PatchApiAgentVersionsByIdDependenciesByDependencyIdErrors];
+
+export type PatchApiAgentVersionsByIdDependenciesByDependencyIdResponses = {
+    /**
+     * Default Response
+     */
+    200: {
+        id: string;
+        sourceVersionId: string;
+        targetAgentId: string;
+        targetAgentSlug: string;
+        versionConstraint: string;
+        required: boolean;
+        maxPriceAtomic: string;
+        maxCalls: number;
+        createdAt: string;
+        updatedAt: string;
+    };
+};
+
+export type PatchApiAgentVersionsByIdDependenciesByDependencyIdResponse = PatchApiAgentVersionsByIdDependenciesByDependencyIdResponses[keyof PatchApiAgentVersionsByIdDependenciesByDependencyIdResponses];
+
+export type PostApiAgentsBySlugQuotesData = {
+    body: {
+        versionConstraint?: string;
+    };
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/agents/{slug}/quotes';
+};
+
+export type PostApiAgentsBySlugQuotesErrors = {
+    /**
+     * Default Response
+     */
+    400: {
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+        };
+        traceId: string;
+    };
+    /**
+     * Default Response
+     */
+    404: {
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+        };
+        traceId: string;
+    };
+    /**
+     * Default Response
+     */
+    409: {
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+        };
+        traceId: string;
+    };
+    /**
+     * Default Response
+     */
+    422: {
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+        };
+        traceId: string;
+    };
+    /**
+     * Default Response
+     */
+    500: {
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+        };
+        traceId: string;
+    };
+};
+
+export type PostApiAgentsBySlugQuotesError = PostApiAgentsBySlugQuotesErrors[keyof PostApiAgentsBySlugQuotesErrors];
+
+export type PostApiAgentsBySlugQuotesResponses = {
+    /**
+     * Default Response
+     */
+    201: {
+        id: string;
+        rootVersionId: string;
+        expiresAt: string;
+        maxCostAtomic: string;
+        snapshot: {
+            version: {
+                id: string;
+                agentId: string;
+                agentSlug: string;
+                semver: string;
+                endpoint: string;
+                priceAtomic: string;
+                network: string;
+                asset: string;
+                payTo: string;
+            };
+            dependencies: Array<{
+                dependencyId: string;
+                targetAgentId: string;
+                targetAgentSlug: string;
+                versionConstraint: string;
+                required: boolean;
+                maxPriceAtomic: string;
+                maxCalls: number;
+                resolved?: QuoteSnapshot;
+            }>;
+        };
+        warnings: Array<{
+            code: 'OPTIONAL_DEPENDENCY_NOT_RESOLVED';
+            dependencyId: string;
+            targetAgentId: string;
+            targetAgentSlug: string;
+            versionConstraint: string;
+        }>;
+    };
+};
+
+export type PostApiAgentsBySlugQuotesResponse = PostApiAgentsBySlugQuotesResponses[keyof PostApiAgentsBySlugQuotesResponses];
 
 export type GetOpenapiJsonData = {
     body?: never;
