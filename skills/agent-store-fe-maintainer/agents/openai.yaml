@@ -1,0 +1,4 @@
+interface:
+  display_name: "AgentStore FE Maintainer"
+  short_description: "Maintain AgentStore React frontend production code."
+  default_prompt: "Use $agent-store-fe-maintainer to maintain AgentStore React frontend code in the established project style."

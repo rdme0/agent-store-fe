@@ -1,0 +1,4 @@
+interface:
+  display_name: "FE README Maintainer"
+  short_description: "Keep FE setup and scope documentation accurate."
+  default_prompt: "Use $readme-maintainer to update the AgentStore frontend README to match implemented behavior."

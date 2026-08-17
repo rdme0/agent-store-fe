@@ -1,0 +1,4 @@
+interface:
+  display_name: "Korean Commit Maintainer"
+  short_description: "Create small Korean commits matching FE history."
+  default_prompt: "Use $git-commit-korean to organize and commit the AgentStore frontend diff in Korean."

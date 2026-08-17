@@ -1,0 +1,4 @@
+interface:
+  display_name: "API Client Maintainer"
+  short_description: "Keep FE API types aligned with BE OpenAPI."
+  default_prompt: "Use $api-client-maintainer to update the AgentStore frontend client from the backend OpenAPI contract."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "AgentStore FE Style Verifier"
+  short_description: "Review AgentStore FE diffs without editing files."
+  default_prompt: "Use $agent-store-fe-style-verifier to independently review this AgentStore frontend production diff."
