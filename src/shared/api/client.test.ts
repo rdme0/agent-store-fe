@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { ApiRequestError, request } from './client'
+import { ApiRequestError, normalizeApiRequestError, request } from './client'
 
 describe('API transport client', () => {
   const fetchMock = vi.fn()
@@ -42,5 +42,23 @@ describe('API transport client', () => {
     fetchMock.mockResolvedValue(new Response(null, { status: 204 }))
 
     await expect(request<void>('/health')).resolves.toBeUndefined()
+  })
+
+  it('preserves structured API errors and the HTTP status', () => {
+    const error = normalizeApiRequestError(
+      {
+        error: { code: 'AGENT_NOT_FOUND', message: 'Agent was not found', details: { slug: 'missing' } },
+        traceId: 'trace-123',
+      },
+      { status: 404 },
+    )
+
+    expect(error).toMatchObject({
+      code: 'AGENT_NOT_FOUND',
+      details: { slug: 'missing' },
+      message: 'Agent was not found',
+      status: 404,
+      traceId: 'trace-123',
+    })
   })
 })

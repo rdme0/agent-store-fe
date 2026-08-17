@@ -324,6 +324,348 @@ a {
   font-weight: 650;
 }
 
+.registry-page {
+  width: 100%;
+}
+
+.registry-page--narrow {
+  max-width: 780px;
+  margin: 0 auto;
+}
+
+.page-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 2rem;
+  margin-bottom: 2.5rem;
+}
+
+.page-heading--compact {
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+}
+
+.page-heading h1,
+.registry-page > h1 {
+  max-width: 720px;
+  margin: 0.85rem 0 1rem;
+  color: var(--ink);
+  font-size: clamp(2.2rem, 5vw, 4rem);
+  font-weight: 650;
+  letter-spacing: -0.06em;
+  line-height: 1;
+}
+
+.agent-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.agent-card,
+.version-row,
+.state-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  box-shadow: var(--shadow);
+}
+
+.agent-card {
+  display: flex;
+  min-height: 265px;
+  flex-direction: column;
+  padding: 1.35rem;
+}
+
+.agent-card__topline,
+.section-heading,
+.agent-card__meta,
+.version-row__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+}
+
+.status-badge--active {
+  color: #126055;
+  background: var(--accent-soft);
+}
+
+.status-badge--draft {
+  color: #765a12;
+  background: #fff4d1;
+}
+
+.status-badge--disabled {
+  color: #6d767b;
+  background: #edf0f1;
+}
+
+.agent-card__version,
+.agent-card__slug,
+.agent-card__meta,
+.version-row__meta,
+.version-row__endpoint {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.agent-card h2 {
+  margin: 1.4rem 0 0.25rem;
+  font-size: 1.3rem;
+  letter-spacing: -0.03em;
+}
+
+.agent-card h2 a {
+  text-decoration: none;
+}
+
+.agent-card h2 a:hover,
+.text-link:hover,
+.back-link:hover {
+  color: var(--accent-strong);
+}
+
+.agent-card__slug {
+  margin: 0;
+}
+
+.agent-card__description {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 1rem 0;
+  color: var(--muted);
+  line-height: 1.55;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.agent-card__meta {
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+}
+
+.text-link {
+  margin-top: 1rem;
+  color: var(--accent-strong);
+  font-size: 0.86rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.state-card {
+  padding: 1.5rem;
+  color: var(--muted);
+}
+
+.state-card h2 {
+  margin: 0 0 0.5rem;
+  color: var(--ink);
+  font-size: 1.15rem;
+}
+
+.state-card p {
+  line-height: 1.55;
+}
+
+.state-card--error {
+  border-color: #e2b5b0;
+  background: #fffafa;
+}
+
+.state-card--error p {
+  color: #8e3830;
+}
+
+.button--secondary {
+  color: var(--accent-strong);
+  background: #fff;
+  border-color: #a7c3bf;
+}
+
+.button--secondary:hover {
+  background: var(--accent-soft);
+}
+
+.button--danger {
+  color: #8e3830;
+  background: #fff;
+  border-color: #e2b5b0;
+}
+
+.button--danger:hover {
+  background: #fff1ef;
+}
+
+.button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 1.25rem;
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.detail-description {
+  max-width: 700px;
+  margin: 0 0 2.5rem;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.section-heading {
+  margin-bottom: 0.8rem;
+}
+
+.section-heading h2 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 1.25rem;
+}
+
+.section-heading span {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.version-list {
+  max-width: 820px;
+}
+
+.version-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: 0.75rem;
+  padding: 1.15rem;
+  box-shadow: none;
+}
+
+.version-row__endpoint {
+  overflow-wrap: anywhere;
+  margin: 0.75rem 0 0.35rem;
+}
+
+.version-row__meta {
+  margin: 0.25rem 0 0;
+  overflow-wrap: anywhere;
+}
+
+.version-row__actions {
+  flex: 0 0 auto;
+}
+
+.text-link-button {
+  margin-top: 1.25rem;
+  padding: 0;
+  color: var(--accent-strong);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.registry-form {
+  display: grid;
+  gap: 1.4rem;
+  margin-top: 2rem;
+}
+
+.registry-form fieldset {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+  padding: 1.25rem;
+  border: 1px solid var(--line);
+  border-radius: 0.9rem;
+  background: var(--surface);
+}
+
+.registry-form legend {
+  padding: 0 0.35rem;
+  color: var(--ink);
+  font-size: 0.95rem;
+  font-weight: 750;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.form-field {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.form-field label {
+  color: var(--ink);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.form-field input,
+.form-field textarea {
+  width: 100%;
+  padding: 0.72rem 0.78rem;
+  color: var(--ink);
+  background: #fbfcfc;
+  border: 1px solid #cbd6d9;
+  border-radius: 0.5rem;
+  font: inherit;
+}
+
+.form-field textarea {
+  resize: vertical;
+}
+
+.form-field input:focus,
+.form-field textarea:focus {
+  outline: 3px solid #cce9e5;
+  border-color: var(--accent);
+}
+
+.form-field input[aria-invalid="true"],
+.form-field textarea[aria-invalid="true"] {
+  border-color: #bb655c;
+}
+
+.form-error {
+  margin: 0;
+  color: #9a4138;
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+
+.form-error--summary {
+  padding: 0.75rem 0.9rem;
+  border-radius: 0.5rem;
+  background: #fff1ef;
+}
+
 @media (max-width: 700px) {
   .app-shell {
     display: block;
@@ -365,5 +707,24 @@ a {
 
   .welcome-card {
     margin-top: 3rem;
+  }
+
+  .page-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .agent-grid,
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .version-row {
+    flex-direction: column;
+  }
+
+  .version-row__actions {
+    width: 100%;
+    justify-content: flex-start;
   }
 }

@@ -9,8 +9,11 @@ import {
 } from 'react-router-dom'
 import { ErrorBoundary } from './ErrorBoundary'
 import { AgentsPage } from '../pages/AgentsPage'
+import { AgentDetailPage } from '../pages/AgentDetailPage'
 import { HomePage } from '../pages/HomePage'
+import { NewAgentVersionPage } from '../pages/NewAgentVersionPage'
 import { NotFoundPage } from '../pages/NotFoundPage'
+import { RegisterAgentPage } from '../pages/RegisterAgentPage'
 import { RunsPage } from '../pages/RunsPage'
 import { SettingsPage } from '../pages/SettingsPage'
 
@@ -98,6 +101,9 @@ export const routes: RouteObject[] = [
     children: [
       { index: true, element: <HomePage /> },
       { path: 'agents', element: <AgentsPage /> },
+      { path: 'agents/new', element: <RegisterAgentPage /> },
+      { path: 'agents/:slug/versions/new', element: <NewAgentVersionPage /> },
+      { path: 'agents/:slug', element: <AgentDetailPage /> },
       { path: 'runs', element: <RunsPage /> },
       { path: 'settings', element: <SettingsPage /> },
       { path: '*', element: <NotFoundPage /> },
