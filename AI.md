@@ -33,3 +33,9 @@ Apply this workflow to every task that changes production code under `src/`.
 8. Complete only when the final verifier has no blocking findings and relevant tests pass.
 
 For FE/BE contract changes, update and verify the BE OpenAPI contract first, then regenerate FE API types and review the generated diff.
+
+## Parallelization policy
+
+- Parallelize work when tasks own disjoint files, have independent contracts, and parallel review shortens the critical path.
+- Serialize work when tasks share an API/schema contract, generated output, migration ordering, runtime state, or another consistency boundary.
+- The coordinator records each dependency boundary, prevents overlapping edits, and starts downstream work only after the upstream contract is verified.
