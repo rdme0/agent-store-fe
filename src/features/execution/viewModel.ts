@@ -65,21 +65,22 @@ export interface ExecutionTimelineViewModelOptions {
 }
 
 function statusTone(status: string): ExecutionStatusTone {
-  if (status === 'succeeded' || status === 'settled') return 'success'
-  if (status === 'failed' || status === 'cancelled' || status === 'timed-out') return 'danger'
-  if (status === 'running' || status === 'connected' || status === 'authorized') return 'info'
-  if (status === 'pending' || status === 'queued' || status === 'reconnecting') return 'warning'
+  const normalized = status.toLowerCase().replaceAll('_', '-')
+  if (normalized === 'succeeded' || normalized === 'settled' || normalized === 'completed' || normalized === 'payment-settled') return 'success'
+  if (normalized === 'failed' || normalized === 'cancelled' || normalized === 'timed-out') return 'danger'
+  if (normalized === 'running' || normalized === 'connected' || normalized === 'authorized') return 'info'
+  if (normalized === 'pending' || normalized === 'queued' || normalized === 'reconnecting' || normalized === 'payment-required') return 'warning'
   return 'neutral'
 }
 
 function connectionLabel(status: ExecutionConnectionStatus): string {
   switch (status) {
-    case 'connected': return 'Live updates connected'
-    case 'connecting': return 'Connecting to live updates'
-    case 'reconnecting': return 'Reconnecting to live updates'
-    case 'closed': return 'Live updates closed'
-    case 'error': return 'Live updates unavailable'
-    case 'idle': return 'Live updates not started'
+    case 'connected': return '실시간 업데이트 연결됨'
+    case 'connecting': return '실시간 업데이트 연결 중'
+    case 'reconnecting': return '실시간 업데이트 재연결 중'
+    case 'closed': return '실시간 업데이트 종료됨'
+    case 'error': return '실시간 연결을 복구하는 중'
+    case 'idle': return '실시간 업데이트 대기 중'
   }
 }
 

@@ -15,6 +15,7 @@ import { NewAgentVersionPage } from '../pages/NewAgentVersionPage'
 import { NotFoundPage } from '../pages/NotFoundPage'
 import { RegisterAgentPage } from '../pages/RegisterAgentPage'
 import { RunsPage } from '../pages/RunsPage'
+import { ExecutionPage } from '../pages/ExecutionPage'
 import { SettingsPage } from '../pages/SettingsPage'
 
 const navigationItems = [
@@ -105,6 +106,7 @@ export const routes: RouteObject[] = [
       { path: 'agents/:slug/versions/new', element: <NewAgentVersionPage /> },
       { path: 'agents/:slug', element: <AgentDetailPage /> },
       { path: 'runs', element: <RunsPage /> },
+      { path: 'runs/:id', element: <ExecutionPage /> },
       { path: 'settings', element: <SettingsPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],

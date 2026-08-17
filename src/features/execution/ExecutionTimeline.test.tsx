@@ -10,10 +10,10 @@ afterEach(() => {
 describe('ExecutionTimelinePanel states', () => {
   it('renders loading, empty, and disabled states', () => {
     const { rerender } = render(<ExecutionTimelinePanel state="loading" />)
-    expect(screen.getByRole('status')).toHaveTextContent('Loading execution')
+    expect(screen.getByRole('status')).toHaveTextContent('실행 정보를 불러오는 중')
 
     rerender(<ExecutionTimelinePanel state="empty" />)
-    expect(screen.getByRole('status')).toHaveTextContent('No execution events yet')
+    expect(screen.getByRole('status')).toHaveTextContent('아직 실행 이벤트가 없습니다.')
 
     rerender(<ExecutionTimelinePanel disabledMessage="Execution is unavailable." state="disabled" />)
     expect(screen.getByRole('status')).toHaveTextContent('Execution is unavailable.')
@@ -24,7 +24,7 @@ describe('ExecutionTimelinePanel states', () => {
     render(<ExecutionTimelinePanel errorMessage="Stream request failed." onRetry={onRetry} state="error" />)
 
     expect(screen.getByRole('alert')).toHaveTextContent('Stream request failed.')
-    fireEvent.click(screen.getByRole('button', { name: 'Retry' }))
+    fireEvent.click(screen.getByRole('button', { name: '다시 시도' }))
     expect(onRetry).toHaveBeenCalledTimes(1)
   })
 })
@@ -59,9 +59,9 @@ describe('ExecutionTimeline', () => {
 
     expect(screen.getByRole('heading', { name: 'Run #42' })).toBeInTheDocument()
     expect(screen.getByRole('list', { name: 'Execution steps' })).toBeInTheDocument()
-    expect(screen.getByRole('listitem', { name: 'Call agent: Failed' })).toBeInTheDocument()
+    expect(screen.getByRole('listitem', { name: 'Call agent: 실패' })).toBeInTheDocument()
     expect(screen.getAllByText('0.50 USDC')).toHaveLength(3)
-    expect(screen.getByRole('heading', { name: 'Payment' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '결제' })).toBeInTheDocument()
     expect(screen.getByText('payment-42')).toBeInTheDocument()
     expect(screen.getAllByRole('alert')).toHaveLength(3)
   })
@@ -73,6 +73,6 @@ describe('ExecutionTimeline', () => {
 
     render(<ExecutionTimelinePanel state="ready" timeline={timeline} />)
 
-    expect(screen.getByRole('status')).toHaveTextContent('Reconnecting to live updates')
+    expect(screen.getByRole('status')).toHaveTextContent('실시간 업데이트 재연결 중')
   })
 })

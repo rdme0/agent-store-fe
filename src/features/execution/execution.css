@@ -173,12 +173,15 @@
   border-radius: 50%;
 }
 
-.execution-timeline__step--running .execution-timeline__marker {
+.execution-timeline__step--running .execution-timeline__marker,
+.execution-timeline__step--payment-required .execution-timeline__marker {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
-.execution-timeline__step--succeeded .execution-timeline__marker {
+.execution-timeline__step--succeeded .execution-timeline__marker,
+.execution-timeline__step--completed .execution-timeline__marker,
+.execution-timeline__step--payment-settled .execution-timeline__marker {
   background: var(--accent);
   border-color: var(--accent);
 }

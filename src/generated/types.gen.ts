@@ -1293,6 +1293,295 @@ export type PostApiAgentsBySlugQuotesResponses = {
 
 export type PostApiAgentsBySlugQuotesResponse = PostApiAgentsBySlugQuotesResponses[keyof PostApiAgentsBySlugQuotesResponses];
 
+export type PostApiExecutionsData = {
+    body: {
+        quoteId: string;
+        maxBudgetAtomic: string;
+        question?: string;
+        input?: unknown;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/executions';
+};
+
+export type PostApiExecutionsErrors = {
+    /**
+     * Default Response
+     */
+    400: {
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+        };
+        traceId: string;
+    };
+    /**
+     * Default Response
+     */
+    404: {
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+        };
+        traceId: string;
+    };
+    /**
+     * Default Response
+     */
+    409: {
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+        };
+        traceId: string;
+    };
+    /**
+     * Default Response
+     */
+    422: {
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+        };
+        traceId: string;
+    };
+    /**
+     * Default Response
+     */
+    500: {
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+        };
+        traceId: string;
+    };
+};
+
+export type PostApiExecutionsError = PostApiExecutionsErrors[keyof PostApiExecutionsErrors];
+
+export type PostApiExecutionsResponses = {
+    /**
+     * Default Response
+     */
+    202: {
+        id: string;
+        quoteId: string;
+        status: 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED';
+        maxBudgetAtomic: string;
+        reservedCostAtomic: string;
+        actualCostAtomic: string;
+        question?: string;
+        input?: unknown;
+        failureCode?: string;
+        steps: Array<{
+            id: string;
+            parentStepId?: string;
+            agentVersionId: string;
+            status: 'CREATED' | 'PAYMENT_REQUIRED' | 'PAYMENT_SETTLED' | 'RUNNING' | 'COMPLETED' | 'FAILED';
+            costAtomic: string;
+            output?: unknown;
+            failureCode?: string;
+            createdAt: string;
+            updatedAt: string;
+        }>;
+        createdAt: string;
+        updatedAt: string;
+    };
+};
+
+export type PostApiExecutionsResponse = PostApiExecutionsResponses[keyof PostApiExecutionsResponses];
+
+export type GetApiExecutionsByIdData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/executions/{id}';
+};
+
+export type GetApiExecutionsByIdErrors = {
+    /**
+     * Default Response
+     */
+    400: {
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+        };
+        traceId: string;
+    };
+    /**
+     * Default Response
+     */
+    404: {
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+        };
+        traceId: string;
+    };
+    /**
+     * Default Response
+     */
+    409: {
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+        };
+        traceId: string;
+    };
+    /**
+     * Default Response
+     */
+    422: {
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+        };
+        traceId: string;
+    };
+    /**
+     * Default Response
+     */
+    500: {
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+        };
+        traceId: string;
+    };
+};
+
+export type GetApiExecutionsByIdError = GetApiExecutionsByIdErrors[keyof GetApiExecutionsByIdErrors];
+
+export type GetApiExecutionsByIdResponses = {
+    /**
+     * Default Response
+     */
+    200: {
+        id: string;
+        quoteId: string;
+        status: 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED';
+        maxBudgetAtomic: string;
+        reservedCostAtomic: string;
+        actualCostAtomic: string;
+        question?: string;
+        input?: unknown;
+        failureCode?: string;
+        steps: Array<{
+            id: string;
+            parentStepId?: string;
+            agentVersionId: string;
+            status: 'CREATED' | 'PAYMENT_REQUIRED' | 'PAYMENT_SETTLED' | 'RUNNING' | 'COMPLETED' | 'FAILED';
+            costAtomic: string;
+            output?: unknown;
+            failureCode?: string;
+            createdAt: string;
+            updatedAt: string;
+        }>;
+        createdAt: string;
+        updatedAt: string;
+    };
+};
+
+export type GetApiExecutionsByIdResponse = GetApiExecutionsByIdResponses[keyof GetApiExecutionsByIdResponses];
+
+export type GetApiExecutionsByIdEventsData = {
+    body?: never;
+    headers?: {
+        /**
+         * Replay events after this nonnegative event sequence.
+         */
+        'last-event-id'?: string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/executions/{id}/events';
+};
+
+export type GetApiExecutionsByIdEventsErrors = {
+    /**
+     * Default Response
+     */
+    400: {
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+        };
+        traceId: string;
+    };
+    /**
+     * Default Response
+     */
+    404: {
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+        };
+        traceId: string;
+    };
+    /**
+     * Default Response
+     */
+    409: {
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+        };
+        traceId: string;
+    };
+    /**
+     * Default Response
+     */
+    422: {
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+        };
+        traceId: string;
+    };
+    /**
+     * Default Response
+     */
+    500: {
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+        };
+        traceId: string;
+    };
+};
+
+export type GetApiExecutionsByIdEventsError = GetApiExecutionsByIdEventsErrors[keyof GetApiExecutionsByIdEventsErrors];
+
+export type GetApiExecutionsByIdEventsResponses = {
+    /**
+     * Server-sent events stream
+     */
+    200: string;
+};
+
+export type GetApiExecutionsByIdEventsResponse = GetApiExecutionsByIdEventsResponses[keyof GetApiExecutionsByIdEventsResponses];
+
 export type GetOpenapiJsonData = {
     body?: never;
     path?: never;

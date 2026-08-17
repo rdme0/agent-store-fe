@@ -28,8 +28,8 @@ function PanelState({
   if (model.panelState === 'loading') {
     return (
       <div className="state-card execution-timeline-state" role="status">
-        <h2>Loading execution</h2>
-        <p>Receiving execution updates.</p>
+        <h2>실행 정보를 불러오는 중</h2>
+        <p>Agent 실행 상태를 확인하고 있습니다.</p>
       </div>
     )
   }
@@ -37,8 +37,8 @@ function PanelState({
   if (model.panelState === 'empty') {
     return (
       <div className="state-card execution-timeline-state" role="status">
-        <h2>No execution events yet</h2>
-        <p>The execution timeline will appear when updates are available.</p>
+        <h2>아직 실행 이벤트가 없습니다.</h2>
+        <p>업데이트가 도착하면 실행 흐름이 여기에 표시됩니다.</p>
       </div>
     )
   }
@@ -46,9 +46,9 @@ function PanelState({
   if (model.panelState === 'error') {
     return (
       <div className="state-card state-card--error execution-timeline-state" role="alert">
-        <h2>Unable to load execution</h2>
-        <p>{model.panelMessage ?? 'Execution updates could not be loaded.'}</p>
-        {onRetry ? <button className="button button--secondary" onClick={onRetry} type="button">Retry</button> : null}
+        <h2>실행 정보를 불러오지 못했습니다.</h2>
+        <p>{model.panelMessage ?? '실행 업데이트를 불러오지 못했습니다.'}</p>
+        {onRetry ? <button className="button button--secondary" onClick={onRetry} type="button">다시 시도</button> : null}
       </div>
     )
   }
@@ -56,8 +56,8 @@ function PanelState({
   if (model.panelState === 'disabled') {
     return (
       <div className="state-card execution-timeline-state execution-timeline-state--disabled" role="status">
-        <h2>Execution updates disabled</h2>
-        <p>{model.panelMessage ?? 'Live execution updates are currently disabled.'}</p>
+        <h2>실행 업데이트가 비활성화되었습니다.</h2>
+        <p>{model.panelMessage ?? '현재 실시간 실행 업데이트를 사용할 수 없습니다.'}</p>
       </div>
     )
   }
@@ -84,7 +84,7 @@ function TimelineContent({ model }: { model: ExecutionTimelineViewModel }) {
       <p className="execution-timeline__connection" role="status">
         <span aria-hidden="true" className={`execution-timeline__connection-dot execution-timeline__connection-dot--${model.connection.value}`} />
         {model.connection.label}
-        {model.eventCount > 0 ? <span> · {model.eventCount} {model.eventCount === 1 ? 'event' : 'events'}</span> : null}
+        {model.eventCount > 0 ? <span> · 이벤트 {model.eventCount}개</span> : null}
       </p>
 
       {model.errorLabel ? (
@@ -93,7 +93,7 @@ function TimelineContent({ model }: { model: ExecutionTimelineViewModel }) {
 
       {model.costLabel ? (
         <dl aria-label="Execution cost" className="execution-timeline__summary">
-          <div><dt>Cost</dt><dd>{model.costLabel}</dd></div>
+          <div><dt>비용</dt><dd>{model.costLabel}</dd></div>
         </dl>
       ) : null}
 
@@ -101,9 +101,9 @@ function TimelineContent({ model }: { model: ExecutionTimelineViewModel }) {
         <ol aria-label="Execution steps" className="execution-timeline__steps">
           {model.steps.map((step) => (
             <li
-              aria-current={step.status === 'running' ? 'step' : undefined}
+              aria-current={step.status.toLowerCase() === 'running' ? 'step' : undefined}
               aria-label={`${step.label}: ${step.statusLabel}`}
-              className={`execution-timeline__step execution-timeline__step--${step.status}`}
+              className={`execution-timeline__step execution-timeline__step--${step.status.toLowerCase().replaceAll('_', '-')}`}
               key={step.id}
             >
               <span aria-hidden="true" className="execution-timeline__marker" />
@@ -113,26 +113,26 @@ function TimelineContent({ model }: { model: ExecutionTimelineViewModel }) {
                   <span className={statusClassName(step.status, step.statusTone)}>{step.statusLabel}</span>
                 </div>
                 {step.description ? <p>{step.description}</p> : null}
-                {step.costLabel ? <p className="execution-timeline__detail"><strong>Cost:</strong> {step.costLabel}</p> : null}
+                {step.costLabel ? <p className="execution-timeline__detail"><strong>비용:</strong> {step.costLabel}</p> : null}
                 {step.errorLabel ? <p className="execution-timeline__error" role="alert">{step.errorLabel}</p> : null}
               </div>
             </li>
           ))}
         </ol>
       ) : (
-        <p className="execution-timeline__no-steps">No execution steps have been reported.</p>
+        <p className="execution-timeline__no-steps">아직 보고된 실행 단계가 없습니다.</p>
       )}
 
       {model.payment ? (
         <section aria-labelledby={paymentHeadingId} className="execution-timeline__payment">
-          <h3 id={paymentHeadingId}>Payment</h3>
+          <h3 id={paymentHeadingId}>결제</h3>
           <dl>
             <div>
-              <dt>Status</dt>
+              <dt>상태</dt>
               <dd><span className={statusClassName(model.payment.status, model.payment.statusTone)}>{model.payment.statusLabel}</span></dd>
             </div>
-            {model.payment.amountLabel ? <div><dt>Amount</dt><dd>{model.payment.amountLabel}</dd></div> : null}
-            {model.payment.reference ? <div><dt>Reference</dt><dd className="execution-timeline__reference">{model.payment.reference}</dd></div> : null}
+            {model.payment.amountLabel ? <div><dt>금액</dt><dd>{model.payment.amountLabel}</dd></div> : null}
+            {model.payment.reference ? <div><dt>참조</dt><dd className="execution-timeline__reference">{model.payment.reference}</dd></div> : null}
           </dl>
           {model.payment.errorLabel ? <p className="execution-timeline__error" role="alert">{model.payment.errorLabel}</p> : null}
         </section>

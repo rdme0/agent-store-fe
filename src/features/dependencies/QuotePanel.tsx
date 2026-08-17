@@ -1,7 +1,9 @@
-import { useQuery } from '@tanstack/react-query'
-import { useMemo } from 'react'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import type { AgentVersionModel } from '../../entities/agent/model'
 import { createAgentQuote } from '../../entities/dependency/api'
+import { createExecution } from '../../entities/execution/api'
 import type { QuoteSnapshot } from '../../generated'
 import { DependencyGraphPanel, type DependencyEdgeViewModel, type DependencyNodeViewModel } from './DependencyGraph'
 
@@ -9,6 +11,8 @@ interface QuotePanelProps {
   slug: string
   version: AgentVersionModel
 }
+
+type RequestLockToken = symbol
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : 'Quote를 발급하지 못했습니다.'
@@ -41,15 +45,86 @@ function flattenSnapshot(root: QuoteSnapshot): { edges: DependencyEdgeViewModel[
   return { edges, nodes: [...nodes.values()] }
 }
 
-export function QuotePanel({ slug, version }: QuotePanelProps) {
+export function QuotePanel(props: QuotePanelProps) {
+  return <QuotePanelForIdentity key={`${props.slug}:${props.version.id}`} {...props} />
+}
+
+function QuotePanelForIdentity({ slug, version }: QuotePanelProps) {
+  const navigate = useNavigate()
+  const [question, setQuestion] = useState('')
+  const [approved, setApproved] = useState(false)
+  const [requestLocked, setRequestLocked] = useState(false)
+  const quoteGeneration = useRef(0)
+  const requestLockOwner = useRef<RequestLockToken | undefined>(undefined)
+  const mounted = useRef(true)
+  useEffect(() => {
+    mounted.current = true
+    return () => {
+      mounted.current = false
+      quoteGeneration.current += 1
+      requestLockOwner.current = undefined
+    }
+  }, [])
+  const acquireRequestLock = () => {
+    if (requestLockOwner.current) return undefined
+    const token = Symbol('quote-execution-request')
+    requestLockOwner.current = token
+    setRequestLocked(true)
+    return token
+  }
+  const releaseRequestLock = (token: RequestLockToken) => {
+    if (requestLockOwner.current !== token) return
+    requestLockOwner.current = undefined
+    if (mounted.current) setRequestLocked(false)
+  }
+  const executionMutation = useMutation({
+    mutationFn: async ({
+      generation,
+      input,
+      lockToken,
+      snapshot,
+    }: {
+      generation: number
+      input: Parameters<typeof createExecution>[0]
+      lockToken: RequestLockToken
+      snapshot: QuoteSnapshot
+    }) => ({ execution: await createExecution(input), generation, lockToken, snapshot }),
+    onSuccess: ({ execution, generation, snapshot }) => {
+      if (!mounted.current || generation !== quoteGeneration.current) return
+      navigate(`/runs/${execution.id}`, {
+        state: { quoteSnapshot: snapshot },
+      })
+    },
+    onSettled: (_data, _error, variables) => releaseRequestLock(variables.lockToken),
+  })
   const quoteQuery = useQuery({
     queryKey: ['quote', slug, version.id],
-    queryFn: () => createAgentQuote(slug, { versionConstraint: version.semver }),
+    queryFn: async () => {
+      const nextQuote = await createAgentQuote(slug, { versionConstraint: version.semver })
+      if (mounted.current) {
+        executionMutation.reset()
+        setApproved(false)
+      }
+      return nextQuote
+    },
     enabled: false,
     retry: false,
     staleTime: 0,
   })
   const quote = quoteQuery.data
+  const requestQuote = async () => {
+    if (executionMutation.isPending || quoteQuery.isFetching) return
+    const lockToken = acquireRequestLock()
+    if (!lockToken) return
+    quoteGeneration.current += 1
+    executionMutation.reset()
+    setApproved(false)
+    try {
+      await quoteQuery.refetch()
+    } finally {
+      releaseRequestLock(lockToken)
+    }
+  }
   const graph = useMemo(() => quote ? flattenSnapshot(quote.snapshot) : undefined, [quote])
   const optionalWarning = quote?.warnings.length
     ? `Optional dependency ${quote.warnings.map((warning) => warning.targetAgentSlug).join(', ')}를 resolve하지 못했습니다.`
@@ -64,11 +139,11 @@ export function QuotePanel({ slug, version }: QuotePanelProps) {
         </div>
         <span>Quote</span>
       </div>
-      <p className="detail-description">실행은 다음 Phase에서 연결됩니다. 먼저 resolved dependency와 최대 비용을 확인하세요.</p>
+      <p className="detail-description">Resolved dependency와 Maximum Cost를 확인한 뒤 질문을 입력하고 실행을 승인하세요.</p>
       <button
         className="button button--primary"
-        disabled={quoteQuery.isFetching}
-        onClick={() => { void quoteQuery.refetch() }}
+        disabled={requestLocked || quoteQuery.isFetching || executionMutation.isPending}
+        onClick={() => { void requestQuote() }}
         type="button"
       >
         {quoteQuery.isFetching ? 'Quote 발급 중…' : quote ? 'Quote 새로 발급' : 'Quote 발급'}
@@ -76,7 +151,12 @@ export function QuotePanel({ slug, version }: QuotePanelProps) {
       {quoteQuery.isError ? (
         <div className="state-card state-card--error quote-panel__error" role="alert">
           <p>{errorMessage(quoteQuery.error)}</p>
-          <button className="button button--secondary" onClick={() => { void quoteQuery.refetch() }} type="button">다시 시도</button>
+          <button
+            className="button button--secondary"
+            disabled={requestLocked || quoteQuery.isFetching || executionMutation.isPending}
+            onClick={() => { void requestQuote() }}
+            type="button"
+          >다시 시도</button>
         </div>
       ) : null}
       {quote ? (
@@ -95,6 +175,63 @@ export function QuotePanel({ slug, version }: QuotePanelProps) {
               title="Quoted dependency graph"
             />
           ) : null}
+          <form
+            className="execution-approval"
+            onSubmit={(event) => {
+              event.preventDefault()
+              const trimmedQuestion = question.trim()
+              if (!trimmedQuestion || !approved || executionMutation.isPending || quoteQuery.isFetching) return
+              const lockToken = acquireRequestLock()
+              if (!lockToken) return
+              try {
+                executionMutation.mutate({
+                  generation: quoteGeneration.current,
+                  lockToken,
+                  snapshot: quote.snapshot,
+                  input: {
+                    quoteId: quote.id,
+                    maxBudgetAtomic: quote.maxCostAtomic,
+                    question: trimmedQuestion,
+                  },
+                })
+              } catch (error) {
+                releaseRequestLock(lockToken)
+                throw error
+              }
+            }}
+          >
+            <div className="form-field">
+              <label htmlFor={`execution-question-${version.id}`}>Agent에게 물어볼 질문</label>
+              <textarea
+                id={`execution-question-${version.id}`}
+                maxLength={4000}
+                onChange={(event) => setQuestion(event.target.value)}
+                placeholder="예: 최근 시장 상황을 바탕으로 투자 위험을 분석해줘"
+                required
+                rows={4}
+                value={question}
+              />
+            </div>
+            <label className="checkbox-field">
+              <input
+                checked={approved}
+                disabled={requestLocked || quoteQuery.isFetching || executionMutation.isPending}
+                onChange={(event) => setApproved(event.target.checked)}
+                type="checkbox"
+              />
+              <span>최대 {quote.maxCostLabel}까지 사용될 수 있음을 확인하고 실행을 승인합니다.</span>
+            </label>
+            {executionMutation.isError ? (
+              <p className="form-error form-error--summary" role="alert">{errorMessage(executionMutation.error)}</p>
+            ) : null}
+            <button
+              className="button button--primary"
+              disabled={!approved || !question.trim() || requestLocked || executionMutation.isPending || quoteQuery.isFetching}
+              type="submit"
+            >
+              {executionMutation.isPending ? '실행을 시작하는 중…' : 'Maximum Cost 승인 후 실행'}
+            </button>
+          </form>
         </>
       ) : null}
     </section>

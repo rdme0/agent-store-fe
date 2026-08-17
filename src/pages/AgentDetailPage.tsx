@@ -80,7 +80,13 @@ export function AgentDetailPage() {
       {agent.versions.filter((version) => version.status === 'DRAFT').map((version) => (
         <DependencyEditor agent={agent} key={version.id} slug={slug} version={version} />
       ))}
-      {getActiveVersion(agent) ? <QuotePanel slug={slug} version={getActiveVersion(agent)!} /> : null}
+      {getActiveVersion(agent) ? (
+        <QuotePanel
+          key={`${slug}:${getActiveVersion(agent)!.id}`}
+          slug={slug}
+          version={getActiveVersion(agent)!}
+        />
+      ) : null}
       <button className="text-link-button" onClick={() => navigate('/agents')} type="button">목록으로 돌아가기</button>
     </section>
   )

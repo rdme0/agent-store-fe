@@ -139,6 +139,19 @@ export function createExecutionTimelineState<Payload = unknown>(
 }
 
 export function executionStatusLabel(status: string): string {
+  const koreanLabels: Record<string, string> = {
+    CREATED: '생성됨',
+    PAYMENT_REQUIRED: '결제 필요',
+    PAYMENT_SETTLED: '결제 완료',
+    RUNNING: '실행 중',
+    COMPLETED: '완료',
+    FAILED: '실패',
+    queued: '대기 중',
+    running: '실행 중',
+    succeeded: '완료',
+    failed: '실패',
+  }
+  if (koreanLabels[status]) return koreanLabels[status]
   return status
     .split('-')
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
