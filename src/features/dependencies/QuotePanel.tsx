@@ -5,6 +5,8 @@ import type { AgentVersionModel } from '../../entities/agent/model'
 import { createAgentQuote } from '../../entities/dependency/api'
 import { createExecution } from '../../entities/execution/api'
 import type { QuoteSnapshot } from '../../generated'
+import { ApiRequestError } from '../../shared/api/client'
+import { paymentFailureMessage } from '../execution/paymentPresentation'
 import { DependencyGraphPanel, type DependencyEdgeViewModel, type DependencyNodeViewModel } from './DependencyGraph'
 
 interface QuotePanelProps {
@@ -15,6 +17,7 @@ interface QuotePanelProps {
 type RequestLockToken = symbol
 
 function errorMessage(error: unknown): string {
+  if (error instanceof ApiRequestError) return paymentFailureMessage(error.code) ?? error.message
   return error instanceof Error ? error.message : 'Quote를 발급하지 못했습니다.'
 }
 
@@ -53,6 +56,7 @@ function QuotePanelForIdentity({ slug, version }: QuotePanelProps) {
   const navigate = useNavigate()
   const [question, setQuestion] = useState('')
   const [approved, setApproved] = useState(false)
+  const [quoteExpired, setQuoteExpired] = useState(false)
   const [requestLocked, setRequestLocked] = useState(false)
   const quoteGeneration = useRef(0)
   const requestLockOwner = useRef<RequestLockToken | undefined>(undefined)
@@ -95,6 +99,13 @@ function QuotePanelForIdentity({ slug, version }: QuotePanelProps) {
         state: { quoteSnapshot: snapshot },
       })
     },
+    onError: (error, variables) => {
+      if (!mounted.current || variables.generation !== quoteGeneration.current) return
+      if (error instanceof ApiRequestError && error.code === 'QUOTE_EXPIRED') {
+        setQuoteExpired(true)
+        setApproved(false)
+      }
+    },
     onSettled: (_data, _error, variables) => releaseRequestLock(variables.lockToken),
   })
   const quoteQuery = useQuery({
@@ -104,6 +115,7 @@ function QuotePanelForIdentity({ slug, version }: QuotePanelProps) {
       if (mounted.current) {
         executionMutation.reset()
         setApproved(false)
+        setQuoteExpired(new Date(nextQuote.expiresAt).getTime() <= Date.now())
       }
       return nextQuote
     },
@@ -166,6 +178,12 @@ function QuotePanelForIdentity({ slug, version }: QuotePanelProps) {
             <div><dt>Expires</dt><dd>{new Date(quote.expiresAt).toLocaleString('ko-KR')}</dd></div>
             <div><dt>Quote ID</dt><dd>{quote.id}</dd></div>
           </dl>
+          {quoteExpired ? (
+            <div className="state-card state-card--error quote-panel__error" role="alert">
+              <p>Quote가 만료되었습니다. 새 Quote를 발급한 뒤 Maximum Cost를 다시 승인하세요.</p>
+              <button className="button button--secondary" disabled={requestLocked || quoteQuery.isFetching || executionMutation.isPending} onClick={() => { void requestQuote() }} type="button">새 Quote 발급</button>
+            </div>
+          ) : null}
           {graph ? (
             <DependencyGraphPanel
               costSummary={{ maxCost: quote.maxCostLabel }}
@@ -181,6 +199,10 @@ function QuotePanelForIdentity({ slug, version }: QuotePanelProps) {
               event.preventDefault()
               const trimmedQuestion = question.trim()
               if (!trimmedQuestion || !approved || executionMutation.isPending || quoteQuery.isFetching) return
+              if (quoteExpired || new Date(quote.expiresAt).getTime() <= Date.now()) {
+                setQuoteExpired(true)
+                return
+              }
               const lockToken = acquireRequestLock()
               if (!lockToken) return
               try {
@@ -215,18 +237,18 @@ function QuotePanelForIdentity({ slug, version }: QuotePanelProps) {
             <label className="checkbox-field">
               <input
                 checked={approved}
-                disabled={requestLocked || quoteQuery.isFetching || executionMutation.isPending}
+                disabled={quoteExpired || requestLocked || quoteQuery.isFetching || executionMutation.isPending}
                 onChange={(event) => setApproved(event.target.checked)}
                 type="checkbox"
               />
               <span>최대 {quote.maxCostLabel}까지 사용될 수 있음을 확인하고 실행을 승인합니다.</span>
             </label>
-            {executionMutation.isError ? (
+            {executionMutation.isError && !quoteExpired ? (
               <p className="form-error form-error--summary" role="alert">{errorMessage(executionMutation.error)}</p>
             ) : null}
             <button
               className="button button--primary"
-              disabled={!approved || !question.trim() || requestLocked || executionMutation.isPending || quoteQuery.isFetching}
+              disabled={quoteExpired || !approved || !question.trim() || requestLocked || executionMutation.isPending || quoteQuery.isFetching}
               type="submit"
             >
               {executionMutation.isPending ? '실행을 시작하는 중…' : 'Maximum Cost 승인 후 실행'}

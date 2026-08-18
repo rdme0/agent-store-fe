@@ -21,7 +21,7 @@ export function DeveloperDashboardPage() {
     retry: false,
   })
 
-  if (!DEMO_DEVELOPER_ID) return <section className="registry-page"><div className="state-card state-card--error" role="alert"><h1>Developer Dashboard를 열 수 없습니다.</h1><p>VITE_DEMO_DEVELOPER_ID 설정이 필요합니다.</p></div></section>
+  if (!DEMO_DEVELOPER_ID) return <section className="registry-page"><div className="state-card state-card--error" role="alert"><h1>Developer Dashboard를 열 수 없습니다.</h1><p>VITE_DEMO_DEVELOPER_ID 설정이 필요합니다. 설정 후 개발 서버를 다시 시작하세요.</p><Link className="button button--secondary" to="/settings">설정 확인</Link></div></section>
   if (revenue.isPending) return <section className="state-card" role="status"><h1>수익 정보를 불러오는 중</h1><p>Developer 정산 내역을 확인하고 있습니다.</p></section>
   if (revenue.isError) return <section className="state-card state-card--error" role="alert"><h1>수익 정보를 불러오지 못했습니다.</h1><p>{errorMessage(revenue.error)}</p><button className="button button--secondary" onClick={() => void revenue.refetch()} type="button">다시 시도</button></section>
 

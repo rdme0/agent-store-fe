@@ -20,11 +20,11 @@ import { SettingsPage } from '../pages/SettingsPage'
 import { DeveloperDashboardPage } from '../pages/DeveloperDashboardPage'
 
 const navigationItems = [
-  { label: 'Overview', to: '/', end: true },
-  { label: 'Agents', to: '/agents', end: false },
-  { label: 'Runs', to: '/runs', end: false },
+  { label: '홈', to: '/', end: true },
+  { label: 'Marketplace', to: '/agents', end: false },
+  { label: '실행', to: '/runs', end: false },
   { label: '수익', to: '/developer/revenue', end: true },
-  { label: 'Settings', to: '/settings', end: false },
+  { label: '설정', to: '/settings', end: false },
 ]
 
 function AppShell() {
@@ -33,7 +33,7 @@ function AppShell() {
       <a className="skip-link" href="#main-content">
         Skip to content
       </a>
-      <aside className="app-shell__sidebar" aria-label="Primary navigation">
+      <aside className="app-shell__sidebar" aria-label="주요 탐색">
         <NavLink className="brand" to="/" end>
           <span className="brand__mark" aria-hidden="true">
             A
@@ -65,7 +65,7 @@ function AppShell() {
           <p>Agent workspace</p>
           <span className="status-pill">
             <span className="status-pill__dot" aria-hidden="true" />
-            Ready
+            준비됨
           </span>
         </header>
         <main id="main-content" className="app-shell__main">

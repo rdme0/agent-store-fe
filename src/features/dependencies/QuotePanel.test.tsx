@@ -7,6 +7,7 @@ import { createAgentQuote } from '../../entities/dependency/api'
 import type { QuoteModel } from '../../entities/dependency/model'
 import { QuotePanel } from './QuotePanel'
 import { createExecution } from '../../entities/execution/api'
+import { ApiRequestError } from '../../shared/api/client'
 
 vi.mock('../../entities/dependency/api', () => ({ createAgentQuote: vi.fn() }))
 vi.mock('../../entities/execution/api', () => ({ createExecution: vi.fn() }))
@@ -18,7 +19,7 @@ const version: AgentVersionModel = {
   priceAtomic: '1000000', priceLabel: '1 USDC', network: 'eip155:84532', asset: 'USDC', payTo: '0x1', createdAt: '', updatedAt: '',
 }
 const quote: QuoteModel = {
-  id: 'quote-id', rootVersionId: version.id, expiresAt: '2026-01-01T00:05:00.000Z', maxCostAtomic: '2500000', maxCostLabel: '2.5 USDC',
+  id: 'quote-id', rootVersionId: version.id, expiresAt: '2099-01-01T00:05:00.000Z', maxCostAtomic: '2500000', maxCostLabel: '2.5 USDC',
   snapshot: {
     version: { id: version.id, agentId: version.agentId, agentSlug: 'investment', semver: version.semver, endpoint: version.endpoint, priceAtomic: version.priceAtomic, network: version.network, asset: version.asset, payTo: version.payTo },
     dependencies: [{ dependencyId: 'dependency-id', targetAgentId: 'risk-id', targetAgentSlug: 'risk', versionConstraint: '^1.0.0', required: false, maxPriceAtomic: '1500000', maxCalls: 1 }],
@@ -36,6 +37,37 @@ afterEach(() => cleanup())
 beforeEach(() => vi.resetAllMocks())
 
 describe('QuotePanel', () => {
+  it('blocks an expired quote locally and guides the user to issue a new one', async () => {
+    createAgentQuoteMock.mockResolvedValue({ ...quote, expiresAt: '2020-01-01T00:00:00.000Z' })
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(<QueryClientProvider client={queryClient}><MemoryRouter><QuotePanel slug="investment" version={version} /></MemoryRouter></QueryClientProvider>)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Quote 발급' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('Quote가 만료되었습니다')
+    expect(screen.getByRole('button', { name: 'Maximum Cost 승인 후 실행' })).toBeDisabled()
+  })
+
+  it('turns a structured expired-quote response into an actionable message', async () => {
+    const refreshedQuote = { ...quote, id: 'quote-refreshed' }
+    createAgentQuoteMock.mockResolvedValueOnce(quote).mockResolvedValueOnce(refreshedQuote)
+    createExecutionMock.mockRejectedValue(new ApiRequestError('Execution quote has expired', 409, { code: 'QUOTE_EXPIRED' }))
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(<QueryClientProvider client={queryClient}><MemoryRouter><QuotePanel slug="investment" version={version} /></MemoryRouter></QueryClientProvider>)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Quote 발급' }))
+    const executeButton = await screen.findByRole('button', { name: 'Maximum Cost 승인 후 실행' })
+    fireEvent.change(screen.getByLabelText('Agent에게 물어볼 질문'), { target: { value: '시장 위험은?' } })
+    fireEvent.click(screen.getByRole('checkbox'))
+    fireEvent.click(executeButton)
+    expect(await screen.findByRole('alert')).toHaveTextContent('Quote가 만료되었습니다')
+    expect(screen.getByRole('checkbox')).not.toBeChecked()
+    expect(executeButton).toBeDisabled()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Quote 새로 발급' }))
+    expect(await screen.findByText('quote-refreshed')).toBeInTheDocument()
+    expect(screen.getByRole('checkbox')).not.toBeChecked()
+  })
+
   it('issues a typed quote and renders maximum cost, warning, and graph', async () => {
     createAgentQuoteMock.mockResolvedValue(quote)
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })

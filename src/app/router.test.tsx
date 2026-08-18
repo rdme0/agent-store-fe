@@ -25,10 +25,10 @@ describe('application routing', () => {
     renderAt('/')
 
     expect(
-      screen.getByRole('heading', { name: 'A calmer way to run agents.' }),
+      screen.getByRole('heading', { name: 'Agent를 찾아 실행하고, 결과와 수익을 확인하세요.' }),
     ).toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('link', { name: 'Agents' }))
+    fireEvent.click(screen.getByRole('link', { name: 'Marketplace' }))
 
     expect(
       screen.getByRole('heading', { name: '사용할 Agent를 찾아보세요.' }),

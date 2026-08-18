@@ -21,6 +21,12 @@ export function paymentFailureMessage(code: string | undefined): string | undefi
     case 'PAYMENT_RECONCILIATION_REQUIRED': return '결제 상태를 확인 중입니다. 중복 결제하지 마세요.'
     case 'PAYMENT_LOOKUP_REQUIRED': return '결제 상태를 확인 중입니다. 중복 결제하지 마세요.'
     case 'PAYMENT_NOT_FOUND': return '결제 확인 결과가 없습니다. 다시 실행하기 전에 결제 상태를 확인해 주세요.'
+    case 'AGENT_TIMEOUT': return 'Agent 응답 시간이 초과되었습니다. 실행 상태를 확인한 뒤 다시 시도해 주세요.'
+    case 'EXECUTION_CALLBACK_TIMEOUT': return 'Agent callback 시간이 초과되어 실행이 종료되었습니다.'
+    case 'BUDGET_EXCEEDED': return '승인한 Maximum Cost를 초과하므로 실행을 중단했습니다.'
+    case 'BUDGET_MISMATCH': return '승인한 Quote의 Maximum Cost와 요청 금액이 일치하지 않습니다.'
+    case 'QUOTE_EXPIRED': return 'Quote가 만료되었습니다. 새 Quote를 발급한 뒤 다시 실행하세요.'
+    case 'DEPENDENCY_CYCLE_DETECTED': return 'dependency cycle이 감지되어 실행할 수 없습니다.'
     default: return undefined
   }
 }
