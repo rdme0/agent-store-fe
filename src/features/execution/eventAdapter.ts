@@ -9,6 +9,8 @@ interface EventPayload {
   output?: unknown
   stepId?: unknown
   transactionHash?: unknown
+  paymentIdentifier?: unknown
+  paymentMode?: unknown
 }
 
 export type StepLabelResolver = (agentVersionId: string) => string
@@ -28,20 +30,35 @@ export function executionSnapshotEvents(
   execution: ExecutionDto,
   labelForVersion: StepLabelResolver,
 ): ExecutionEvent[] {
-  const stepEvents: ExecutionEvent[] = execution.steps.map((step, index) => ({
-    id: `snapshot-${step.id}`,
-    sequence: -(execution.steps.length - index),
-    step: {
-      id: step.id,
-      label: labelForVersion(step.agentVersionId),
-      status: step.status,
-      description: step.parentStepId ? 'Dependency Agent 호출' : 'Root Agent 호출',
-      startedAt: step.createdAt,
-      finishedAt: step.status === 'COMPLETED' || step.status === 'FAILED' ? step.updatedAt : undefined,
-      cost: { amount: step.costAtomic, label: formatAtomicUsdc(step.costAtomic) },
-      error: step.failureCode ? { code: step.failureCode, message: '실행 단계가 실패했습니다.' } : undefined,
-    },
-  }))
+  const stepEvents: ExecutionEvent[] = execution.steps.flatMap((step, index) => {
+    const stepEvent: ExecutionEvent = {
+      id: `snapshot-${step.id}`,
+      sequence: -(execution.steps.length - index),
+      step: {
+        id: step.id,
+        label: labelForVersion(step.agentVersionId),
+        status: step.status,
+        description: step.parentStepId ? 'Dependency Agent 호출' : 'Root Agent 호출',
+        startedAt: step.createdAt,
+        finishedAt: step.status === 'COMPLETED' || step.status === 'FAILED' ? step.updatedAt : undefined,
+        cost: { amount: step.costAtomic, label: formatAtomicUsdc(step.costAtomic) },
+        error: step.failureCode ? { code: step.failureCode, message: '실행 단계가 실패했습니다.' } : undefined,
+      },
+    }
+    const payment = step.payments.at(-1)
+    if (!payment) return [stepEvent]
+    return [{
+      ...stepEvent,
+      payment: {
+        status: payment.status === 'SETTLED' ? 'settled' : payment.status === 'FAILED' ? 'failed' : 'pending',
+        mode: payment.mode,
+        amount: { amount: payment.amountAtomic, label: formatAtomicUsdc(payment.amountAtomic) },
+        reference: payment.transactionHash,
+        paymentIdentifier: payment.paymentIdentifier,
+        error: payment.failureCode ? { code: payment.failureCode, message: '결제 처리에 실패했습니다.' } : undefined,
+      },
+    }]
+  })
   return [...stepEvents, {
     id: 'snapshot-execution',
     sequence: 0,
@@ -105,8 +122,10 @@ export function toTimelineEvent(event: ExecutionStreamEvent, labelForVersion?: S
       : event.type === 'PAYMENT_SETTLED'
         ? {
             status: 'settled',
+            mode: payload.paymentMode === 'x402' ? 'x402' : payload.paymentMode === 'simulated' ? 'simulated' : undefined,
             amount,
             reference: typeof payload.transactionHash === 'string' ? payload.transactionHash : undefined,
+            paymentIdentifier: typeof payload.paymentIdentifier === 'string' ? payload.paymentIdentifier : undefined,
           }
         : event.type === 'PAYMENT_RECONCILIATION_REQUIRED'
           ? { status: 'failed', error: { code: 'PAYMENT_RECONCILIATION_REQUIRED', message: '결제 확인이 필요합니다.' } }

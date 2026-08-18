@@ -7,7 +7,7 @@ const execution: ExecutionDto = {
   reservedCostAtomic: '1000000', actualCostAtomic: '500000', question: '분석해줘',
   steps: [{
     id: 'root-step', agentVersionId: 'root-version', status: 'PAYMENT_SETTLED', costAtomic: '500000',
-    createdAt: '2026-08-17T00:00:00Z', updatedAt: '2026-08-17T00:00:01Z',
+    payments: [], createdAt: '2026-08-17T00:00:00Z', updatedAt: '2026-08-17T00:00:01Z',
   }],
   createdAt: '2026-08-17T00:00:00Z', updatedAt: '2026-08-17T00:00:01Z',
 }

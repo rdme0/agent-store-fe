@@ -883,6 +883,17 @@ a {
   overflow-wrap: anywhere;
 }
 
+.developer-dashboard { display: grid; gap: 1.25rem; }
+.developer-dashboard__summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .75rem; margin: 0; }
+.developer-dashboard__summary > div, .developer-dashboard__entries { padding: 1rem; background: var(--surface); border: 1px solid var(--line); border-radius: .75rem; }
+.developer-dashboard__summary dt { color: var(--muted); font-size: .74rem; font-weight: 700; text-transform: uppercase; }
+.developer-dashboard__summary dd { margin: .4rem 0 0; color: var(--ink); font-weight: 750; }
+.developer-dashboard__entries h2 { margin: 0 0 1rem; font-size: 1.1rem; }
+.developer-dashboard__list { display: grid; gap: .7rem; margin: 0 0 1rem; padding: 0; list-style: none; }
+.developer-dashboard__list li { display: grid; gap: .35rem; padding: .9rem; background: var(--surface-muted); border-radius: .55rem; overflow-wrap: anywhere; }
+.developer-dashboard__list li > div { display: flex; justify-content: space-between; gap: .6rem; }
+.developer-dashboard__list span, .developer-dashboard__list time, .developer-dashboard__list code { color: var(--muted); font-size: .8rem; }
+
 .dependency-graph {
   width: 100%;
   padding: 1.35rem;
@@ -1228,6 +1239,7 @@ a {
   .execution-page__costs {
     grid-template-columns: 1fr;
   }
+  .developer-dashboard__summary { grid-template-columns: 1fr; }
 
   .execution-approval .button {
     width: 100%;

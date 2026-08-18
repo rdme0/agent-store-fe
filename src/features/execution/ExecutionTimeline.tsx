@@ -132,7 +132,9 @@ function TimelineContent({ model }: { model: ExecutionTimelineViewModel }) {
               <dd><span className={statusClassName(model.payment.status, model.payment.statusTone)}>{model.payment.statusLabel}</span></dd>
             </div>
             {model.payment.amountLabel ? <div><dt>금액</dt><dd>{model.payment.amountLabel}</dd></div> : null}
-            {model.payment.reference ? <div><dt>참조</dt><dd className="execution-timeline__reference">{model.payment.reference}</dd></div> : null}
+            {model.payment.modeLabel ? <div><dt>방식</dt><dd>{model.payment.modeLabel}</dd></div> : null}
+            {model.payment.reference ? <div><dt>거래 hash</dt><dd className="execution-timeline__reference">{model.payment.transactionExplorerUrl ? <a href={model.payment.transactionExplorerUrl} rel="noreferrer" target="_blank">{model.payment.reference} (Base Sepolia)</a> : model.payment.reference}</dd></div> : null}
+            {model.payment.paymentIdentifier ? <div><dt>결제 식별자</dt><dd className="execution-timeline__reference">{model.payment.paymentIdentifier}</dd></div> : null}
           </dl>
           {model.payment.errorLabel ? <p className="execution-timeline__error" role="alert">{model.payment.errorLabel}</p> : null}
         </section>

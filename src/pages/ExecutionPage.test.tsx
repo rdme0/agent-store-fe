@@ -52,7 +52,10 @@ describe('ExecutionPage', () => {
       reservedCostAtomic: '0', actualCostAtomic: '1000000', question: '시장 위험은?',
       steps: [{
         id: 'root-step', agentVersionId: 'root-version', status: 'COMPLETED', costAtomic: '1000000',
-        output: { answer: '분산 투자가 필요합니다.' }, createdAt: '2026-08-17T00:00:00Z', updatedAt: '2026-08-17T00:00:02Z',
+        output: { answer: '분산 투자가 필요합니다.' }, payments: [{
+          id: 'payment-id', status: 'SETTLED', amountAtomic: '1000000', mode: 'x402',
+          transactionHash: `0x${'a'.repeat(64)}`, paymentIdentifier: 'receipt-id',
+        }], createdAt: '2026-08-17T00:00:00Z', updatedAt: '2026-08-17T00:00:02Z',
       }], createdAt: '2026-08-17T00:00:00Z', updatedAt: '2026-08-17T00:00:02Z',
     })
     renderPage()
@@ -63,6 +66,8 @@ describe('ExecutionPage', () => {
     expect(screen.getByText(/분산 투자가 필요합니다/)).toBeInTheDocument()
     expect(screen.getAllByText('1 USDC').length).toBeGreaterThan(0)
     expect(screen.getAllByText('3 USDC')).toHaveLength(2)
+    expect(screen.getByText('x402 실제 결제 (Base Sepolia)')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Base Sepolia/ })).toHaveAttribute('href', `https://sepolia.basescan.org/tx/${'0x'}${'a'.repeat(64)}`)
   })
 
   it('renders an API error with a retry action', async () => {

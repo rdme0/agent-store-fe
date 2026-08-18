@@ -9,6 +9,7 @@ import {
   type StepStatus,
   type PaymentStatus,
 } from './model'
+import { baseSepoliaExplorerUrl, paymentFailureMessage, paymentModeLabel } from './paymentPresentation'
 
 export type ExecutionStatusTone = 'neutral' | 'info' | 'success' | 'warning' | 'danger'
 
@@ -33,10 +34,14 @@ export interface ExecutionTimelineStepViewModel {
 
 export interface ExecutionPaymentViewModel {
   status: string
+  mode?: 'simulated' | 'x402'
+  modeLabel?: string
   statusLabel: string
   statusTone: ExecutionStatusTone
   amountLabel?: string
   reference?: string
+  transactionExplorerUrl?: string
+  paymentIdentifier?: string
   errorLabel?: string
 }
 
@@ -122,14 +127,18 @@ export function createExecutionTimelineViewModel<Payload = unknown>(
     })),
     payment: timeline.payment ? {
       status: timeline.payment.status,
+      mode: timeline.payment.mode,
+      modeLabel: timeline.payment.mode ? paymentModeLabel(timeline.payment.mode) : undefined,
       statusLabel: executionStatusLabel(timeline.payment.status),
       statusTone: statusTone(timeline.payment.status),
       amountLabel: formatExecutionCost(timeline.payment.amount),
       reference: timeline.payment.reference,
-      errorLabel: formatExecutionError(timeline.payment.error),
+      transactionExplorerUrl: timeline.payment.mode === 'x402' ? baseSepoliaExplorerUrl(timeline.payment.reference) : undefined,
+      paymentIdentifier: timeline.payment.paymentIdentifier,
+      errorLabel: paymentFailureMessage(timeline.payment.error?.code) ?? formatExecutionError(timeline.payment.error),
     } : undefined,
     costLabel: formatExecutionCost(timeline.cost),
-    errorLabel: options.errorMessage ?? executionError,
+    errorLabel: options.errorMessage ?? paymentFailureMessage(timeline.error?.code) ?? executionError,
     errorRetryable: timeline.error?.retryable,
     panelMessage: panelState === 'disabled'
       ? options.disabledMessage

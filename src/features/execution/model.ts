@@ -71,8 +71,10 @@ export interface ExecutionStep {
 
 export interface ExecutionPayment {
   status: PaymentStatus
+  mode?: 'simulated' | 'x402'
   amount?: ExecutionCost
   reference?: string
+  paymentIdentifier?: string
   error?: ExecutionError
 }
 

@@ -1387,6 +1387,15 @@ export type PostApiExecutionsResponses = {
             costAtomic: string;
             output?: unknown;
             failureCode?: string;
+            payments: Array<{
+                id: string;
+                status: 'REQUIRED' | 'AUTHORIZED' | 'SETTLED' | 'FAILED' | 'RECONCILIATION_REQUIRED';
+                amountAtomic: string;
+                mode: 'simulated' | 'x402';
+                transactionHash?: string;
+                paymentIdentifier?: string;
+                failureCode?: string;
+            }>;
             createdAt: string;
             updatedAt: string;
         }>;
@@ -1488,6 +1497,15 @@ export type GetApiExecutionsByIdResponses = {
             costAtomic: string;
             output?: unknown;
             failureCode?: string;
+            payments: Array<{
+                id: string;
+                status: 'REQUIRED' | 'AUTHORIZED' | 'SETTLED' | 'FAILED' | 'RECONCILIATION_REQUIRED';
+                amountAtomic: string;
+                mode: 'simulated' | 'x402';
+                transactionHash?: string;
+                paymentIdentifier?: string;
+                failureCode?: string;
+            }>;
             createdAt: string;
             updatedAt: string;
         }>;
@@ -1581,6 +1599,106 @@ export type GetApiExecutionsByIdEventsResponses = {
 };
 
 export type GetApiExecutionsByIdEventsResponse = GetApiExecutionsByIdEventsResponses[keyof GetApiExecutionsByIdEventsResponses];
+
+export type GetApiDevelopersByIdRevenueData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: {
+        cursor?: string;
+        limit?: number;
+    };
+    url: '/api/developers/{id}/revenue';
+};
+
+export type GetApiDevelopersByIdRevenueErrors = {
+    /**
+     * Default Response
+     */
+    400: {
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+        };
+        traceId: string;
+    };
+    /**
+     * Default Response
+     */
+    404: {
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+        };
+        traceId: string;
+    };
+    /**
+     * Default Response
+     */
+    409: {
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+        };
+        traceId: string;
+    };
+    /**
+     * Default Response
+     */
+    422: {
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+        };
+        traceId: string;
+    };
+    /**
+     * Default Response
+     */
+    500: {
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+        };
+        traceId: string;
+    };
+};
+
+export type GetApiDevelopersByIdRevenueError = GetApiDevelopersByIdRevenueErrors[keyof GetApiDevelopersByIdRevenueErrors];
+
+export type GetApiDevelopersByIdRevenueResponses = {
+    /**
+     * Default Response
+     */
+    200: {
+        developerId: string;
+        totalRevenueAtomic: string;
+        directRevenueAtomic: string;
+        dependencyRevenueAtomic: string;
+        directCount: number;
+        dependencyCount: number;
+        entries: Array<{
+            id: string;
+            executionStepId: string;
+            paymentAttemptId: string;
+            type: 'DIRECT' | 'DEPENDENCY';
+            amountAtomic: string;
+            paymentMode: 'simulated' | 'x402';
+            transactionHash?: string;
+            paymentIdentifier?: string;
+            createdAt: string;
+        }>;
+        nextCursor?: string;
+    };
+};
+
+export type GetApiDevelopersByIdRevenueResponse = GetApiDevelopersByIdRevenueResponses[keyof GetApiDevelopersByIdRevenueResponses];
 
 export type GetOpenapiJsonData = {
     body?: never;

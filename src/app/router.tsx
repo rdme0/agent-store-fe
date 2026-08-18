@@ -17,11 +17,13 @@ import { RegisterAgentPage } from '../pages/RegisterAgentPage'
 import { RunsPage } from '../pages/RunsPage'
 import { ExecutionPage } from '../pages/ExecutionPage'
 import { SettingsPage } from '../pages/SettingsPage'
+import { DeveloperDashboardPage } from '../pages/DeveloperDashboardPage'
 
 const navigationItems = [
   { label: 'Overview', to: '/', end: true },
   { label: 'Agents', to: '/agents', end: false },
   { label: 'Runs', to: '/runs', end: false },
+  { label: '수익', to: '/developer/revenue', end: true },
   { label: 'Settings', to: '/settings', end: false },
 ]
 
@@ -107,6 +109,7 @@ export const routes: RouteObject[] = [
       { path: 'agents/:slug', element: <AgentDetailPage /> },
       { path: 'runs', element: <RunsPage /> },
       { path: 'runs/:id', element: <ExecutionPage /> },
+      { path: 'developer/revenue', element: <DeveloperDashboardPage /> },
       { path: 'settings', element: <SettingsPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
