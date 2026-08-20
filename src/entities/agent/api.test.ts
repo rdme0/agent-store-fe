@@ -14,7 +14,7 @@ describe('Agent API boundary', () => {
   })
 
   it('sends the generated register operation and maps its DTO response', async () => {
-    fetchMock.mockResolvedValue(new Response(JSON.stringify({
+    fetchMock.mockResolvedValue(new Response(JSON.stringify({ isSuccess: true, message: '요청이 성공했습니다.', errorCode: null, result: {
       id: 'agent-id',
       developerId: 'developer-id',
       developerName: 'Demo Developer',
@@ -36,7 +36,7 @@ describe('Agent API boundary', () => {
       }],
       createdAt: '2026-01-01T00:00:00.000Z',
       updatedAt: '2026-01-01T00:00:00.000Z',
-    }), { headers: { 'Content-Type': 'application/json' }, status: 201 }))
+    }}), { headers: { 'Content-Type': 'application/json' }, status: 201 }))
 
     const result = await registerAgent({
       developerId: '123e4567-e89b-12d3-a456-426614174000',

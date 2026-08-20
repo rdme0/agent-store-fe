@@ -44,21 +44,35 @@ describe('API transport client', () => {
     await expect(request<void>('/health')).resolves.toBeUndefined()
   })
 
-  it('preserves structured API errors and the HTTP status', () => {
+  it('preserves CommonResponse errors and the HTTP status', () => {
     const error = normalizeApiRequestError(
       {
-        error: { code: 'AGENT_NOT_FOUND', message: 'Agent was not found', details: { slug: 'missing' } },
-        traceId: 'trace-123',
+        isSuccess: false,
+        errorCode: 'AGENT_404_002',
+        message: 'Agent를 찾을 수 없습니다.',
+        result: null,
       },
       { status: 404 },
     )
 
     expect(error).toMatchObject({
-      code: 'AGENT_NOT_FOUND',
-      details: { slug: 'missing' },
-      message: 'Agent was not found',
+      errorCode: 'AGENT_404_002',
+      message: 'Agent를 찾을 수 없습니다.',
       status: 404,
-      traceId: 'trace-123',
+    })
+  })
+
+  it('reads the Spring CommonResponse error code and trace header', () => {
+    const error = normalizeApiRequestError(
+      { isSuccess: false, message: 'Agent를 찾을 수 없습니다.', errorCode: 'AGENT_404_002', result: null },
+      { status: 404, headers: new Headers({ 'X-Trace-Id': 'trace-header' }) },
+    )
+
+    expect(error).toMatchObject({
+      errorCode: 'AGENT_404_002',
+      message: 'Agent를 찾을 수 없습니다.',
+      status: 404,
+      traceId: 'trace-header',
     })
   })
 })

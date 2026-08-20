@@ -17,5 +17,7 @@ describe('payment presentation', () => {
     expect(paymentFailureMessage('FACILITATOR_ERROR')).toContain('facilitator')
     expect(paymentFailureMessage('FAILED_AFTER_PAYMENT')).toContain('결제는 완료')
     expect(paymentFailureMessage('PAYMENT_RECONCILIATION_REQUIRED')).toContain('중복 결제')
+    expect(paymentFailureMessage('PAYMENT_503_001')).toContain('중복 결제')
+    expect(paymentFailureMessage('QUOTE_409_001')).toContain('Quote가 만료')
   })
 })

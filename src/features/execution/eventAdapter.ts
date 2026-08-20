@@ -51,10 +51,10 @@ export function executionSnapshotEvents(
       ...stepEvent,
       payment: {
         status: payment.status === 'SETTLED' ? 'settled' : payment.status === 'FAILED' ? 'failed' : 'pending',
-        mode: payment.mode,
+        mode: payment.mode === 'x402' || payment.mode === 'simulated' ? payment.mode : undefined,
         amount: { amount: payment.amountAtomic, label: formatAtomicUsdc(payment.amountAtomic) },
-        reference: payment.transactionHash,
-        paymentIdentifier: payment.paymentIdentifier,
+        reference: payment.transactionHash ?? undefined,
+        paymentIdentifier: payment.paymentIdentifier ?? undefined,
         error: payment.failureCode ? { code: payment.failureCode, message: '결제 처리에 실패했습니다.' } : undefined,
       },
     }]

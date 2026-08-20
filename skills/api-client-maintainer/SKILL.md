@@ -13,8 +13,11 @@ Use this skill whenever a backend HTTP contract, DTO, error code, execution even
 2. Verify the backend route schema and generated `/openapi.json` before changing FE usage.
 3. Regenerate FE types and client code through the repository script; never edit generated files manually.
 4. Update the smallest typed API adapter and feature mapping needed by the change.
-5. Keep atomic USDC amounts as strings and preserve nullable/error fields from the contract.
-6. For SSE, keep event names and payload discriminators typed and handle reconnect behavior explicitly.
+5. Public JSON responses use `CommonResponse<T>`; adapters unwrap only `result`, while errors read `status`,
+   `errorCode`, `message`, and the `X-Trace-Id` response header. Do not reintroduce nested `error.code` or JSON
+   `traceId` assumptions.
+6. Keep atomic USDC amounts as strings and preserve nullable/error fields from the contract.
+7. For SSE, keep event names and payload discriminators typed and handle reconnect behavior explicitly.
 
 ## Checks
 

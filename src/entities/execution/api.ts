@@ -3,13 +3,13 @@ import {
   getApiExecutionsByIdEvents,
   postApiExecutions,
   type PostApiExecutionsData,
-  type PostApiExecutionsResponse,
+  type ExecutionResponse,
 } from '../../generated'
-import { normalizeApiRequestError } from '../../shared/api/client'
+import { normalizeApiRequestError, unwrapCommonResponse } from '../../shared/api/client'
 import { agentStoreClient } from '../../shared/api/generatedClient'
 
 export type CreateExecutionInput = PostApiExecutionsData['body']
-export type ExecutionDto = PostApiExecutionsResponse
+export type ExecutionDto = ExecutionResponse
 
 export interface ExecutionStreamEvent {
   id?: string
@@ -39,7 +39,7 @@ export function createExecution(input: CreateExecutionInput): Promise<ExecutionD
       client: agentStoreClient,
       throwOnError: true,
     })
-    return response.data
+    return unwrapCommonResponse<ExecutionDto>(response.data)
   })
 }
 
@@ -50,7 +50,7 @@ export function getExecution(id: string): Promise<ExecutionDto> {
       path: { id },
       throwOnError: true,
     })
-    return response.data
+    return unwrapCommonResponse<ExecutionDto>(response.data)
   })
 }
 

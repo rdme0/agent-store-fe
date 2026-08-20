@@ -1,12 +1,12 @@
 import {
   getApiDevelopersByIdRevenue,
   type GetApiDevelopersByIdRevenueData,
-  type GetApiDevelopersByIdRevenueResponse,
+  type DeveloperRevenueResponse,
 } from '../../generated'
-import { normalizeApiRequestError } from '../../shared/api/client'
+import { normalizeApiRequestError, unwrapCommonResponse } from '../../shared/api/client'
 import { agentStoreClient } from '../../shared/api/generatedClient'
 
-export type RevenueDto = GetApiDevelopersByIdRevenueResponse
+export type RevenueDto = DeveloperRevenueResponse
 export type RevenueQuery = GetApiDevelopersByIdRevenueData['query']
 
 export async function getDeveloperRevenue(developerId: string, query?: RevenueQuery): Promise<RevenueDto> {
@@ -17,7 +17,7 @@ export async function getDeveloperRevenue(developerId: string, query?: RevenueQu
       query,
       throwOnError: true,
     })
-    return response.data
+    return unwrapCommonResponse<RevenueDto>(response.data)
   } catch (error) {
     throw normalizeApiRequestError(error)
   }

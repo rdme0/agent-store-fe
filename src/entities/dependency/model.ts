@@ -1,11 +1,9 @@
-import type {
-  GetApiAgentVersionsByIdDependenciesResponse,
-  PostApiAgentsBySlugQuotesResponse,
-} from '../../generated'
 import { formatAtomicUsdc } from '../agent/model'
+import type { DependencyResponse, QuoteResponse, QuoteSnapshot } from '../../generated'
 
-export type DependencyDto = GetApiAgentVersionsByIdDependenciesResponse[number]
-export type QuoteDto = PostApiAgentsBySlugQuotesResponse
+export type DependencyDto = DependencyResponse
+export type QuoteDto = QuoteResponse
+export type { QuoteSnapshot }
 
 export interface DependencyModel extends DependencyDto {
   maxPriceLabel: string

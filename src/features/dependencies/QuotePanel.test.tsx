@@ -50,7 +50,7 @@ describe('QuotePanel', () => {
   it('turns a structured expired-quote response into an actionable message', async () => {
     const refreshedQuote = { ...quote, id: 'quote-refreshed' }
     createAgentQuoteMock.mockResolvedValueOnce(quote).mockResolvedValueOnce(refreshedQuote)
-    createExecutionMock.mockRejectedValue(new ApiRequestError('Execution quote has expired', 409, { code: 'QUOTE_EXPIRED' }))
+    createExecutionMock.mockRejectedValue(new ApiRequestError('실행 Quote가 만료되었습니다.', 409, { errorCode: 'QUOTE_409_001' }))
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     render(<QueryClientProvider client={queryClient}><MemoryRouter><QuotePanel slug="investment" version={version} /></MemoryRouter></QueryClientProvider>)
 

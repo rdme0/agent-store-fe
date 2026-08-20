@@ -53,10 +53,16 @@ function errorMessage(error: unknown, fallback: string): string {
 }
 
 function cyclePathFromError(error: unknown): string[] | undefined {
-  if (!(error instanceof ApiRequestError) || error.code !== 'DEPENDENCY_CYCLE_DETECTED') return undefined
-  if (!error.details || typeof error.details !== 'object') return undefined
-  const cycle = (error.details as { cycle?: unknown }).cycle
-  return Array.isArray(cycle) && cycle.every((value): value is string => typeof value === 'string') ? cycle : undefined
+  if (!(error instanceof ApiRequestError) || (error.errorCode !== 'DEPENDENCY_409_003' && error.errorCode !== 'DEPENDENCY_CYCLE_DETECTED')) return undefined
+  const marker = '경로:'
+  const markerIndex = error.message.indexOf(marker)
+  if (markerIndex < 0) return undefined
+  const cycle = error.message
+    .slice(markerIndex + marker.length)
+    .split(' -> ')
+    .map((value) => value.trim())
+    .filter(Boolean)
+  return cycle.length >= 2 ? cycle : undefined
 }
 
 function DependencyForm({ agents, idPrefix, isSubmitting, onCancel, onSubmit, sourceAgentId, value }: DependencyFormProps) {

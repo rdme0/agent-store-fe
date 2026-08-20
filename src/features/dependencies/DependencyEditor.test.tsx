@@ -68,10 +68,11 @@ describe('DependencyEditor', () => {
   })
 
   it('shows the full cycle path returned by the API', async () => {
-    createDependencyMock.mockRejectedValue(new ApiRequestError('cycle', 409, {
-      code: 'DEPENDENCY_CYCLE_DETECTED',
-      details: { cycle: ['investment', 'risk', 'investment'] },
-    }))
+    createDependencyMock.mockRejectedValue(new ApiRequestError(
+      '의존성 순환이 감지되었습니다. 경로: investment -> risk -> investment',
+      409,
+      { errorCode: 'DEPENDENCY_409_003' },
+    ))
     renderEditor()
 
     expect(await screen.findByRole('heading', { name: 'v1.0.0 Dependencies' })).toBeInTheDocument()

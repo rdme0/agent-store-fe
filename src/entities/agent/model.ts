@@ -1,12 +1,9 @@
-import type {
-  GetApiAgentsBySlugResponse,
-  GetApiAgentsResponse,
-} from '../../generated'
+import type { AgentListResponse, AgentResponse, AgentVersionResponse } from '../../generated'
 
-export type AgentDto = GetApiAgentsBySlugResponse
-export type AgentListItemDto = GetApiAgentsResponse['items'][number]
-export type AgentDetailDto = GetApiAgentsBySlugResponse
-export type AgentVersionDto = AgentDto['versions'][number]
+export type AgentDto = AgentResponse
+export type AgentListItemDto = AgentListResponse['items'][number]
+export type AgentDetailDto = AgentResponse
+export type AgentVersionDto = AgentVersionResponse
 export type AgentVersionStatus = AgentVersionDto['status']
 
 export interface AgentVersionModel extends AgentVersionDto {

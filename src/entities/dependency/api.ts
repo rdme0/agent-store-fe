@@ -4,11 +4,13 @@ import {
   patchApiAgentVersionsByIdDependenciesByDependencyId,
   postApiAgentVersionsByIdDependencies,
   postApiAgentsBySlugQuotes,
+  type DependencyResponse,
+  type QuoteResponse,
   type PatchApiAgentVersionsByIdDependenciesByDependencyIdData,
   type PostApiAgentVersionsByIdDependenciesData,
   type PostApiAgentsBySlugQuotesData,
 } from '../../generated'
-import { normalizeApiRequestError } from '../../shared/api/client'
+import { normalizeApiRequestError, unwrapCommonResponse } from '../../shared/api/client'
 import { agentStoreClient } from '../../shared/api/generatedClient'
 import { toDependencyModel, toQuoteModel, type DependencyModel, type QuoteModel } from './model'
 
@@ -31,7 +33,7 @@ export function listDependencies(versionId: string): Promise<DependencyModel[]> 
       path: { id: versionId },
       throwOnError: true,
     })
-    return response.data.map(toDependencyModel)
+    return unwrapCommonResponse<DependencyResponse[]>(response.data).map(toDependencyModel)
   })
 }
 
@@ -46,7 +48,7 @@ export function createDependency(
       path: { id: versionId },
       throwOnError: true,
     })
-    return toDependencyModel(response.data)
+    return toDependencyModel(unwrapCommonResponse<DependencyResponse>(response.data))
   })
 }
 
@@ -62,7 +64,7 @@ export function updateDependency(
       path: { id: versionId, dependencyId },
       throwOnError: true,
     })
-    return toDependencyModel(response.data)
+    return toDependencyModel(unwrapCommonResponse<DependencyResponse>(response.data))
   })
 }
 
@@ -84,6 +86,6 @@ export function createAgentQuote(slug: string, input: CreateQuoteInput = {}): Pr
       path: { slug },
       throwOnError: true,
     })
-    return toQuoteModel(response.data)
+    return toQuoteModel(unwrapCommonResponse<QuoteResponse>(response.data))
   })
 }

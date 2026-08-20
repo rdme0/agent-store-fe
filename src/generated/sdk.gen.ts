@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, ServerSentEventsResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { DeleteApiAgentsByIdData, DeleteApiAgentsByIdErrors, DeleteApiAgentsByIdResponses, DeleteApiAgentVersionsByIdDependenciesByDependencyIdData, DeleteApiAgentVersionsByIdDependenciesByDependencyIdErrors, DeleteApiAgentVersionsByIdDependenciesByDependencyIdResponses, GetApiAgentsBySlugData, GetApiAgentsBySlugErrors, GetApiAgentsBySlugResponses, GetApiAgentsData, GetApiAgentsErrors, GetApiAgentsResponses, GetApiAgentVersionsByIdDependenciesData, GetApiAgentVersionsByIdDependenciesErrors, GetApiAgentVersionsByIdDependenciesResponses, GetApiDevelopersByIdRevenueData, GetApiDevelopersByIdRevenueErrors, GetApiDevelopersByIdRevenueResponses, GetApiExecutionsByIdData, GetApiExecutionsByIdErrors, GetApiExecutionsByIdEventsData, GetApiExecutionsByIdEventsErrors, GetApiExecutionsByIdEventsResponse, GetApiExecutionsByIdEventsResponses, GetApiExecutionsByIdResponses, GetHealthData, GetHealthResponses, GetOpenapiJsonData, GetOpenapiJsonResponses, PatchApiAgentsByIdData, PatchApiAgentsByIdErrors, PatchApiAgentsByIdResponses, PatchApiAgentVersionsByIdDependenciesByDependencyIdData, PatchApiAgentVersionsByIdDependenciesByDependencyIdErrors, PatchApiAgentVersionsByIdDependenciesByDependencyIdResponses, PostApiAgentsByIdVersionsData, PostApiAgentsByIdVersionsErrors, PostApiAgentsByIdVersionsResponses, PostApiAgentsBySlugQuotesData, PostApiAgentsBySlugQuotesErrors, PostApiAgentsBySlugQuotesResponses, PostApiAgentsData, PostApiAgentsErrors, PostApiAgentsResponses, PostApiAgentVersionsByIdDependenciesData, PostApiAgentVersionsByIdDependenciesErrors, PostApiAgentVersionsByIdDependenciesResponses, PostApiAgentVersionsByIdDisableData, PostApiAgentVersionsByIdDisableErrors, PostApiAgentVersionsByIdDisableResponses, PostApiAgentVersionsByIdPublishData, PostApiAgentVersionsByIdPublishErrors, PostApiAgentVersionsByIdPublishResponses, PostApiExecutionsData, PostApiExecutionsErrors, PostApiExecutionsResponses } from './types.gen';
+import type { DeleteApiAgentsByIdData, DeleteApiAgentsByIdErrors, DeleteApiAgentsByIdResponses, DeleteApiAgentVersionsByIdDependenciesByDependencyIdData, DeleteApiAgentVersionsByIdDependenciesByDependencyIdErrors, DeleteApiAgentVersionsByIdDependenciesByDependencyIdResponses, GetApiAgentsBySlugData, GetApiAgentsBySlugErrors, GetApiAgentsBySlugResponses, GetApiAgentsData, GetApiAgentsErrors, GetApiAgentsResponses, GetApiAgentVersionsByIdDependenciesData, GetApiAgentVersionsByIdDependenciesErrors, GetApiAgentVersionsByIdDependenciesResponses, GetApiDevelopersByIdRevenueData, GetApiDevelopersByIdRevenueErrors, GetApiDevelopersByIdRevenueResponses, GetApiExecutionsByIdData, GetApiExecutionsByIdErrors, GetApiExecutionsByIdEventsData, GetApiExecutionsByIdEventsErrors, GetApiExecutionsByIdEventsResponse, GetApiExecutionsByIdEventsResponses, GetApiExecutionsByIdResponses, GetHealthData, GetHealthResponses, PatchApiAgentsByIdData, PatchApiAgentsByIdErrors, PatchApiAgentsByIdResponses, PatchApiAgentVersionsByIdDependenciesByDependencyIdData, PatchApiAgentVersionsByIdDependenciesByDependencyIdErrors, PatchApiAgentVersionsByIdDependenciesByDependencyIdResponses, PostApiAgentsByIdVersionsData, PostApiAgentsByIdVersionsErrors, PostApiAgentsByIdVersionsResponses, PostApiAgentsBySlugQuotesData, PostApiAgentsBySlugQuotesErrors, PostApiAgentsBySlugQuotesResponses, PostApiAgentsData, PostApiAgentsErrors, PostApiAgentsResponses, PostApiAgentVersionsByIdDependenciesData, PostApiAgentVersionsByIdDependenciesErrors, PostApiAgentVersionsByIdDependenciesResponses, PostApiAgentVersionsByIdDisableData, PostApiAgentVersionsByIdDisableErrors, PostApiAgentVersionsByIdDisableResponses, PostApiAgentVersionsByIdPublishData, PostApiAgentVersionsByIdPublishErrors, PostApiAgentVersionsByIdPublishResponses, PostApiExecutionsData, PostApiExecutionsErrors, PostApiExecutionsResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -19,119 +19,7 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
 };
 
 /**
- * Check API health
- */
-export const getHealth = <ThrowOnError extends boolean = false>(options?: Options<GetHealthData, ThrowOnError>): RequestResult<GetHealthResponses, unknown, ThrowOnError> => (options?.client ?? client).get<GetHealthResponses, unknown, ThrowOnError>({ url: '/health', ...options });
-
-/**
- * List active Agents
- */
-export const getApiAgents = <ThrowOnError extends boolean = false>(options?: Options<GetApiAgentsData, ThrowOnError>): RequestResult<GetApiAgentsResponses, GetApiAgentsErrors, ThrowOnError> => (options?.client ?? client).get<GetApiAgentsResponses, GetApiAgentsErrors, ThrowOnError>({ url: '/api/agents', ...options });
-
-/**
- * Register an Agent with its first DRAFT version
- */
-export const postApiAgents = <ThrowOnError extends boolean = false>(options: Options<PostApiAgentsData, ThrowOnError>): RequestResult<PostApiAgentsResponses, PostApiAgentsErrors, ThrowOnError> => (options.client ?? client).post<PostApiAgentsResponses, PostApiAgentsErrors, ThrowOnError>({
-    url: '/api/agents',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-    }
-});
-
-/**
- * Get an Agent by slug
- */
-export const getApiAgentsBySlug = <ThrowOnError extends boolean = false>(options: Options<GetApiAgentsBySlugData, ThrowOnError>): RequestResult<GetApiAgentsBySlugResponses, GetApiAgentsBySlugErrors, ThrowOnError> => (options.client ?? client).get<GetApiAgentsBySlugResponses, GetApiAgentsBySlugErrors, ThrowOnError>({ url: '/api/agents/{slug}', ...options });
-
-/**
- * Delete a versionless Agent
- */
-export const deleteApiAgentsById = <ThrowOnError extends boolean = false>(options: Options<DeleteApiAgentsByIdData, ThrowOnError>): RequestResult<DeleteApiAgentsByIdResponses, DeleteApiAgentsByIdErrors, ThrowOnError> => (options.client ?? client).delete<DeleteApiAgentsByIdResponses, DeleteApiAgentsByIdErrors, ThrowOnError>({ url: '/api/agents/{id}', ...options });
-
-/**
- * Update Agent metadata
- */
-export const patchApiAgentsById = <ThrowOnError extends boolean = false>(options: Options<PatchApiAgentsByIdData, ThrowOnError>): RequestResult<PatchApiAgentsByIdResponses, PatchApiAgentsByIdErrors, ThrowOnError> => (options.client ?? client).patch<PatchApiAgentsByIdResponses, PatchApiAgentsByIdErrors, ThrowOnError>({
-    url: '/api/agents/{id}',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-    }
-});
-
-/**
- * Create a DRAFT Agent version
- */
-export const postApiAgentsByIdVersions = <ThrowOnError extends boolean = false>(options: Options<PostApiAgentsByIdVersionsData, ThrowOnError>): RequestResult<PostApiAgentsByIdVersionsResponses, PostApiAgentsByIdVersionsErrors, ThrowOnError> => (options.client ?? client).post<PostApiAgentsByIdVersionsResponses, PostApiAgentsByIdVersionsErrors, ThrowOnError>({
-    url: '/api/agents/{id}/versions',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-    }
-});
-
-/**
- * Publish a DRAFT Agent version
- */
-export const postApiAgentVersionsByIdPublish = <ThrowOnError extends boolean = false>(options: Options<PostApiAgentVersionsByIdPublishData, ThrowOnError>): RequestResult<PostApiAgentVersionsByIdPublishResponses, PostApiAgentVersionsByIdPublishErrors, ThrowOnError> => (options.client ?? client).post<PostApiAgentVersionsByIdPublishResponses, PostApiAgentVersionsByIdPublishErrors, ThrowOnError>({ url: '/api/agent-versions/{id}/publish', ...options });
-
-/**
- * Disable an ACTIVE Agent version
- */
-export const postApiAgentVersionsByIdDisable = <ThrowOnError extends boolean = false>(options: Options<PostApiAgentVersionsByIdDisableData, ThrowOnError>): RequestResult<PostApiAgentVersionsByIdDisableResponses, PostApiAgentVersionsByIdDisableErrors, ThrowOnError> => (options.client ?? client).post<PostApiAgentVersionsByIdDisableResponses, PostApiAgentVersionsByIdDisableErrors, ThrowOnError>({ url: '/api/agent-versions/{id}/disable', ...options });
-
-/**
- * List dependencies for an Agent version
- */
-export const getApiAgentVersionsByIdDependencies = <ThrowOnError extends boolean = false>(options: Options<GetApiAgentVersionsByIdDependenciesData, ThrowOnError>): RequestResult<GetApiAgentVersionsByIdDependenciesResponses, GetApiAgentVersionsByIdDependenciesErrors, ThrowOnError> => (options.client ?? client).get<GetApiAgentVersionsByIdDependenciesResponses, GetApiAgentVersionsByIdDependenciesErrors, ThrowOnError>({ url: '/api/agent-versions/{id}/dependencies', ...options });
-
-/**
- * Add a dependency to a DRAFT Agent version
- */
-export const postApiAgentVersionsByIdDependencies = <ThrowOnError extends boolean = false>(options: Options<PostApiAgentVersionsByIdDependenciesData, ThrowOnError>): RequestResult<PostApiAgentVersionsByIdDependenciesResponses, PostApiAgentVersionsByIdDependenciesErrors, ThrowOnError> => (options.client ?? client).post<PostApiAgentVersionsByIdDependenciesResponses, PostApiAgentVersionsByIdDependenciesErrors, ThrowOnError>({
-    url: '/api/agent-versions/{id}/dependencies',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-    }
-});
-
-/**
- * Delete a dependency from a DRAFT Agent version
- */
-export const deleteApiAgentVersionsByIdDependenciesByDependencyId = <ThrowOnError extends boolean = false>(options: Options<DeleteApiAgentVersionsByIdDependenciesByDependencyIdData, ThrowOnError>): RequestResult<DeleteApiAgentVersionsByIdDependenciesByDependencyIdResponses, DeleteApiAgentVersionsByIdDependenciesByDependencyIdErrors, ThrowOnError> => (options.client ?? client).delete<DeleteApiAgentVersionsByIdDependenciesByDependencyIdResponses, DeleteApiAgentVersionsByIdDependenciesByDependencyIdErrors, ThrowOnError>({ url: '/api/agent-versions/{id}/dependencies/{dependencyId}', ...options });
-
-/**
- * Update a dependency on a DRAFT Agent version
- */
-export const patchApiAgentVersionsByIdDependenciesByDependencyId = <ThrowOnError extends boolean = false>(options: Options<PatchApiAgentVersionsByIdDependenciesByDependencyIdData, ThrowOnError>): RequestResult<PatchApiAgentVersionsByIdDependenciesByDependencyIdResponses, PatchApiAgentVersionsByIdDependenciesByDependencyIdErrors, ThrowOnError> => (options.client ?? client).patch<PatchApiAgentVersionsByIdDependenciesByDependencyIdResponses, PatchApiAgentVersionsByIdDependenciesByDependencyIdErrors, ThrowOnError>({
-    url: '/api/agent-versions/{id}/dependencies/{dependencyId}',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-    }
-});
-
-/**
- * Create a five-minute execution quote
- */
-export const postApiAgentsBySlugQuotes = <ThrowOnError extends boolean = false>(options: Options<PostApiAgentsBySlugQuotesData, ThrowOnError>): RequestResult<PostApiAgentsBySlugQuotesResponses, PostApiAgentsBySlugQuotesErrors, ThrowOnError> => (options.client ?? client).post<PostApiAgentsBySlugQuotesResponses, PostApiAgentsBySlugQuotesErrors, ThrowOnError>({
-    url: '/api/agents/{slug}/quotes',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-    }
-});
-
-/**
- * Approve a quote and start an execution
+ * Create execution
  */
 export const postApiExecutions = <ThrowOnError extends boolean = false>(options: Options<PostApiExecutionsData, ThrowOnError>): RequestResult<PostApiExecutionsResponses, PostApiExecutionsErrors, ThrowOnError> => (options.client ?? client).post<PostApiExecutionsResponses, PostApiExecutionsErrors, ThrowOnError>({
     url: '/api/executions',
@@ -143,7 +31,114 @@ export const postApiExecutions = <ThrowOnError extends boolean = false>(options:
 });
 
 /**
- * Get execution status
+ * List agents
+ */
+export const getApiAgents = <ThrowOnError extends boolean = false>(options?: Options<GetApiAgentsData, ThrowOnError>): RequestResult<GetApiAgentsResponses, GetApiAgentsErrors, ThrowOnError> => (options?.client ?? client).get<GetApiAgentsResponses, GetApiAgentsErrors, ThrowOnError>({ url: '/api/agents', ...options });
+
+/**
+ * Create agent
+ */
+export const postApiAgents = <ThrowOnError extends boolean = false>(options: Options<PostApiAgentsData, ThrowOnError>): RequestResult<PostApiAgentsResponses, PostApiAgentsErrors, ThrowOnError> => (options.client ?? client).post<PostApiAgentsResponses, PostApiAgentsErrors, ThrowOnError>({
+    url: '/api/agents',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Create quote
+ */
+export const postApiAgentsBySlugQuotes = <ThrowOnError extends boolean = false>(options: Options<PostApiAgentsBySlugQuotesData, ThrowOnError>): RequestResult<PostApiAgentsBySlugQuotesResponses, PostApiAgentsBySlugQuotesErrors, ThrowOnError> => (options.client ?? client).post<PostApiAgentsBySlugQuotesResponses, PostApiAgentsBySlugQuotesErrors, ThrowOnError>({
+    url: '/api/agents/{slug}/quotes',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Create agent version
+ */
+export const postApiAgentsByIdVersions = <ThrowOnError extends boolean = false>(options: Options<PostApiAgentsByIdVersionsData, ThrowOnError>): RequestResult<PostApiAgentsByIdVersionsResponses, PostApiAgentsByIdVersionsErrors, ThrowOnError> => (options.client ?? client).post<PostApiAgentsByIdVersionsResponses, PostApiAgentsByIdVersionsErrors, ThrowOnError>({
+    url: '/api/agents/{id}/versions',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Publish agent version
+ */
+export const postApiAgentVersionsByIdPublish = <ThrowOnError extends boolean = false>(options: Options<PostApiAgentVersionsByIdPublishData, ThrowOnError>): RequestResult<PostApiAgentVersionsByIdPublishResponses, PostApiAgentVersionsByIdPublishErrors, ThrowOnError> => (options.client ?? client).post<PostApiAgentVersionsByIdPublishResponses, PostApiAgentVersionsByIdPublishErrors, ThrowOnError>({ url: '/api/agent-versions/{id}/publish', ...options });
+
+/**
+ * Disable agent version
+ */
+export const postApiAgentVersionsByIdDisable = <ThrowOnError extends boolean = false>(options: Options<PostApiAgentVersionsByIdDisableData, ThrowOnError>): RequestResult<PostApiAgentVersionsByIdDisableResponses, PostApiAgentVersionsByIdDisableErrors, ThrowOnError> => (options.client ?? client).post<PostApiAgentVersionsByIdDisableResponses, PostApiAgentVersionsByIdDisableErrors, ThrowOnError>({ url: '/api/agent-versions/{id}/disable', ...options });
+
+/**
+ * List dependencies
+ */
+export const getApiAgentVersionsByIdDependencies = <ThrowOnError extends boolean = false>(options: Options<GetApiAgentVersionsByIdDependenciesData, ThrowOnError>): RequestResult<GetApiAgentVersionsByIdDependenciesResponses, GetApiAgentVersionsByIdDependenciesErrors, ThrowOnError> => (options.client ?? client).get<GetApiAgentVersionsByIdDependenciesResponses, GetApiAgentVersionsByIdDependenciesErrors, ThrowOnError>({ url: '/api/agent-versions/{id}/dependencies', ...options });
+
+/**
+ * Create dependency
+ */
+export const postApiAgentVersionsByIdDependencies = <ThrowOnError extends boolean = false>(options: Options<PostApiAgentVersionsByIdDependenciesData, ThrowOnError>): RequestResult<PostApiAgentVersionsByIdDependenciesResponses, PostApiAgentVersionsByIdDependenciesErrors, ThrowOnError> => (options.client ?? client).post<PostApiAgentVersionsByIdDependenciesResponses, PostApiAgentVersionsByIdDependenciesErrors, ThrowOnError>({
+    url: '/api/agent-versions/{id}/dependencies',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Delete agent
+ */
+export const deleteApiAgentsById = <ThrowOnError extends boolean = false>(options: Options<DeleteApiAgentsByIdData, ThrowOnError>): RequestResult<DeleteApiAgentsByIdResponses, DeleteApiAgentsByIdErrors, ThrowOnError> => (options.client ?? client).delete<DeleteApiAgentsByIdResponses, DeleteApiAgentsByIdErrors, ThrowOnError>({ url: '/api/agents/{id}', ...options });
+
+/**
+ * Update agent
+ */
+export const patchApiAgentsById = <ThrowOnError extends boolean = false>(options: Options<PatchApiAgentsByIdData, ThrowOnError>): RequestResult<PatchApiAgentsByIdResponses, PatchApiAgentsByIdErrors, ThrowOnError> => (options.client ?? client).patch<PatchApiAgentsByIdResponses, PatchApiAgentsByIdErrors, ThrowOnError>({
+    url: '/api/agents/{id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Delete dependency
+ */
+export const deleteApiAgentVersionsByIdDependenciesByDependencyId = <ThrowOnError extends boolean = false>(options: Options<DeleteApiAgentVersionsByIdDependenciesByDependencyIdData, ThrowOnError>): RequestResult<DeleteApiAgentVersionsByIdDependenciesByDependencyIdResponses, DeleteApiAgentVersionsByIdDependenciesByDependencyIdErrors, ThrowOnError> => (options.client ?? client).delete<DeleteApiAgentVersionsByIdDependenciesByDependencyIdResponses, DeleteApiAgentVersionsByIdDependenciesByDependencyIdErrors, ThrowOnError>({ url: '/api/agent-versions/{id}/dependencies/{dependencyId}', ...options });
+
+/**
+ * Update dependency
+ */
+export const patchApiAgentVersionsByIdDependenciesByDependencyId = <ThrowOnError extends boolean = false>(options: Options<PatchApiAgentVersionsByIdDependenciesByDependencyIdData, ThrowOnError>): RequestResult<PatchApiAgentVersionsByIdDependenciesByDependencyIdResponses, PatchApiAgentVersionsByIdDependenciesByDependencyIdErrors, ThrowOnError> => (options.client ?? client).patch<PatchApiAgentVersionsByIdDependenciesByDependencyIdResponses, PatchApiAgentVersionsByIdDependenciesByDependencyIdErrors, ThrowOnError>({
+    url: '/api/agent-versions/{id}/dependencies/{dependencyId}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Health check
+ */
+export const getHealth = <ThrowOnError extends boolean = false>(options?: Options<GetHealthData, ThrowOnError>): RequestResult<GetHealthResponses, unknown, ThrowOnError> => (options?.client ?? client).get<GetHealthResponses, unknown, ThrowOnError>({ url: '/health', ...options });
+
+/**
+ * Get execution
  */
 export const getApiExecutionsById = <ThrowOnError extends boolean = false>(options: Options<GetApiExecutionsByIdData, ThrowOnError>): RequestResult<GetApiExecutionsByIdResponses, GetApiExecutionsByIdErrors, ThrowOnError> => (options.client ?? client).get<GetApiExecutionsByIdResponses, GetApiExecutionsByIdErrors, ThrowOnError>({ url: '/api/executions/{id}', ...options });
 
@@ -158,6 +153,6 @@ export const getApiExecutionsByIdEvents = <ThrowOnError extends boolean = false>
 export const getApiDevelopersByIdRevenue = <ThrowOnError extends boolean = false>(options: Options<GetApiDevelopersByIdRevenueData, ThrowOnError>): RequestResult<GetApiDevelopersByIdRevenueResponses, GetApiDevelopersByIdRevenueErrors, ThrowOnError> => (options.client ?? client).get<GetApiDevelopersByIdRevenueResponses, GetApiDevelopersByIdRevenueErrors, ThrowOnError>({ url: '/api/developers/{id}/revenue', ...options });
 
 /**
- * Get the generated OpenAPI document
+ * Get agent by slug
  */
-export const getOpenapiJson = <ThrowOnError extends boolean = false>(options?: Options<GetOpenapiJsonData, ThrowOnError>): RequestResult<GetOpenapiJsonResponses, unknown, ThrowOnError> => (options?.client ?? client).get<GetOpenapiJsonResponses, unknown, ThrowOnError>({ url: '/openapi.json', ...options });
+export const getApiAgentsBySlug = <ThrowOnError extends boolean = false>(options: Options<GetApiAgentsBySlugData, ThrowOnError>): RequestResult<GetApiAgentsBySlugResponses, GetApiAgentsBySlugErrors, ThrowOnError> => (options.client ?? client).get<GetApiAgentsBySlugResponses, GetApiAgentsBySlugErrors, ThrowOnError>({ url: '/api/agents/{slug}', ...options });

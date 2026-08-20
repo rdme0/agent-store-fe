@@ -17,7 +17,7 @@ interface QuotePanelProps {
 type RequestLockToken = symbol
 
 function errorMessage(error: unknown): string {
-  if (error instanceof ApiRequestError) return paymentFailureMessage(error.code) ?? error.message
+  if (error instanceof ApiRequestError) return paymentFailureMessage(error.errorCode) ?? error.message
   return error instanceof Error ? error.message : 'Quote를 발급하지 못했습니다.'
 }
 
@@ -101,7 +101,7 @@ function QuotePanelForIdentity({ slug, version }: QuotePanelProps) {
     },
     onError: (error, variables) => {
       if (!mounted.current || variables.generation !== quoteGeneration.current) return
-      if (error instanceof ApiRequestError && error.code === 'QUOTE_EXPIRED') {
+      if (error instanceof ApiRequestError && (error.errorCode === 'QUOTE_409_001' || error.errorCode === 'QUOTE_EXPIRED')) {
         setQuoteExpired(true)
         setApproved(false)
       }

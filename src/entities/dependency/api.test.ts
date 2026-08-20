@@ -11,7 +11,7 @@ describe('Dependency API boundary', () => {
   })
 
   it('uses generated dependency operations and preserves atomic strings', async () => {
-    fetchMock.mockResolvedValue(new Response(JSON.stringify([{
+    fetchMock.mockResolvedValue(new Response(JSON.stringify({ isSuccess: true, message: '요청이 성공했습니다.', errorCode: null, result: [{
       id: 'dependency-id',
       sourceVersionId: 'version-id',
       targetAgentId: 'target-id',
@@ -22,7 +22,7 @@ describe('Dependency API boundary', () => {
       maxCalls: 2,
       createdAt: '2026-01-01T00:00:00.000Z',
       updatedAt: '2026-01-01T00:00:00.000Z',
-    }]), { headers: { 'Content-Type': 'application/json' }, status: 200 }))
+    }]}), { headers: { 'Content-Type': 'application/json' }, status: 200 }))
 
     const result = await listDependencies('version-id')
     const request = fetchMock.mock.calls[0]?.[0] as Request
@@ -32,10 +32,10 @@ describe('Dependency API boundary', () => {
 
   it('maps create, update, delete, and quote operations to contract paths', async () => {
     fetchMock
-      .mockResolvedValueOnce(new Response(JSON.stringify({ id: 'd', sourceVersionId: 'v', targetAgentId: 'a', targetAgentSlug: 'risk', versionConstraint: '^1', required: true, maxPriceAtomic: '1', maxCalls: 1, createdAt: '', updatedAt: '' }), { headers: { 'Content-Type': 'application/json' }, status: 201 }))
-      .mockResolvedValueOnce(new Response(JSON.stringify({ id: 'd', sourceVersionId: 'v', targetAgentId: 'a', targetAgentSlug: 'risk', versionConstraint: '^2', required: false, maxPriceAtomic: '2', maxCalls: 2, createdAt: '', updatedAt: '' }), { headers: { 'Content-Type': 'application/json' }, status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ isSuccess: true, message: '요청이 성공했습니다.', errorCode: null, result: { id: 'd', sourceVersionId: 'v', targetAgentId: 'a', targetAgentSlug: 'risk', versionConstraint: '^1', required: true, maxPriceAtomic: '1', maxCalls: 1, createdAt: '', updatedAt: '' } }), { headers: { 'Content-Type': 'application/json' }, status: 201 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ isSuccess: true, message: '요청이 성공했습니다.', errorCode: null, result: { id: 'd', sourceVersionId: 'v', targetAgentId: 'a', targetAgentSlug: 'risk', versionConstraint: '^2', required: false, maxPriceAtomic: '2', maxCalls: 2, createdAt: '', updatedAt: '' } }), { headers: { 'Content-Type': 'application/json' }, status: 200 }))
       .mockResolvedValueOnce(new Response(null, { status: 204 }))
-      .mockResolvedValueOnce(new Response(JSON.stringify({ id: 'q', rootVersionId: 'v', expiresAt: '2026-01-01T00:05:00.000Z', maxCostAtomic: '1000000', snapshot: { version: { id: 'v', agentId: 'a', agentSlug: 'investment', semver: '1.0.0', endpoint: 'http://localhost:8090', priceAtomic: '1000000', network: 'eip155:84532', asset: 'USDC', payTo: '0x1' }, dependencies: [] }, warnings: [] }), { headers: { 'Content-Type': 'application/json' }, status: 201 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ isSuccess: true, message: '요청이 성공했습니다.', errorCode: null, result: { id: 'q', rootVersionId: 'v', expiresAt: '2026-01-01T00:05:00.000Z', maxCostAtomic: '1000000', snapshot: { version: { id: 'v', agentId: 'a', agentSlug: 'investment', semver: '1.0.0', endpoint: 'http://localhost:8090', priceAtomic: '1000000', network: 'eip155:84532', asset: 'USDC', payTo: '0x1' }, dependencies: [] }, warnings: [] } }), { headers: { 'Content-Type': 'application/json' }, status: 201 }))
 
     await createDependency('v', { targetAgentId: 'a', versionConstraint: '^1', maxPriceAtomic: '1' })
     await updateDependency('v', 'd', { versionConstraint: '^2', maxPriceAtomic: '2', maxCalls: 2 })

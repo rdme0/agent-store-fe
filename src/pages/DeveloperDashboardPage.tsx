@@ -36,8 +36,8 @@ export function DeveloperDashboardPage() {
     </dl>
     <section aria-labelledby="revenue-entries-title" className="developer-dashboard__entries"><h2 id="revenue-entries-title">정산 내역</h2>
       {entries.length === 0 ? <p className="state-card">아직 정산된 수익이 없습니다.</p> : <ul aria-label="수익 정산 목록" className="developer-dashboard__list">{entries.map((entry) => {
-        const explorerUrl = baseSepoliaExplorerUrl(entry.transactionHash)
-        return <li key={entry.id}><div><strong>{entry.type === 'DIRECT' ? 'Direct 호출' : 'Dependency 호출'}</strong><span>{paymentModeLabel(entry.paymentMode)}</span></div><strong>{formatAtomicUsdc(entry.amountAtomic)}</strong><time dateTime={entry.createdAt}>{new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(entry.createdAt))}</time>{explorerUrl ? <a href={explorerUrl} rel="noreferrer" target="_blank">Base Sepolia에서 거래 보기</a> : null}{entry.paymentIdentifier ? <code>결제 식별자: {entry.paymentIdentifier}</code> : null}</li>
+        const explorerUrl = baseSepoliaExplorerUrl(entry.transactionHash ?? undefined)
+        return <li key={entry.id}><div><strong>{entry.type === 'DIRECT' ? 'Direct 호출' : 'Dependency 호출'}</strong><span>{paymentModeLabel(entry.paymentMode === 'x402' ? 'x402' : 'simulated')}</span></div><strong>{formatAtomicUsdc(entry.amountAtomic)}</strong><time dateTime={entry.createdAt}>{new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(entry.createdAt))}</time>{explorerUrl ? <a href={explorerUrl} rel="noreferrer" target="_blank">Base Sepolia에서 거래 보기</a> : null}{entry.paymentIdentifier ? <code>결제 식별자: {entry.paymentIdentifier}</code> : null}</li>
       })}</ul>}
       {revenue.hasNextPage ? <button className="button button--secondary" disabled={revenue.isFetchingNextPage} onClick={() => void revenue.fetchNextPage()} type="button">{revenue.isFetchingNextPage ? '불러오는 중…' : '더 불러오기'}</button> : null}
     </section>

@@ -6,12 +6,15 @@ import {
   postApiAgentVersionsByIdPublish,
   postApiAgents,
   postApiAgentsByIdVersions,
+  type AgentListResponse,
+  type AgentResponse,
+  type AgentVersionResponse,
   type GetApiAgentsData,
   type PatchApiAgentsByIdData,
   type PostApiAgentsByIdVersionsData,
   type PostApiAgentsData,
 } from '../../generated'
-import { normalizeApiRequestError } from '../../shared/api/client'
+import { normalizeApiRequestError, unwrapCommonResponse } from '../../shared/api/client'
 import { agentStoreClient } from '../../shared/api/generatedClient'
 import { toAgentModel, toVersionModel, type AgentModel, type AgentVersionModel } from './model'
 
@@ -34,7 +37,8 @@ export function listAgents(query?: GetApiAgentsData['query']): Promise<AgentMode
       query,
       throwOnError: true,
     })
-    return response.data.items.map(toAgentModel)
+    const data = unwrapCommonResponse<AgentListResponse>(response.data)
+    return data.items.map(toAgentModel)
   })
 }
 
@@ -45,7 +49,7 @@ export function getAgentBySlug(slug: string): Promise<AgentModel> {
       path: { slug },
       throwOnError: true,
     })
-    return toAgentModel(response.data)
+    return toAgentModel(unwrapCommonResponse<AgentResponse>(response.data))
   })
 }
 
@@ -56,7 +60,7 @@ export function registerAgent(input: RegisterAgentInput): Promise<AgentModel> {
       body: input,
       throwOnError: true,
     })
-    return toAgentModel(response.data)
+    return toAgentModel(unwrapCommonResponse<AgentResponse>(response.data))
   })
 }
 
@@ -68,7 +72,7 @@ export function updateAgent(id: string, input: UpdateAgentInput): Promise<AgentM
       path: { id },
       throwOnError: true,
     })
-    return toAgentModel(response.data)
+    return toAgentModel(unwrapCommonResponse<AgentResponse>(response.data))
   })
 }
 
@@ -83,7 +87,7 @@ export function createAgentVersion(
       path: { id: agentId },
       throwOnError: true,
     })
-    return toVersionModel(response.data)
+    return toVersionModel(unwrapCommonResponse<AgentVersionResponse>(response.data))
   })
 }
 
@@ -94,7 +98,7 @@ export function publishAgentVersion(versionId: string): Promise<AgentVersionMode
       path: { id: versionId },
       throwOnError: true,
     })
-    return toVersionModel(response.data)
+    return toVersionModel(unwrapCommonResponse<AgentVersionResponse>(response.data))
   })
 }
 
@@ -105,6 +109,6 @@ export function disableAgentVersion(versionId: string): Promise<AgentVersionMode
       path: { id: versionId },
       throwOnError: true,
     })
-    return toVersionModel(response.data)
+    return toVersionModel(unwrapCommonResponse<AgentVersionResponse>(response.data))
   })
 }
