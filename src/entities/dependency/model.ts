@@ -1,15 +1,25 @@
 import { formatAtomicUsdc } from '../agent/model'
-import type { DependencyResponse, QuoteResponse, QuoteSnapshot } from '../../generated'
+import type { DependencyResponse, DependencySnapshot, QuoteResponse, QuoteSnapshot as GeneratedQuoteSnapshot, ResolvedVersionSnapshot } from '../../generated'
+import type { AgentResponseFormat } from '../agent/model'
 
 export type DependencyDto = DependencyResponse
 export type QuoteDto = QuoteResponse
-export type { QuoteSnapshot }
+
+export type QuoteVersionSnapshot = Omit<ResolvedVersionSnapshot, 'responseFormat'> & {
+  responseFormat?: AgentResponseFormat
+}
+
+export type QuoteSnapshot = Omit<GeneratedQuoteSnapshot, 'version' | 'dependencies'> & {
+  version: QuoteVersionSnapshot
+  dependencies: Array<Omit<DependencySnapshot, 'resolved'> & { resolved?: QuoteSnapshot | null }>
+}
 
 export interface DependencyModel extends DependencyDto {
   maxPriceLabel: string
 }
 
-export interface QuoteModel extends QuoteDto {
+export interface QuoteModel extends Omit<QuoteDto, 'snapshot'> {
+  snapshot: QuoteSnapshot
   maxCostLabel: string
 }
 

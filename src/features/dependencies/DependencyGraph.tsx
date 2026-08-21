@@ -114,7 +114,7 @@ export function DependencyGraph({
   edges,
   nodes,
   optionalDependencyWarning,
-  title = 'Dependencies',
+  title = '의존성',
 }: DependencyGraphProps) {
   const normalizedCyclePath = normalizeCyclePath(cyclePath)
   const nodesById = new Map(nodes.map((node) => [node.id, node]))
@@ -131,18 +131,17 @@ export function DependencyGraph({
     <section className="dependency-graph" aria-labelledby={headingId}>
       <div className="dependency-graph__header">
         <div>
-          <p className="card-kicker">Dependency graph</p>
+          <p className="card-kicker">의존성 그래프</p>
           <h2 id={headingId}>{title}</h2>
         </div>
         <span className="dependency-graph__count">
-          {nodes.length} {nodes.length === 1 ? 'node' : 'nodes'} · {edges.length}{' '}
-          {edges.length === 1 ? 'edge' : 'edges'}
+          노드 {nodes.length}개 · 연결 {edges.length}개
         </span>
       </div>
 
       {cycleText ? (
         <p className="dependency-graph__notice dependency-graph__notice--cycle" role="alert">
-          <strong>Cycle detected.</strong> {cycleText}
+          <strong>순환 의존성이 감지되었습니다.</strong> {cycleText}
         </p>
       ) : null}
       {optionalDependencyWarning ? (
@@ -152,16 +151,16 @@ export function DependencyGraph({
       ) : null}
 
       {hasCostSummary ? (
-        <dl className="dependency-graph__summary" aria-label="Dependency cost summary">
+        <dl className="dependency-graph__summary" aria-label="의존성 비용 요약">
           {costSummary?.maxCost ? (
             <div>
-              <dt>Maximum cost</dt>
+              <dt>최대 비용</dt>
               <dd>{costValue(costSummary.maxCost, costSummary.currency)}</dd>
             </div>
           ) : null}
           {costSummary?.budget ? (
             <div>
-              <dt>Budget</dt>
+              <dt>예산</dt>
               <dd>{costValue(costSummary.budget, costSummary.currency)}</dd>
             </div>
           ) : null}
@@ -237,8 +236,8 @@ export function DependencyGraph({
       </div>
 
       <div className="dependency-graph__fallback">
-        <h3>Dependency list</h3>
-        <ul aria-label="Dependency nodes" className="dependency-graph__nodes">
+        <h3>의존성 목록</h3>
+        <ul aria-label="의존성 노드" className="dependency-graph__nodes">
           {nodes.map((node) => {
             const nodeEdges = indexedEdges.filter(({ edge }) => edge.source === node.id)
             const isCycle = cycleNodeIds.has(node.id)
@@ -254,13 +253,13 @@ export function DependencyGraph({
               >
                 <div className="dependency-graph__node-heading">
                   <strong>{node.label}</strong>
-                  {node.optional ? <span className="dependency-graph__tag">Optional</span> : null}
-                  {isCycle ? <span className="dependency-graph__tag dependency-graph__tag--cycle">Cycle</span> : null}
-                  {node.disabled ? <span className="dependency-graph__tag">Disabled</span> : null}
+                  {node.optional ? <span className="dependency-graph__tag">선택</span> : null}
+                  {isCycle ? <span className="dependency-graph__tag dependency-graph__tag--cycle">순환</span> : null}
+                  {node.disabled ? <span className="dependency-graph__tag">비활성화</span> : null}
                 </div>
                 {node.description ? <p>{node.description}</p> : null}
                 {nodeEdges.length > 0 ? (
-                  <ul aria-label={`${node.label} dependencies`} className="dependency-graph__edges">
+                  <ul aria-label={`${node.label} 의존성`} className="dependency-graph__edges">
                     {nodeEdges.map(({ edge, index }) => {
                       const target = nodesById.get(edge.target)
                       const isCycleEdge = edgeIsInCycle(edge, index, cycleEdgeIdSet)
@@ -272,13 +271,13 @@ export function DependencyGraph({
                         >
                           <span>{target?.label ?? edge.target}</span>
                           {edge.label ? <span> · {edge.label}</span> : null}
-                          {edge.optional ? <span className="dependency-graph__tag">Optional</span> : null}
+                          {edge.optional ? <span className="dependency-graph__tag">선택</span> : null}
                         </li>
                       )
                     })}
                   </ul>
                 ) : (
-                  <p className="dependency-graph__leaf">No downstream dependencies</p>
+                  <p className="dependency-graph__leaf">하위 의존성이 없습니다.</p>
                 )}
               </li>
             )
@@ -290,8 +289,8 @@ export function DependencyGraph({
 }
 
 export function DependencyGraphPanel({
-  disabledMessage = 'Dependency execution is currently disabled.',
-  errorMessage = 'Dependencies could not be loaded.',
+  disabledMessage = '의존성 실행이 현재 비활성화되어 있습니다.',
+  errorMessage = '의존성 정보를 불러오지 못했습니다.',
   onRetry,
   state,
   ...graphProps
@@ -300,19 +299,19 @@ export function DependencyGraphPanel({
   const effectiveState = state ?? (graphProps.nodes.length === 0 ? 'empty' : 'ready')
 
   if (effectiveState === 'loading') {
-    return <div className="state-card dependency-graph-state" role="status"><h2>Loading dependencies…</h2><p>Preparing the dependency graph.</p></div>
+    return <div className="state-card dependency-graph-state" role="status"><h2>의존성 정보를 불러오는 중…</h2><p>의존성 그래프를 준비하고 있습니다.</p></div>
   }
 
   if (effectiveState === 'empty') {
-    return <div className="state-card dependency-graph-state" role="status"><h2>No dependencies configured</h2><p>Add a dependency to see its execution path here.</p></div>
+    return <div className="state-card dependency-graph-state" role="status"><h2>등록된 의존성이 없습니다</h2><p>의존성을 추가하면 실행 경로를 여기에서 확인할 수 있습니다.</p></div>
   }
 
   if (effectiveState === 'error') {
     return (
       <div className="state-card state-card--error dependency-graph-state" role="alert">
-        <h2>Unable to load dependencies</h2>
+        <h2>의존성 정보를 불러오지 못했습니다</h2>
         <p>{errorMessage}</p>
-        {onRetry ? <button className="button button--secondary" onClick={onRetry} type="button">Retry</button> : null}
+        {onRetry ? <button className="button button--secondary" onClick={onRetry} type="button">다시 시도</button> : null}
       </div>
     )
   }
@@ -324,14 +323,14 @@ export function DependencyGraphPanel({
         className="state-card dependency-graph-state dependency-graph-state--disabled"
         role="status"
       >
-        <h2 id={disabledHeadingId}>Dependencies disabled</h2>
+        <h2 id={disabledHeadingId}>의존성 실행이 비활성화됨</h2>
         <p>{disabledMessage}</p>
       </section>
     )
   }
 
   if (graphProps.nodes.length === 0) {
-    return <div className="state-card dependency-graph-state" role="status"><h2>No dependencies configured</h2><p>Add a dependency to see its execution path here.</p></div>
+    return <div className="state-card dependency-graph-state" role="status"><h2>등록된 의존성이 없습니다</h2><p>의존성을 추가하면 실행 경로를 여기에서 확인할 수 있습니다.</p></div>
   }
 
   return <DependencyGraph {...graphProps} />

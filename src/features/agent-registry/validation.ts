@@ -7,6 +7,27 @@ export interface VersionFormValues {
   network: string
   asset: string
   payTo: string
+  responseFormat?: import('../../entities/agent/model').AgentResponseFormat
+}
+
+const USDC_DECIMALS = 6
+const USDC_AMOUNT_PATTERN = /^\d+(?:\.\d{1,6})?$/
+
+/** Converts a human-readable USDC amount to the API's six-decimal atomic string without floats. */
+export function usdcToAtomic(value: string): string | undefined {
+  const trimmed = value.trim()
+  if (!USDC_AMOUNT_PATTERN.test(trimmed)) return undefined
+
+  const [whole, fraction = ''] = trimmed.split('.')
+  const atomic = `${whole}${fraction.padEnd(USDC_DECIMALS, '0')}`.replace(/^0+(?=\d)/, '')
+  return atomic || '0'
+}
+
+export function validateUsdcAmount(value: string): string | undefined {
+  if (!value.trim()) return '호출 가격을 입력하세요.'
+  if (!USDC_AMOUNT_PATTERN.test(value.trim())) return 'USDC 가격은 소수점 여섯 자리까지 입력할 수 있습니다. 예: 0.01'
+  if (usdcToAtomic(value) === '0') return '호출 가격은 0보다 커야 합니다.'
+  return undefined
 }
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i

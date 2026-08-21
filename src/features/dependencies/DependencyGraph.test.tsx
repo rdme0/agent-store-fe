@@ -22,11 +22,11 @@ describe('DependencyGraph', () => {
     render(<DependencyGraph edges={edges} nodes={nodes} title="Run dependencies" />)
 
     expect(screen.getByRole('heading', { name: 'Run dependencies' })).toBeInTheDocument()
-    expect(screen.getByRole('list', { name: 'Dependency nodes' })).toBeInTheDocument()
-    expect(screen.getByRole('list', { name: 'Planner dependencies' })).toHaveTextContent('Retriever')
+    expect(screen.getByRole('list', { name: '의존성 노드' })).toBeInTheDocument()
+    expect(screen.getByRole('list', { name: 'Planner 의존성' })).toHaveTextContent('Retriever')
     expect(screen.getByTestId('dependency-graph-canvas')).toBeInTheDocument()
     expect(document.querySelector('[data-edge-id="planner-retriever"]')).toBeInTheDocument()
-    expect(screen.getByText('Optional')).toBeInTheDocument()
+    expect(screen.getByText('선택')).toBeInTheDocument()
   })
 
   it('highlights cycle nodes and cycle edges and announces the path', () => {
@@ -37,7 +37,7 @@ describe('DependencyGraph', () => {
     ]
     render(<DependencyGraph cyclePath={['planner', 'retriever', 'executor']} edges={cycleEdges} nodes={nodes} />)
 
-    expect(screen.getByRole('alert')).toHaveTextContent('Cycle detected. Planner → Retriever → Executor → Planner')
+    expect(screen.getByRole('alert')).toHaveTextContent('순환 의존성이 감지되었습니다. Planner → Retriever → Executor → Planner')
     expect(document.querySelector('[data-node-id="planner"]')).toHaveClass('dependency-graph__node--cycle')
     expect(document.querySelector('[data-edge-id="a-b"]')).toHaveClass('dependency-graph__edge--cycle')
     expect(document.querySelector('.dependency-graph__edge-item[data-edge-id="c-a"]')).toHaveClass('dependency-graph__edge-item--cycle')
@@ -78,7 +78,7 @@ describe('DependencyGraph', () => {
     )
 
     expect(screen.getByRole('note')).toHaveTextContent('Optional dependencies may be skipped.')
-    expect(screen.getByText('Maximum cost')).toBeInTheDocument()
+    expect(screen.getByText('최대 비용')).toBeInTheDocument()
     expect(screen.getByText('10 USDC')).toBeInTheDocument()
     expect(screen.getByText('25 USDC')).toBeInTheDocument()
   })
@@ -87,14 +87,14 @@ describe('DependencyGraph', () => {
 describe('DependencyGraphPanel states', () => {
   it('renders loading, empty, and disabled states', () => {
     const { rerender } = render(<DependencyGraphPanel edges={[]} nodes={[]} state="loading" />)
-    expect(screen.getByRole('status')).toHaveTextContent('Loading dependencies')
+    expect(screen.getByRole('status')).toHaveTextContent('의존성 정보를 불러오는 중')
 
     rerender(<DependencyGraphPanel edges={[]} nodes={[]} state="empty" />)
-    expect(screen.getByRole('status')).toHaveTextContent('No dependencies configured')
+    expect(screen.getByRole('status')).toHaveTextContent('등록된 의존성이 없습니다')
 
     rerender(<DependencyGraphPanel edges={edges} nodes={nodes} state="disabled" />)
-    expect(screen.getByRole('status', { name: 'Dependencies disabled' })).toBeInTheDocument()
-    expect(screen.getByRole('status', { name: 'Dependencies disabled' })).not.toHaveAttribute('aria-disabled')
+    expect(screen.getByRole('status', { name: '의존성 실행이 비활성화됨' })).toBeInTheDocument()
+    expect(screen.getByRole('status', { name: '의존성 실행이 비활성화됨' })).not.toHaveAttribute('aria-disabled')
   })
 
   it('renders an error state and invokes retry', () => {
@@ -102,12 +102,12 @@ describe('DependencyGraphPanel states', () => {
     render(<DependencyGraphPanel edges={[]} errorMessage="Graph request failed." nodes={[]} onRetry={onRetry} state="error" />)
 
     expect(screen.getByRole('alert')).toHaveTextContent('Graph request failed.')
-    fireEvent.click(screen.getByRole('button', { name: 'Retry' }))
+    fireEvent.click(screen.getByRole('button', { name: '다시 시도' }))
     expect(onRetry).toHaveBeenCalledTimes(1)
   })
 
   it('uses the empty state when ready data has no nodes', () => {
     render(<DependencyGraphPanel edges={[]} nodes={[]} />)
-    expect(screen.getByRole('status')).toHaveTextContent('No dependencies configured')
+    expect(screen.getByRole('status')).toHaveTextContent('등록된 의존성이 없습니다')
   })
 })

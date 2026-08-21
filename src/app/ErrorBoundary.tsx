@@ -31,16 +31,14 @@ export class ErrorBoundary extends Component<
     if (this.state.error) {
       return (
         <main className="error-page" role="alert">
-          <p className="eyebrow">AgentStore</p>
-          <h1>Something went wrong</h1>
-          <p>
-            The workspace could not be rendered. Reload the page to try again.
-          </p>
+          <p className="section-label">AgentStore</p>
+          <h1>화면을 표시할 수 없습니다</h1>
+          <p>일시적인 문제가 발생했습니다. 페이지를 새로고침한 뒤 다시 시도해 주세요.</p>
           <div className="error-page__actions">
             <button type="button" onClick={this.handleReload}>
-              Reload workspace
+              새로고침
             </button>
-            <a href="/">Return home</a>
+            <a href="/">Marketplace로 돌아가기</a>
           </div>
         </main>
       )

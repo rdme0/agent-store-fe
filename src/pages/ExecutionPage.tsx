@@ -1,10 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link, useLocation, useParams } from 'react-router-dom'
 import { useCallback, useMemo } from 'react'
-import type { QuoteSnapshot } from '../generated'
+import type { QuoteSnapshot } from '../entities/dependency/model'
 import { getExecution } from '../entities/execution/api'
 import { toExecutionModel } from '../entities/execution/model'
 import { ExecutionTimelinePanel } from '../features/execution/ExecutionTimeline'
+import { ExecutionResult } from '../features/execution/ExecutionResult'
 import { DependencyGraphPanel } from '../features/dependencies/DependencyGraph'
 import { executionSnapshotEvents, type StepLabelResolver } from '../features/execution/eventAdapter'
 import { useExecutionEvents } from '../features/execution/useExecutionEvents'
@@ -32,9 +33,8 @@ function collectVersionLabels(snapshot: QuoteSnapshot | undefined): Map<string, 
   return labels
 }
 
-function executionOutput(execution: Awaited<ReturnType<typeof getExecution>>): unknown {
-  const root = execution.steps.find((step) => !step.parentStepId)
-  return root?.output
+function executionRootStep(execution: Awaited<ReturnType<typeof getExecution>>) {
+  return execution.steps.find((step) => !step.parentStepId)
 }
 
 export function ExecutionPage() {
@@ -93,7 +93,7 @@ function ExecutionPageContent({ execution, labelForVersion, onUpdate }: Executio
     onEvent: onUpdate,
   })
   const model = toExecutionModel(execution)
-  const output = executionOutput(execution)
+  const rootStep = executionRootStep(execution)
   const stepById = new Map(timeline.steps.map((step) => [step.id, step]))
   const graphNodes = timeline.steps.map((step) => ({
     id: step.id,
@@ -109,29 +109,29 @@ function ExecutionPageContent({ execution, labelForVersion, onUpdate }: Executio
       <div className="page-heading page-heading--compact">
         <div>
           <Link className="back-link" to="/agents">← Marketplace</Link>
-          <p className="eyebrow">Execution</p>
+          <p className="section-label">실행</p>
           <h1 id="execution-title">실행 상세</h1>
           <p className="agent-card__slug">{execution.id}</p>
         </div>
       </div>
       {execution.question ? <p className="execution-page__question"><strong>질문</strong>{execution.question}</p> : null}
       <dl className="execution-page__costs" aria-label="실행 비용">
-        <div><dt>Maximum Cost</dt><dd>{model.maxBudgetLabel}</dd></div>
-        <div><dt>Actual Cost</dt><dd>{model.actualCostLabel}</dd></div>
-        <div><dt>Reserved</dt><dd>{model.reservedCostLabel}</dd></div>
+        <div><dt>승인 최대 비용</dt><dd>{model.maxBudgetLabel}</dd></div>
+        <div><dt>실제 사용 비용</dt><dd>{model.actualCostLabel}</dd></div>
+        <div><dt>예약된 비용</dt><dd>{model.reservedCostLabel}</dd></div>
       </dl>
       <DependencyGraphPanel
         costSummary={{ budget: model.maxBudgetLabel }}
         edges={graphEdges}
         nodes={graphNodes}
         state={graphNodes.length > 0 ? 'ready' : 'empty'}
-        title="실시간 dependency graph"
+        title="실시간 의존성 그래프"
       />
       <ExecutionTimelinePanel state="ready" timeline={timeline} title="Agent 실행 흐름" />
-      {output !== undefined ? (
+      {rootStep?.output !== undefined ? (
         <section className="execution-page__output" aria-labelledby="execution-output-title">
           <h2 id="execution-output-title">최종 결과</h2>
-          <pre>{typeof output === 'string' ? output : JSON.stringify(output, null, 2)}</pre>
+          <ExecutionResult output={rootStep.output} responseFormat={rootStep.responseFormat} />
         </section>
       ) : execution.status === 'COMPLETED' ? (
         <p className="state-card">실행은 완료됐지만 반환된 결과가 없습니다.</p>

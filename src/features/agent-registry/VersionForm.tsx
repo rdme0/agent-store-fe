@@ -1,4 +1,5 @@
 import { useState, type FormEvent, type HTMLAttributes } from 'react'
+import { RESPONSE_FORMAT_OPTIONS, type AgentResponseFormat } from '../../entities/agent/model'
 import type { CreateVersionInput } from '../../entities/agent/api'
 import { validateVersion, type FieldErrors, type VersionFormValues } from './validation'
 
@@ -15,6 +16,7 @@ const initialValues: VersionFormValues = {
   network: 'eip155:84532',
   asset: 'USDC',
   payTo: '',
+  responseFormat: 'JSON',
 }
 
 export function VersionForm({ isSubmitting, onSubmit, serverError }: VersionFormProps) {
@@ -36,7 +38,7 @@ export function VersionForm({ isSubmitting, onSubmit, serverError }: VersionForm
     const nextErrors = validateVersion(values)
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length > 0) return
-    onSubmit(values)
+    onSubmit({ ...values, responseFormat: values.responseFormat ?? 'JSON' })
   }
 
   return (
@@ -50,6 +52,13 @@ export function VersionForm({ isSubmitting, onSubmit, serverError }: VersionForm
           <Field error={errors.asset} id="version-asset" label="Asset" value={values.asset} onChange={(value) => update('asset', value)} />
         </div>
         <Field error={errors.endpoint} id="version-endpoint" label="Endpoint" value={values.endpoint} onChange={(value) => update('endpoint', value)} />
+        <div className="form-field">
+          <label htmlFor="version-responseFormat">응답 형식 <span aria-hidden="true">*</span></label>
+          <select id="version-responseFormat" onChange={(event) => update('responseFormat', event.target.value as AgentResponseFormat)} value={values.responseFormat ?? 'JSON'}>
+            {RESPONSE_FORMAT_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+          </select>
+          <p className="form-field__help">{RESPONSE_FORMAT_OPTIONS.find((option) => option.value === (values.responseFormat ?? 'JSON'))?.description}</p>
+        </div>
         <Field error={errors.payTo} id="version-payTo" label="PayTo wallet" value={values.payTo} onChange={(value) => update('payTo', value)} />
       </fieldset>
       {serverError ? <p className="form-error form-error--summary" role="alert">{serverError}</p> : null}

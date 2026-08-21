@@ -34,7 +34,7 @@ export function paymentFailureMessage(code: string | undefined): string | undefi
     case 'QUOTE_EXPIRED':
     case 'QUOTE_409_001': return 'Quote가 만료되었습니다. 새 Quote를 발급한 뒤 다시 실행하세요.'
     case 'DEPENDENCY_CYCLE_DETECTED':
-    case 'DEPENDENCY_409_003': return 'dependency cycle이 감지되어 실행할 수 없습니다.'
+    case 'DEPENDENCY_409_003': return '순환 의존성이 감지되어 실행할 수 없습니다.'
     default: return undefined
   }
 }

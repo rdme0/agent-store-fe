@@ -18,10 +18,10 @@ describe('ErrorBoundary', () => {
 
     expect(screen.getByRole('alert')).toBeInTheDocument()
     expect(
-      screen.getByRole('heading', { name: 'Something went wrong' }),
+      screen.getByRole('heading', { name: '화면을 표시할 수 없습니다' }),
     ).toBeInTheDocument()
     expect(
-      screen.getByRole('button', { name: 'Reload workspace' }),
+      screen.getByRole('button', { name: '새로고침' }),
     ).toBeInTheDocument()
 
     consoleError.mockRestore()

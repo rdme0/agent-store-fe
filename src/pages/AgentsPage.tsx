@@ -1,46 +1,114 @@
-import { useQuery } from '@tanstack/react-query'
+import { useInfiniteQuery } from '@tanstack/react-query'
+import { type ChangeEvent, type FormEvent, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { listAgents } from '../entities/agent/api'
+import { listMarketplaceAgents, type MarketplaceAgentSort } from '../entities/agent/api'
 import { getActiveVersion, type AgentModel } from '../entities/agent/model'
+
+const PAGE_SIZE = 12
 
 function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : 'Agent 목록을 불러오지 못했습니다.'
 }
 
 export function AgentsPage() {
-  const agentsQuery = useQuery({ queryKey: ['agents'], queryFn: () => listAgents() })
+  const [searchDraft, setSearchDraft] = useState('')
+  const [criteria, setCriteria] = useState<{ q?: string; sort: MarketplaceAgentSort }>({ sort: 'NEWEST' })
+  const loadMoreLockedRef = useRef(false)
+  const agentsQuery = useInfiniteQuery({
+    queryKey: ['marketplace-agents', criteria],
+    initialPageParam: undefined as string | undefined,
+    queryFn: ({ pageParam }) => listMarketplaceAgents({ ...criteria, cursor: pageParam, limit: PAGE_SIZE }),
+    getNextPageParam: (page) => page.nextCursor ?? undefined,
+    retry: false,
+  })
+  const agents = agentsQuery.data?.pages.flatMap((page) => page.items) ?? []
+
+  function submitSearch(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const q = searchDraft.trim()
+    setCriteria((current) => ({ ...current, q: q || undefined }))
+  }
+
+  function changeSort(event: ChangeEvent<HTMLSelectElement>) {
+    const sort = event.target.value as MarketplaceAgentSort
+    setCriteria((current) => ({ ...current, sort }))
+  }
+
+  async function loadMore() {
+    if (loadMoreLockedRef.current || !agentsQuery.hasNextPage) {
+      return
+    }
+    loadMoreLockedRef.current = true
+    try {
+      await agentsQuery.fetchNextPage()
+    } finally {
+      loadMoreLockedRef.current = false
+    }
+  }
 
   return (
-    <section className="registry-page" aria-labelledby="agents-title">
-      <div className="page-heading">
+    <section className="marketplace-page" aria-labelledby="agents-title">
+      <div className="marketplace-page__heading">
         <div>
-          <p className="eyebrow">Marketplace</p>
-          <h1 id="agents-title">사용할 Agent를 찾아보세요.</h1>
-          <p className="page-placeholder__description">
-            ACTIVE Version이 있는 Agent를 탐색하고, 세부 정보와 가격을 확인하세요.
+          <h1 id="agents-title">Agent Marketplace</h1>
+          <p className="marketplace-page__description">
+            목적과 비용을 비교하고, 필요한 Agent를 실행해 보세요.
           </p>
         </div>
-        <Link className="button button--primary" to="/agents/new">Agent 등록</Link>
+        <Link className="button button--primary" to="/agents/new">새 Agent 등록</Link>
       </div>
 
-      {agentsQuery.isPending ? <p className="state-card" role="status">Agent 목록을 불러오는 중…</p> : null}
+      <form className="marketplace-toolbar" onSubmit={submitSearch} role="search">
+        <label className="marketplace-toolbar__search" htmlFor="agent-search">
+          <span className="visually-hidden">Agent 검색</span>
+          <input
+            id="agent-search"
+            name="q"
+            onChange={(event) => setSearchDraft(event.target.value)}
+            placeholder="Agent 이름 또는 설명으로 검색"
+            type="search"
+            value={searchDraft}
+          />
+        </label>
+        <button className="button button--secondary" type="submit">검색</button>
+        <label className="marketplace-toolbar__sort" htmlFor="agent-sort">
+          <span>정렬</span>
+          <select id="agent-sort" onChange={changeSort} value={criteria.sort}>
+            <option value="NEWEST">최신 등록순</option>
+            <option value="NAME_ASC">이름순</option>
+          </select>
+        </label>
+      </form>
+
+      {agentsQuery.isPending ? <div className="marketplace-grid marketplace-grid--skeleton" role="status" aria-label="Agent 목록을 불러오는 중"><AgentSkeleton /><AgentSkeleton /><AgentSkeleton /><AgentSkeleton /></div> : null}
       {agentsQuery.isError ? (
-        <div className="state-card state-card--error" role="alert">
+        <div className="marketplace-error-banner" role="alert">
+          <strong>Marketplace를 불러오지 못했습니다.</strong>
           <p>{getErrorMessage(agentsQuery.error)}</p>
           <button className="button button--secondary" onClick={() => void agentsQuery.refetch()} type="button">다시 시도</button>
         </div>
       ) : null}
-      {agentsQuery.isSuccess && agentsQuery.data.length === 0 ? (
+      {agentsQuery.isSuccess && agents.length === 0 ? (
         <div className="state-card">
-          <h2>아직 공개된 Agent가 없습니다.</h2>
-          <p>첫 번째 Agent를 등록하고 DRAFT Version을 만들어보세요.</p>
+          <h2>등록된 Agent가 없습니다.</h2>
+          <p>첫 번째 Agent를 등록하고 공개할 Version을 준비해 보세요.</p>
           <Link className="button button--secondary" to="/agents/new">Agent 등록하기</Link>
         </div>
       ) : null}
-      {agentsQuery.isSuccess && agentsQuery.data.length > 0 ? (
-        <div className="agent-grid">
-          {agentsQuery.data.map((agent) => <AgentCard agent={agent} key={agent.id} />)}
-        </div>
+      {agentsQuery.isSuccess && agents.length > 0 ? (
+        <>
+          <div className="marketplace-grid">
+            {agents.map((agent) => <AgentCard agent={agent} key={agent.id} />)}
+          </div>
+          {agentsQuery.hasNextPage ? (
+            <div className="marketplace-page__more">
+              <button className="button button--secondary" disabled={agentsQuery.isFetchingNextPage} onClick={() => void loadMore()} type="button">
+                {agentsQuery.isFetchingNextPage ? '더 불러오는 중…' : '더 보기'}
+              </button>
+            </div>
+          ) : null}
+          {agentsQuery.isFetchingNextPage ? <p className="visually-hidden" role="status">다음 Agent 목록을 불러오는 중입니다.</p> : null}
+        </>
       ) : null}
     </section>
   )
@@ -49,19 +117,29 @@ export function AgentsPage() {
 function AgentCard({ agent }: { agent: AgentModel }) {
   const activeVersion = getActiveVersion(agent)
   return (
-    <article className="agent-card">
-      <div className="agent-card__topline">
-        <span className="status-badge status-badge--active">ACTIVE</span>
-        <span className="agent-card__version">{activeVersion?.semver ?? 'Version 없음'}</span>
+    <article className="marketplace-agent-card">
+      <Link aria-label={`${agent.name} 상세 보기`} className="marketplace-agent-card__surface-link" to={`/agents/${agent.slug}`} />
+      <div className="marketplace-agent-card__header">
+        <div>
+          <h2>{agent.name}</h2>
+          <p className="marketplace-agent-card__developer">{agent.developerName}</p>
+        </div>
+        <span className="status-badge status-badge--active">공개됨</span>
       </div>
-      <h2><Link to={`/agents/${agent.slug}`}>{agent.name}</Link></h2>
-      <p className="agent-card__slug">/{agent.slug}</p>
-      <p className="agent-card__description">{agent.description}</p>
-      <div className="agent-card__meta">
-        <span>{activeVersion?.priceLabel ?? '가격 미정'}</span>
-        <span>{agent.developerName}</span>
+      <p className="marketplace-agent-card__description">{agent.description}</p>
+      <dl className="marketplace-agent-card__meta">
+        <div><dt>Version</dt><dd>{activeVersion ? `v${activeVersion.semver}` : '공개 Version 없음'}</dd></div>
+        <div><dt>호출 비용</dt><dd>{activeVersion?.priceLabel ?? '가격 미정'}</dd></div>
+        <div><dt>Version 수</dt><dd>{agent.dependencyCount}개</dd></div>
+      </dl>
+      <div className="marketplace-agent-card__actions">
+        <Link className="text-link" to={`/agents/${agent.slug}`}>상세 보기</Link>
+        <Link className="button button--secondary" to={`/agents/${agent.slug}`}>실행 준비</Link>
       </div>
-      <Link className="text-link" to={`/agents/${agent.slug}`}>상세 보기 →</Link>
     </article>
   )
+}
+
+function AgentSkeleton() {
+  return <div aria-hidden="true" className="marketplace-agent-card marketplace-agent-card--skeleton"><span /><span /><span /><span /></div>
 }

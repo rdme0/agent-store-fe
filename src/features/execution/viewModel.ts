@@ -103,7 +103,7 @@ export function createExecutionTimelineViewModel<Payload = unknown>(
 
   return {
     panelState,
-    title: options.title ?? 'Execution timeline',
+    title: options.title ?? '실행 흐름',
     executionStatus: {
       value: timeline.status,
       label: executionStatusLabel(timeline.status),

@@ -22,7 +22,7 @@ const createDependencyMock = vi.mocked(createDependency)
 
 const agent: AgentModel = {
   id: 'source-agent', developerId: 'developer', developerName: 'Developer', slug: 'investment', name: 'Investment',
-  description: 'Fixture', createdAt: '', updatedAt: '', versions: [],
+  description: 'Fixture', dependencyCount: 0, createdAt: '', updatedAt: '', versions: [],
 }
 const target: AgentModel = {
   ...agent, id: 'target-agent', slug: 'risk', name: 'Risk',

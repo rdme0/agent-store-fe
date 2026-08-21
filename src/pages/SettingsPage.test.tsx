@@ -13,7 +13,7 @@ describe('SettingsPage', () => {
   it('explains how to enable the dashboard when the demo developer is not configured', () => {
     render(<MemoryRouter><SettingsPage /></MemoryRouter>)
 
-    expect(screen.getByText('VITE_DEMO_DEVELOPER_ID가 설정되지 않음')).toBeInTheDocument()
-    expect(screen.getByRole('status')).toHaveTextContent('VITE_DEMO_DEVELOPER_ID')
+    expect(screen.getByText('데모 개발자 설정이 필요함')).toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent('데모 개발자 설정이 완료된 뒤')
   })
 })

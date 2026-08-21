@@ -1,12 +1,21 @@
 import type { AgentListResponse, AgentResponse, AgentVersionResponse } from '../../generated'
 
-export type AgentDto = AgentResponse
-export type AgentListItemDto = AgentListResponse['items'][number]
-export type AgentDetailDto = AgentResponse
-export type AgentVersionDto = AgentVersionResponse
+export type AgentResponseFormat = AgentVersionResponse['responseFormat']
+export type AgentVersionDto = Omit<AgentVersionResponse, 'responseFormat'> & { responseFormat?: AgentResponseFormat }
+export type AgentDto = Omit<AgentResponse, 'versions'> & { versions: AgentVersionDto[] }
+export type AgentListItemDto = Omit<AgentListResponse['items'][number], 'versions'> & { versions: AgentVersionDto[] }
+export type AgentDetailDto = AgentDto
 export type AgentVersionStatus = AgentVersionDto['status']
 
-export interface AgentVersionModel extends AgentVersionDto {
+export const RESPONSE_FORMAT_OPTIONS: Array<{ value: AgentResponseFormat; label: string; description: string }> = [
+  { value: 'TEXT', label: '일반 문장', description: '문장과 줄바꿈으로 결과를 표시합니다.' },
+  { value: 'MARKDOWN', label: 'Markdown', description: '제목·목록·강조가 있는 문서로 표시합니다.' },
+  { value: 'STRUCTURED', label: '구조화 결과', description: '제목·요약·섹션 카드로 표시합니다.' },
+  { value: 'JSON', label: 'JSON', description: '자유로운 JSON을 안전한 보기로 표시합니다.' },
+]
+
+export interface AgentVersionModel extends Omit<AgentVersionDto, 'responseFormat'> {
+  responseFormat?: AgentResponseFormat
   priceLabel: string
 }
 
@@ -26,13 +35,14 @@ export function toAgentModel(dto: AgentDto | AgentListItemDto): AgentModel {
     ...dto,
     versions: dto.versions.map((version) => ({
       ...version,
+      responseFormat: version.responseFormat ?? 'JSON',
       priceLabel: formatAtomicUsdc(version.priceAtomic),
     })),
   }
 }
 
 export function toVersionModel(dto: AgentVersionDto): AgentVersionModel {
-  return { ...dto, priceLabel: formatAtomicUsdc(dto.priceAtomic) }
+  return { ...dto, responseFormat: dto.responseFormat ?? 'JSON', priceLabel: formatAtomicUsdc(dto.priceAtomic) }
 }
 
 export function getActiveVersion(agent: AgentModel): AgentVersionModel | undefined {

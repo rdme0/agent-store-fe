@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { validateAgent, validateVersion } from './validation'
+import { usdcToAtomic, validateAgent, validateUsdcAmount, validateVersion } from './validation'
 
 describe('agent registry form validation', () => {
   it('requires a valid atomic price and URL', () => {
@@ -32,5 +32,13 @@ describe('agent registry form validation', () => {
 
     expect(errors.slug).toBeDefined()
     expect(errors.developerId).toContain('UUID')
+  })
+
+  it('converts human-readable USDC to atomic units without floating point arithmetic', () => {
+    expect(usdcToAtomic('1.234567')).toBe('1234567')
+    expect(usdcToAtomic('0.01')).toBe('10000')
+    expect(usdcToAtomic('0002.5')).toBe('2500000')
+    expect(usdcToAtomic('0.0000001')).toBeUndefined()
+    expect(validateUsdcAmount('0')).toContain('0보다')
   })
 })

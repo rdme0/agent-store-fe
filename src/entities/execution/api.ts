@@ -5,11 +5,15 @@ import {
   type PostApiExecutionsData,
   type ExecutionResponse,
 } from '../../generated'
+import type { AgentResponseFormat } from '../agent/model'
 import { normalizeApiRequestError, unwrapCommonResponse } from '../../shared/api/client'
 import { agentStoreClient } from '../../shared/api/generatedClient'
 
 export type CreateExecutionInput = PostApiExecutionsData['body']
-export type ExecutionDto = ExecutionResponse
+export type ExecutionStepDto = Omit<ExecutionResponse['steps'][number], 'responseFormat'> & {
+  responseFormat?: AgentResponseFormat
+}
+export type ExecutionDto = Omit<ExecutionResponse, 'steps'> & { steps: ExecutionStepDto[] }
 
 export interface ExecutionStreamEvent {
   id?: string

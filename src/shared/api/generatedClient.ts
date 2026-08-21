@@ -7,6 +7,13 @@ client.setConfig({
   headers: { Accept: 'application/json' },
 })
 
+client.interceptors.request.use((request) => {
+  if (!request.url.includes('/api/executions/') || !request.url.endsWith('/events')) return request
+  const headers = new Headers(request.headers)
+  headers.set('Accept', 'text/event-stream')
+  return new Request(request, { headers })
+})
+
 client.interceptors.error.use((error, response) => normalizeApiRequestError(error, response))
 
 export { client as agentStoreClient }

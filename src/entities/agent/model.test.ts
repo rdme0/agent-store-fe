@@ -16,6 +16,7 @@ describe('Agent UI mapping', () => {
       slug: 'demo-agent',
       name: 'Demo Agent',
       description: 'Fixture',
+      dependencyCount: 3,
       versions: [{
         id: 'version-id',
         agentId: 'agent-id',
@@ -34,5 +35,6 @@ describe('Agent UI mapping', () => {
     })
 
     expect(result.versions[0].priceLabel).toBe('2.5 USDC')
+    expect(result.dependencyCount).toBe(3)
   })
 })

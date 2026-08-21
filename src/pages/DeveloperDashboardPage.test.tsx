@@ -21,17 +21,20 @@ function renderPage() {
   render(<QueryClientProvider client={client}><MemoryRouter><DeveloperDashboardPage /></MemoryRouter></QueryClientProvider>)
 }
 
-afterEach(() => cleanup())
+afterEach(() => {
+  cleanup()
+  vi.resetAllMocks()
+})
 
 describe('DeveloperDashboardPage', () => {
   it('renders totals, payment entries, and loads the next cursor page', async () => {
     getRevenueMock.mockResolvedValueOnce(firstPage).mockResolvedValueOnce({ ...firstPage, entries: [{ ...firstPage.entries[0], id: 'entry-2', type: 'DEPENDENCY' as const, paymentMode: 'simulated' as const, transactionHash: undefined }], nextCursor: undefined })
     renderPage()
     expect(await screen.findByText('3 USDC')).toBeInTheDocument()
-    expect(screen.getByText('Direct 호출')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Base Sepolia에서 거래 보기' })).toHaveAttribute('href', `https://sepolia.basescan.org/tx/${'0x'}${'a'.repeat(64)}`)
+    expect(screen.getAllByText('직접 호출')).not.toHaveLength(0)
+    expect(screen.getByRole('link', { name: 'Base Sepolia 보기' })).toHaveAttribute('href', `https://sepolia.basescan.org/tx/${'0x'}${'a'.repeat(64)}`)
     fireEvent.click(screen.getByRole('button', { name: '더 불러오기' }))
-    expect(await screen.findByText('Dependency 호출')).toBeInTheDocument()
+    expect(await screen.findByText('의존성 호출')).toBeInTheDocument()
     expect(getRevenueMock).toHaveBeenLastCalledWith('developer-id', { cursor: 'cursor-2', limit: 20 })
   })
 

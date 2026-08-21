@@ -77,4 +77,20 @@ describe('ExecutionPage', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('실행 조회 오류')
     expect(screen.getByRole('button', { name: '다시 시도' })).toBeEnabled()
   })
+
+  it('selects the renderer from the execution step response format', async () => {
+    getExecutionMock.mockResolvedValue({
+      id: 'execution-id', quoteId: 'quote-id', status: 'COMPLETED', maxBudgetAtomic: '1000000',
+      reservedCostAtomic: '0', actualCostAtomic: '1000000',
+      steps: [{
+        id: 'root-step', agentVersionId: 'root-version', status: 'COMPLETED', costAtomic: '1000000', responseFormat: 'STRUCTURED',
+        output: { title: '결과 요약', sections: [{ label: '상태', value: '완료' }] }, payments: [],
+        createdAt: '2026-08-17T00:00:00Z', updatedAt: '2026-08-17T00:00:02Z',
+      }], createdAt: '2026-08-17T00:00:00Z', updatedAt: '2026-08-17T00:00:02Z',
+    })
+    renderPage()
+
+    expect(await screen.findByRole('heading', { name: '결과 요약' })).toBeInTheDocument()
+    expect(screen.getAllByText('완료').length).toBeGreaterThan(0)
+  })
 })

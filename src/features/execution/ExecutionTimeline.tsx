@@ -73,7 +73,7 @@ function TimelineContent({ model }: { model: ExecutionTimelineViewModel }) {
     <section aria-labelledby={headingId} className="execution-timeline">
       <div className="execution-timeline__header">
         <div>
-          <p className="card-kicker">Execution</p>
+          <p className="card-kicker">실행 흐름</p>
           <h2 id={headingId}>{model.title}</h2>
         </div>
         <span className={statusClassName(model.executionStatus.value, model.executionStatus.tone)}>
@@ -92,7 +92,7 @@ function TimelineContent({ model }: { model: ExecutionTimelineViewModel }) {
       ) : null}
 
       {model.costLabel ? (
-        <dl aria-label="Execution cost" className="execution-timeline__summary">
+        <dl aria-label="실행 비용" className="execution-timeline__summary">
           <div><dt>비용</dt><dd>{model.costLabel}</dd></div>
         </dl>
       ) : null}

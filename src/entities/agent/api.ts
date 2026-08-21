@@ -26,9 +26,21 @@ async function withApiError<T>(operation: () => Promise<T>): Promise<T> {
   }
 }
 
-export type RegisterAgentInput = PostApiAgentsData['body']
-export type CreateVersionInput = PostApiAgentsByIdVersionsData['body']
+export type RegisterAgentInput = Omit<PostApiAgentsData['body'], 'responseFormat'> & {
+  responseFormat?: import('./model').AgentResponseFormat
+}
+export type CreateVersionInput = Omit<PostApiAgentsByIdVersionsData['body'], 'responseFormat'> & {
+  responseFormat?: import('./model').AgentResponseFormat
+}
 export type UpdateAgentInput = PatchApiAgentsByIdData['body']
+
+export type MarketplaceAgentQuery = NonNullable<GetApiAgentsData['query']>
+export type MarketplaceAgentSort = NonNullable<MarketplaceAgentQuery['sort']>
+
+export interface MarketplaceAgentPage {
+  items: AgentModel[]
+  nextCursor?: string | null
+}
 
 export function listAgents(query?: GetApiAgentsData['query']): Promise<AgentModel[]> {
   return withApiError(async () => {
@@ -39,6 +51,21 @@ export function listAgents(query?: GetApiAgentsData['query']): Promise<AgentMode
     })
     const data = unwrapCommonResponse<AgentListResponse>(response.data)
     return data.items.map(toAgentModel)
+  })
+}
+
+export function listMarketplaceAgents(query: MarketplaceAgentQuery = {}): Promise<MarketplaceAgentPage> {
+  return withApiError(async () => {
+    const response = await getApiAgents({
+      client: agentStoreClient,
+      query,
+      throwOnError: true,
+    })
+    const data = unwrapCommonResponse<AgentListResponse>(response.data)
+    return {
+      items: data.items.map(toAgentModel),
+      nextCursor: data.nextCursor,
+    }
   })
 }
 
@@ -57,7 +84,7 @@ export function registerAgent(input: RegisterAgentInput): Promise<AgentModel> {
   return withApiError(async () => {
     const response = await postApiAgents({
       client: agentStoreClient,
-      body: input,
+      body: { ...input, responseFormat: input.responseFormat ?? 'JSON' },
       throwOnError: true,
     })
     return toAgentModel(unwrapCommonResponse<AgentResponse>(response.data))
@@ -83,7 +110,7 @@ export function createAgentVersion(
   return withApiError(async () => {
     const response = await postApiAgentsByIdVersions({
       client: agentStoreClient,
-      body: input,
+      body: { ...input, responseFormat: input.responseFormat ?? 'JSON' },
       path: { id: agentId },
       throwOnError: true,
     })
