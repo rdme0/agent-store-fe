@@ -379,7 +379,7 @@ export type GetApiAgentsData = {
         /**
          * 정렬 기준
          */
-        sort?: 'NEWEST' | 'NAME_ASC';
+        sort?: 'newest' | 'name_asc';
     };
     url: '/api/agents';
 };

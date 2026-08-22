@@ -12,7 +12,7 @@ function getErrorMessage(error: unknown): string {
 
 export function AgentsPage() {
   const [searchDraft, setSearchDraft] = useState('')
-  const [criteria, setCriteria] = useState<{ q?: string; sort: MarketplaceAgentSort }>({ sort: 'NEWEST' })
+  const [criteria, setCriteria] = useState<{ q?: string; sort: MarketplaceAgentSort }>({ sort: 'newest' })
   const loadMoreLockedRef = useRef(false)
   const agentsQuery = useInfiniteQuery({
     queryKey: ['marketplace-agents', criteria],
@@ -74,8 +74,8 @@ export function AgentsPage() {
         <label className="marketplace-toolbar__sort" htmlFor="agent-sort">
           <span>정렬</span>
           <select id="agent-sort" onChange={changeSort} value={criteria.sort}>
-            <option value="NEWEST">최신 등록순</option>
-            <option value="NAME_ASC">이름순</option>
+            <option value="newest">최신 등록순</option>
+            <option value="name_asc">이름순</option>
           </select>
         </label>
       </form>

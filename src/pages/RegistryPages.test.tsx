@@ -108,10 +108,10 @@ describe('Marketplace public states', () => {
 
     await screen.findByRole('heading', { name: 'Demo Agent' })
     fireEvent.change(screen.getByLabelText('Agent 검색'), { target: { value: 'risk' } })
-    fireEvent.change(screen.getByLabelText('정렬'), { target: { value: 'NAME_ASC' } })
+    fireEvent.change(screen.getByLabelText('정렬'), { target: { value: 'name_asc' } })
     fireEvent.submit(screen.getByRole('search'))
 
-    await waitFor(() => expect(listMarketplaceAgentsMock).toHaveBeenLastCalledWith({ cursor: undefined, limit: 12, q: 'risk', sort: 'NAME_ASC' }))
+    await waitFor(() => expect(listMarketplaceAgentsMock).toHaveBeenLastCalledWith({ cursor: undefined, limit: 12, q: 'risk', sort: 'name_asc' }))
     expect(await screen.findByRole('heading', { name: 'Demo Agent' })).toBeInTheDocument()
   })
 

@@ -69,10 +69,10 @@ describe('Agent API boundary', () => {
       }], nextCursor: null,
     }}), { headers: { 'Content-Type': 'application/json' } }))
 
-    const result = await listMarketplaceAgents({ cursor: 'cursor-1', limit: 12, q: 'risk', sort: 'NAME_ASC' })
+    const result = await listMarketplaceAgents({ cursor: 'cursor-1', limit: 12, q: 'risk', sort: 'name_asc' })
 
     const request = fetchMock.mock.calls[0]?.[0] as Request
-    expect(request.url).toBe('http://localhost:8080/api/agents?cursor=cursor-1&limit=12&q=risk&sort=NAME_ASC')
+    expect(request.url).toBe('http://localhost:8080/api/agents?cursor=cursor-1&limit=12&q=risk&sort=name_asc')
     expect(result.items[0]?.dependencyCount).toBe(3)
   })
 })
