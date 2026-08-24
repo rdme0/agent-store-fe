@@ -2,8 +2,8 @@ import type { AgentListResponse, AgentResponse, AgentVersionResponse } from '../
 
 export type AgentResponseFormat = AgentVersionResponse['responseFormat']
 export type AgentVersionDto = Omit<AgentVersionResponse, 'responseFormat'> & { responseFormat?: AgentResponseFormat }
-export type AgentDto = Omit<AgentResponse, 'versions'> & { versions: AgentVersionDto[] }
-export type AgentListItemDto = Omit<AgentListResponse['items'][number], 'versions'> & { versions: AgentVersionDto[] }
+export type AgentDto = Omit<AgentResponse, 'versions' | 'usageType'> & { usageType?: AgentResponse['usageType']; versions: AgentVersionDto[] }
+export type AgentListItemDto = Omit<AgentListResponse['items'][number], 'versions' | 'usageType'> & { usageType?: AgentResponse['usageType']; versions: AgentVersionDto[] }
 export type AgentDetailDto = AgentDto
 export type AgentVersionStatus = AgentVersionDto['status']
 

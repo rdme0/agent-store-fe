@@ -4,6 +4,103 @@ export type ClientOptions = {
     baseUrl: 'http://localhost:8080' | (string & {});
 };
 
+export type AgentManifestRequest = {
+    content: string;
+};
+
+export type CommonResponse = {
+    isSuccess: boolean;
+    message: string;
+    errorCode?: string | null;
+    result?: null;
+};
+
+export type AgentManifestResponse = {
+    versionId: string;
+    content: string;
+    sha256: string;
+};
+
+export type CommonResponseAgentManifestResponse = {
+    isSuccess: boolean;
+    message: string;
+    errorCode?: string | null;
+    result?: AgentManifestResponse | null;
+};
+
+export type CreateExternalInvocationIntentRequest = {
+    agentSlug?: string | null;
+    functionCode?: string | null;
+    contractVersion?: string | null;
+    selectionStrategy?: 'lowest_price' | 'latest_version' | 'highest_reliability' | 'fastest' | 'balanced';
+    versionConstraint?: string | null;
+    maxTotalAtomic: string;
+    question?: string | null;
+    input?: null;
+};
+
+export type CommonResponseExternalInvocationIntentResponse = {
+    isSuccess: boolean;
+    message: string;
+    errorCode?: string | null;
+    result?: ExternalInvocationIntentResponse | null;
+};
+
+export type ExternalInvocationIntentResponse = {
+    id: string;
+    executeUrl: string;
+    providerCostAtomic: string;
+    platformFeeAtomic: string;
+    totalCostAtomic: string;
+    expiresAt: string;
+};
+
+export type CommonResponseExternalInvocationExecutionResponse = {
+    isSuccess: boolean;
+    message: string;
+    errorCode?: string | null;
+    result?: ExternalInvocationExecutionResponse | null;
+};
+
+export type ExternalInvocationExecutionResponse = {
+    id: string;
+    status: 'payment_pending' | 'settling' | 'settled' | 'execution_created' | 'reconciliation_required' | 'failed';
+    executionId: string;
+    totalCostAtomic: string;
+};
+
+export type CreateFunctionContractRequest = {
+    code: string;
+    contractVersion: string;
+    name: string;
+    description: string;
+    responseFormat: 'TEXT' | 'MARKDOWN' | 'STRUCTURED' | 'JSON';
+    inputSchema: JsonNode;
+    outputSchema: JsonNode;
+};
+
+export type JsonNode = unknown;
+
+export type CommonResponseFunctionContractResponse = {
+    isSuccess: boolean;
+    message: string;
+    errorCode?: string | null;
+    result?: FunctionContractResponse | null;
+};
+
+export type FunctionContractResponse = {
+    id: string;
+    code: string;
+    contractVersion: string;
+    name: string;
+    description: string;
+    responseFormat: 'TEXT' | 'MARKDOWN' | 'STRUCTURED' | 'JSON';
+    inputSchema: JsonNode;
+    outputSchema: JsonNode;
+    createdAt: string;
+    updatedAt: string;
+};
+
 export type CreateExecutionRequest = {
     quoteId: string;
     maxBudgetAtomic: string;
@@ -11,27 +108,35 @@ export type CreateExecutionRequest = {
     input?: null;
 };
 
-export type CommonResponse = {
-    isSuccess?: boolean;
-    message?: string;
-    errorCode?: string;
-    result?: unknown;
+export type CommonResponseExecutionResponse = {
+    isSuccess: boolean;
+    message: string;
+    errorCode?: string | null;
+    result?: ExecutionResponse | null;
 };
 
-export type CommonResponseExecutionResponse = {
-    isSuccess?: boolean;
-    message?: string;
-    errorCode?: string;
-    result?: ExecutionResponse;
+export type DependencySnapshotDto = {
+    dependencyId: string;
+    targetAgentId?: string | null;
+    targetAgentSlug?: string | null;
+    selection?: ProviderSelectionSnapshotDto | null;
+    versionConstraint: string;
+    required: boolean;
+    maxPriceAtomic: string;
+    maxCalls: number;
+    resolved?: QuoteSnapshotDto | null;
 };
 
 export type ExecutionResponse = {
     id: string;
     quoteId: string;
+    quoteSnapshot: QuoteSnapshotDto;
     status: 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED';
     maxBudgetAtomic: string;
+    maxBudgetKrwEstimate?: KrwEstimateResponse | null;
     reservedCostAtomic: string;
     actualCostAtomic: string;
+    actualCostKrwEstimate?: KrwEstimateResponse | null;
     question?: string | null;
     input?: JsonNode | null;
     failureCode?: string | null;
@@ -44,6 +149,8 @@ export type ExecutionStepResponse = {
     id: string;
     parentStepId?: string | null;
     agentVersionId: string;
+    agentSlug?: string | null;
+    agentName?: string | null;
     status: 'CREATED' | 'PAYMENT_REQUIRED' | 'PAYMENT_SETTLED' | 'RUNNING' | 'COMPLETED' | 'FAILED';
     costAtomic: string;
     responseFormat: 'TEXT' | 'MARKDOWN' | 'STRUCTURED' | 'JSON';
@@ -54,7 +161,27 @@ export type ExecutionStepResponse = {
     updatedAt: string;
 };
 
-export type JsonNode = unknown;
+export type FunctionContractSnapshotDto = {
+    id: string;
+    key: string;
+    contractVersion: string;
+    inputSchema: JsonNode;
+    outputSchema: JsonNode;
+};
+
+export type KrwEstimateDto = {
+    amountWon: string;
+    rateWonPerUsdc: string;
+    rateAsOf: string;
+    stale: boolean;
+};
+
+export type KrwEstimateResponse = {
+    amountWon: string;
+    rateWonPerUsdc: string;
+    rateAsOf: string;
+    stale: boolean;
+};
 
 export type PaymentAttemptResponse = {
     id: string;
@@ -64,6 +191,54 @@ export type PaymentAttemptResponse = {
     transactionHash?: string | null;
     paymentIdentifier?: string | null;
     failureCode?: string | null;
+};
+
+export type ProviderCandidateSnapshotDto = {
+    agentId: string;
+    agentSlug: string;
+    versionId: string;
+    semver: string;
+    priceAtomic: string;
+    status: string;
+    observationCount?: number | null;
+    reliabilityPercent?: number | null;
+    p95LatencyMillis?: number | null;
+    contractCompliancePercent?: number | null;
+};
+
+export type ProviderSelectionSnapshotDto = {
+    strategy?: 'lowest_price' | 'latest_version' | 'highest_reliability' | 'fastest' | 'balanced';
+    providerScope?: 'pinned' | 'allowlist' | 'marketplace';
+    functionContractId: string;
+    functionCode: string;
+    functionContractVersion: string;
+    candidates: Array<ProviderCandidateSnapshotDto>;
+    selectedVersionId?: string | null;
+    selectedReason?: string | null;
+    explorationSelected: boolean;
+    selectionSeedDigest?: string | null;
+};
+
+export type QuoteSnapshotDto = {
+    version: ResolvedVersionSnapshotDto;
+    dependencies: Array<DependencySnapshotDto>;
+    krwEstimate?: KrwEstimateDto | null;
+};
+
+export type ResolvedVersionSnapshotDto = {
+    id: string;
+    agentId: string;
+    agentSlug: string;
+    agentName?: string | null;
+    agentDescription?: string | null;
+    semver: string;
+    endpoint: string;
+    priceAtomic: string;
+    network: string;
+    asset: string;
+    payTo: string;
+    responseFormat: 'TEXT' | 'MARKDOWN' | 'STRUCTURED' | 'JSON';
+    functionContract?: FunctionContractSnapshotDto | null;
 };
 
 export type CreateAgentRequest = {
@@ -78,6 +253,8 @@ export type CreateAgentRequest = {
     asset: string;
     payTo: string;
     responseFormat: 'TEXT' | 'MARKDOWN' | 'STRUCTURED' | 'JSON';
+    functionContractId?: string | null;
+    usageType: 'user_facing' | 'internal_component';
 };
 
 export type AgentResponse = {
@@ -87,6 +264,7 @@ export type AgentResponse = {
     slug: string;
     name: string;
     description: string;
+    usageType: 'user_facing' | 'internal_component';
     dependencyCount: number;
     versions: Array<AgentVersionResponse>;
     createdAt: string;
@@ -96,6 +274,7 @@ export type AgentResponse = {
 export type AgentVersionResponse = {
     id: string;
     agentId: string;
+    functionContractId?: string | null;
     semver: string;
     status: 'DRAFT' | 'ACTIVE' | 'DISABLED';
     endpoint: string;
@@ -109,10 +288,10 @@ export type AgentVersionResponse = {
 };
 
 export type CommonResponseAgentResponse = {
-    isSuccess?: boolean;
-    message?: string;
-    errorCode?: string;
-    result?: AgentResponse;
+    isSuccess: boolean;
+    message: string;
+    errorCode?: string | null;
+    result?: AgentResponse | null;
 };
 
 export type QuoteRequest = {
@@ -120,21 +299,10 @@ export type QuoteRequest = {
 };
 
 export type CommonResponseQuoteResponse = {
-    isSuccess?: boolean;
-    message?: string;
-    errorCode?: string;
-    result?: QuoteResponse;
-};
-
-export type DependencySnapshot = {
-    dependencyId: string;
-    targetAgentId: string;
-    targetAgentSlug: string;
-    versionConstraint: string;
-    required: boolean;
-    maxPriceAtomic: string;
-    maxCalls: number;
-    resolved?: QuoteSnapshot | null;
+    isSuccess: boolean;
+    message: string;
+    errorCode?: string | null;
+    result?: QuoteResponse | null;
 };
 
 export type QuoteResponse = {
@@ -142,34 +310,19 @@ export type QuoteResponse = {
     rootVersionId: string;
     expiresAt: string;
     maxCostAtomic: string;
-    snapshot: QuoteSnapshot;
+    maxCostKrwEstimate?: KrwEstimateResponse | null;
+    snapshot: QuoteSnapshotDto;
     warnings: Array<QuoteWarning>;
-};
-
-export type QuoteSnapshot = {
-    version: ResolvedVersionSnapshot;
-    dependencies: Array<DependencySnapshot>;
 };
 
 export type QuoteWarning = {
     code: string;
     dependencyId: string;
-    targetAgentId: string;
-    targetAgentSlug: string;
+    targetAgentId?: string | null;
+    targetAgentSlug?: string | null;
+    functionContractId?: string | null;
+    functionCode?: string | null;
     versionConstraint: string;
-};
-
-export type ResolvedVersionSnapshot = {
-    id: string;
-    agentId: string;
-    agentSlug: string;
-    semver: string;
-    endpoint: string;
-    priceAtomic: string;
-    network: string;
-    asset: string;
-    payTo: string;
-    responseFormat: 'TEXT' | 'MARKDOWN' | 'STRUCTURED' | 'JSON';
 };
 
 export type CreateAgentVersionRequest = {
@@ -180,17 +333,28 @@ export type CreateAgentVersionRequest = {
     asset: string;
     payTo: string;
     responseFormat: 'TEXT' | 'MARKDOWN' | 'STRUCTURED' | 'JSON';
+    functionContractId?: string | null;
 };
 
 export type CommonResponseAgentVersionResponse = {
-    isSuccess?: boolean;
-    message?: string;
-    errorCode?: string;
-    result?: AgentVersionResponse;
+    isSuccess: boolean;
+    message: string;
+    errorCode?: string | null;
+    result?: AgentVersionResponse | null;
 };
 
 export type CreateDependencyRequest = {
-    targetAgentId: string;
+    targetAgentId?: string | null;
+    functionContractId?: string | null;
+    providerScope?: 'pinned' | 'allowlist' | 'marketplace';
+    selectionStrategy?: 'lowest_price' | 'latest_version' | 'highest_reliability' | 'fastest' | 'balanced';
+    allowedProviderAgentIds?: Array<string> | null;
+    minReliabilityPercent?: number | null;
+    maxP95LatencyMillis?: number | null;
+    explorationPercent?: number | null;
+    reliabilityWeight?: number | null;
+    priceWeight?: number | null;
+    speedWeight?: number | null;
     versionConstraint: string;
     required?: boolean;
     maxPriceAtomic: string;
@@ -198,17 +362,28 @@ export type CreateDependencyRequest = {
 };
 
 export type CommonResponseDependencyResponse = {
-    isSuccess?: boolean;
-    message?: string;
-    errorCode?: string;
-    result?: DependencyResponse;
+    isSuccess: boolean;
+    message: string;
+    errorCode?: string | null;
+    result?: DependencyResponse | null;
 };
 
 export type DependencyResponse = {
     id: string;
     sourceVersionId: string;
-    targetAgentId: string;
-    targetAgentSlug: string;
+    targetAgentId?: string | null;
+    targetAgentSlug?: string | null;
+    functionContractId?: string | null;
+    functionCode?: string | null;
+    functionContractVersion?: string | null;
+    providerScope?: 'pinned' | 'allowlist' | 'marketplace';
+    selectionStrategy?: 'lowest_price' | 'latest_version' | 'highest_reliability' | 'fastest' | 'balanced';
+    minReliabilityPercent?: number | null;
+    maxP95LatencyMillis?: number | null;
+    explorationPercent?: number | null;
+    reliabilityWeight?: number | null;
+    priceWeight?: number | null;
+    speedWeight?: number | null;
     versionConstraint: string;
     required: boolean;
     maxPriceAtomic: string;
@@ -217,9 +392,38 @@ export type DependencyResponse = {
     updatedAt: string;
 };
 
+export type AgentManifestImportResponse = {
+    agentId: string;
+    versionId: string;
+    agentCode: string;
+    sha256: string;
+};
+
+export type CommonResponseAgentManifestImportResponse = {
+    isSuccess: boolean;
+    message: string;
+    errorCode?: string | null;
+    result?: AgentManifestImportResponse | null;
+};
+
+export type AgentManifestValidationResponse = {
+    canonicalContent: string;
+    sha256: string;
+    agentCode: string;
+    functionCode: string;
+};
+
+export type CommonResponseAgentManifestValidationResponse = {
+    isSuccess: boolean;
+    message: string;
+    errorCode?: string | null;
+    result?: AgentManifestValidationResponse | null;
+};
+
 export type UpdateAgentRequest = {
     name?: string | null;
     description?: string | null;
+    usageType?: 'user_facing' | 'internal_component';
     isEmpty: boolean;
 };
 
@@ -228,13 +432,41 @@ export type UpdateDependencyRequest = {
     required?: boolean | null;
     maxPriceAtomic?: string | null;
     maxCalls?: number | null;
+    providerScope?: 'pinned' | 'allowlist' | 'marketplace';
+    selectionStrategy?: 'lowest_price' | 'latest_version' | 'highest_reliability' | 'fastest' | 'balanced';
+    allowedProviderAgentIds?: Array<string> | null;
+    minReliabilityPercent?: number | null;
+    maxP95LatencyMillis?: number | null;
+    explorationPercent?: number | null;
+    reliabilityWeight?: number | null;
+    priceWeight?: number | null;
+    speedWeight?: number | null;
+};
+
+export type CommonResponseExternalInvocationStatusResponse = {
+    isSuccess: boolean;
+    message: string;
+    errorCode?: string | null;
+    result?: ExternalInvocationStatusResponse | null;
+};
+
+export type ExternalInvocationStatusResponse = {
+    id: string;
+    status: 'payment_pending' | 'settling' | 'settled' | 'execution_created' | 'reconciliation_required' | 'failed';
+    executionId?: string | null;
+    executionStatus?: string | null;
+    output?: JsonNode | null;
+    providerCostAtomic: string;
+    platformFeeAtomic: string;
+    totalCostAtomic: string;
+    expiresAt: string;
 };
 
 export type CommonResponseHealthResponse = {
-    isSuccess?: boolean;
-    message?: string;
-    errorCode?: string;
-    result?: HealthResponse;
+    isSuccess: boolean;
+    message: string;
+    errorCode?: string | null;
+    result?: HealthResponse | null;
 };
 
 export type HealthResponse = {
@@ -244,11 +476,44 @@ export type HealthResponse = {
     timestamp: string;
 };
 
+export type CommonResponseListFunctionContractResponse = {
+    isSuccess: boolean;
+    message: string;
+    errorCode?: string | null;
+    result?: Array<FunctionContractResponse> | null;
+};
+
+export type CommonResponseListFunctionProviderMetricResponse = {
+    isSuccess: boolean;
+    message: string;
+    errorCode?: string | null;
+    result?: Array<FunctionProviderMetricResponse> | null;
+};
+
+export type FunctionProviderMetricResponse = {
+    agentId: string;
+    agentCode: string;
+    agentName: string;
+    versionId: string;
+    semver: string;
+    priceAtomic: string;
+    observationCount: number;
+    reliabilityPercent?: number | null;
+    p95LatencyMillis?: number | null;
+    contractCompliancePercent?: number | null;
+    mature: boolean;
+};
+
+export type RevenueQueryRequest = {
+    cursor?: string | null;
+    limit: number;
+};
+
 export type CommonResponseDeveloperRevenueResponse = {
-    isSuccess?: boolean;
-    message?: string;
-    errorCode?: string;
-    result?: DeveloperRevenueResponse;
+    isSuccess: boolean;
+    message: string;
+    errorCode?: string | null;
+    result?: DeveloperRevenueResponse | null;
 };
 
 export type DeveloperRevenueResponse = {
@@ -283,25 +548,384 @@ export type AgentListResponse = {
 };
 
 export type CommonResponseAgentListResponse = {
-    isSuccess?: boolean;
-    message?: string;
-    errorCode?: string;
-    result?: AgentListResponse;
+    isSuccess: boolean;
+    message: string;
+    errorCode?: string | null;
+    result?: AgentListResponse | null;
 };
 
 export type CommonResponseListDependencyResponse = {
-    isSuccess?: boolean;
-    message?: string;
-    errorCode?: string;
-    result?: Array<DependencyResponse>;
+    isSuccess: boolean;
+    message: string;
+    errorCode?: string | null;
+    result?: Array<DependencyResponse> | null;
 };
 
 export type CommonResponseVoid = {
-    isSuccess?: boolean;
-    message?: string;
-    errorCode?: string;
-    result?: unknown;
+    isSuccess: boolean;
+    message: string;
+    errorCode?: string | null;
+    result?: null;
 };
+
+export type GetApiAgentManifestsAgentVersionsByIdData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/agent-versions/{id}/manifest';
+};
+
+export type GetApiAgentManifestsAgentVersionsByIdErrors = {
+    /**
+     * Bad request
+     */
+    400: CommonResponse;
+    /**
+     * Unauthorized
+     */
+    401: CommonResponse;
+    /**
+     * Forbidden
+     */
+    403: CommonResponse;
+    /**
+     * Not found
+     */
+    404: CommonResponse;
+    /**
+     * Conflict
+     */
+    409: CommonResponse;
+    /**
+     * Validation error
+     */
+    422: CommonResponse;
+    /**
+     * Internal server error
+     */
+    500: CommonResponse;
+    /**
+     * Upstream failure
+     */
+    502: CommonResponse;
+    /**
+     * Service unavailable
+     */
+    503: CommonResponse;
+};
+
+export type GetApiAgentManifestsAgentVersionsByIdError = GetApiAgentManifestsAgentVersionsByIdErrors[keyof GetApiAgentManifestsAgentVersionsByIdErrors];
+
+export type GetApiAgentManifestsAgentVersionsByIdResponses = {
+    /**
+     * OK
+     */
+    200: CommonResponseAgentManifestResponse;
+};
+
+export type GetApiAgentManifestsAgentVersionsByIdResponse = GetApiAgentManifestsAgentVersionsByIdResponses[keyof GetApiAgentManifestsAgentVersionsByIdResponses];
+
+export type PutApiAgentVersionsByIdManifestData = {
+    body: AgentManifestRequest;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/agent-versions/{id}/manifest';
+};
+
+export type PutApiAgentVersionsByIdManifestErrors = {
+    /**
+     * Bad request
+     */
+    400: CommonResponse;
+    /**
+     * Unauthorized
+     */
+    401: CommonResponse;
+    /**
+     * Forbidden
+     */
+    403: CommonResponse;
+    /**
+     * Not found
+     */
+    404: CommonResponse;
+    /**
+     * Conflict
+     */
+    409: CommonResponse;
+    /**
+     * Validation error
+     */
+    422: CommonResponse;
+    /**
+     * Internal server error
+     */
+    500: CommonResponse;
+    /**
+     * Upstream failure
+     */
+    502: CommonResponse;
+    /**
+     * Service unavailable
+     */
+    503: CommonResponse;
+};
+
+export type PutApiAgentVersionsByIdManifestError = PutApiAgentVersionsByIdManifestErrors[keyof PutApiAgentVersionsByIdManifestErrors];
+
+export type PutApiAgentVersionsByIdManifestResponses = {
+    /**
+     * OK
+     */
+    200: CommonResponseAgentManifestResponse;
+};
+
+export type PutApiAgentVersionsByIdManifestResponse = PutApiAgentVersionsByIdManifestResponses[keyof PutApiAgentVersionsByIdManifestResponses];
+
+export type PostV1InvocationIntentsData = {
+    body: CreateExternalInvocationIntentRequest;
+    headers?: {
+        'Idempotency-Key'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/v1/invocation-intents';
+};
+
+export type PostV1InvocationIntentsErrors = {
+    /**
+     * Bad request
+     */
+    400: CommonResponse;
+    /**
+     * Unauthorized
+     */
+    401: CommonResponse;
+    /**
+     * Forbidden
+     */
+    403: CommonResponse;
+    /**
+     * Not found
+     */
+    404: CommonResponse;
+    /**
+     * Conflict
+     */
+    409: CommonResponse;
+    /**
+     * Validation error
+     */
+    422: CommonResponse;
+    /**
+     * Internal server error
+     */
+    500: CommonResponse;
+    /**
+     * Upstream failure
+     */
+    502: CommonResponse;
+    /**
+     * Service unavailable
+     */
+    503: CommonResponse;
+};
+
+export type PostV1InvocationIntentsError = PostV1InvocationIntentsErrors[keyof PostV1InvocationIntentsErrors];
+
+export type PostV1InvocationIntentsResponses = {
+    /**
+     * Created
+     */
+    201: CommonResponseExternalInvocationIntentResponse;
+};
+
+export type PostV1InvocationIntentsResponse = PostV1InvocationIntentsResponses[keyof PostV1InvocationIntentsResponses];
+
+export type PostV1InvocationIntentsByIdExecuteData = {
+    body?: never;
+    headers?: {
+        'X-AgentStore-Invocation-Receipt'?: string;
+        'PAYMENT-SIGNATURE'?: string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/v1/invocation-intents/{id}/execute';
+};
+
+export type PostV1InvocationIntentsByIdExecuteErrors = {
+    /**
+     * Bad request
+     */
+    400: CommonResponse;
+    /**
+     * Unauthorized
+     */
+    401: CommonResponse;
+    /**
+     * x402 payment is required
+     */
+    402: CommonResponse;
+    /**
+     * Forbidden
+     */
+    403: CommonResponse;
+    /**
+     * Not found
+     */
+    404: CommonResponse;
+    /**
+     * Conflict
+     */
+    409: CommonResponse;
+    /**
+     * Validation error
+     */
+    422: CommonResponse;
+    /**
+     * Internal server error
+     */
+    500: CommonResponse;
+    /**
+     * Upstream failure
+     */
+    502: CommonResponse;
+    /**
+     * Service unavailable
+     */
+    503: CommonResponse;
+};
+
+export type PostV1InvocationIntentsByIdExecuteError = PostV1InvocationIntentsByIdExecuteErrors[keyof PostV1InvocationIntentsByIdExecuteErrors];
+
+export type PostV1InvocationIntentsByIdExecuteResponses = {
+    /**
+     * Payment was settled and the asynchronous execution was created
+     */
+    202: CommonResponseExternalInvocationExecutionResponse;
+};
+
+export type PostV1InvocationIntentsByIdExecuteResponse = PostV1InvocationIntentsByIdExecuteResponses[keyof PostV1InvocationIntentsByIdExecuteResponses];
+
+export type GetApiFunctionContractsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/function-contracts';
+};
+
+export type GetApiFunctionContractsErrors = {
+    /**
+     * Bad request
+     */
+    400: CommonResponse;
+    /**
+     * Unauthorized
+     */
+    401: CommonResponse;
+    /**
+     * Forbidden
+     */
+    403: CommonResponse;
+    /**
+     * Not found
+     */
+    404: CommonResponse;
+    /**
+     * Conflict
+     */
+    409: CommonResponse;
+    /**
+     * Validation error
+     */
+    422: CommonResponse;
+    /**
+     * Internal server error
+     */
+    500: CommonResponse;
+    /**
+     * Upstream failure
+     */
+    502: CommonResponse;
+    /**
+     * Service unavailable
+     */
+    503: CommonResponse;
+};
+
+export type GetApiFunctionContractsError = GetApiFunctionContractsErrors[keyof GetApiFunctionContractsErrors];
+
+export type GetApiFunctionContractsResponses = {
+    /**
+     * OK
+     */
+    200: CommonResponseListFunctionContractResponse;
+};
+
+export type GetApiFunctionContractsResponse = GetApiFunctionContractsResponses[keyof GetApiFunctionContractsResponses];
+
+export type PostApiFunctionContractsData = {
+    body: CreateFunctionContractRequest;
+    path?: never;
+    query?: never;
+    url: '/api/function-contracts';
+};
+
+export type PostApiFunctionContractsErrors = {
+    /**
+     * Bad request
+     */
+    400: CommonResponse;
+    /**
+     * Unauthorized
+     */
+    401: CommonResponse;
+    /**
+     * Forbidden
+     */
+    403: CommonResponse;
+    /**
+     * Not found
+     */
+    404: CommonResponse;
+    /**
+     * Conflict
+     */
+    409: CommonResponse;
+    /**
+     * Validation error
+     */
+    422: CommonResponse;
+    /**
+     * Internal server error
+     */
+    500: CommonResponse;
+    /**
+     * Upstream failure
+     */
+    502: CommonResponse;
+    /**
+     * Service unavailable
+     */
+    503: CommonResponse;
+};
+
+export type PostApiFunctionContractsError = PostApiFunctionContractsErrors[keyof PostApiFunctionContractsErrors];
+
+export type PostApiFunctionContractsResponses = {
+    /**
+     * Created
+     */
+    201: CommonResponseFunctionContractResponse;
+};
+
+export type PostApiFunctionContractsResponse = PostApiFunctionContractsResponses[keyof PostApiFunctionContractsResponses];
 
 export type PostApiExecutionsData = {
     body: CreateExecutionRequest;
@@ -380,6 +1004,7 @@ export type GetApiAgentsData = {
          * 정렬 기준
          */
         sort?: 'newest' | 'name_asc';
+        view?: string;
     };
     url: '/api/agents';
 };
@@ -845,6 +1470,120 @@ export type PostApiAgentVersionsByIdDependenciesResponses = {
 
 export type PostApiAgentVersionsByIdDependenciesResponse = PostApiAgentVersionsByIdDependenciesResponses[keyof PostApiAgentVersionsByIdDependenciesResponses];
 
+export type PostApiAgentManifestsData = {
+    body: AgentManifestRequest;
+    path?: never;
+    query?: never;
+    url: '/api/agent-manifests';
+};
+
+export type PostApiAgentManifestsErrors = {
+    /**
+     * Bad request
+     */
+    400: CommonResponse;
+    /**
+     * Unauthorized
+     */
+    401: CommonResponse;
+    /**
+     * Forbidden
+     */
+    403: CommonResponse;
+    /**
+     * Not found
+     */
+    404: CommonResponse;
+    /**
+     * Conflict
+     */
+    409: CommonResponse;
+    /**
+     * Validation error
+     */
+    422: CommonResponse;
+    /**
+     * Internal server error
+     */
+    500: CommonResponse;
+    /**
+     * Upstream failure
+     */
+    502: CommonResponse;
+    /**
+     * Service unavailable
+     */
+    503: CommonResponse;
+};
+
+export type PostApiAgentManifestsError = PostApiAgentManifestsErrors[keyof PostApiAgentManifestsErrors];
+
+export type PostApiAgentManifestsResponses = {
+    /**
+     * Created
+     */
+    201: CommonResponseAgentManifestImportResponse;
+};
+
+export type PostApiAgentManifestsResponse = PostApiAgentManifestsResponses[keyof PostApiAgentManifestsResponses];
+
+export type PostApiAgentManifestsValidateData = {
+    body: AgentManifestRequest;
+    path?: never;
+    query?: never;
+    url: '/api/agent-manifests/validate';
+};
+
+export type PostApiAgentManifestsValidateErrors = {
+    /**
+     * Bad request
+     */
+    400: CommonResponse;
+    /**
+     * Unauthorized
+     */
+    401: CommonResponse;
+    /**
+     * Forbidden
+     */
+    403: CommonResponse;
+    /**
+     * Not found
+     */
+    404: CommonResponse;
+    /**
+     * Conflict
+     */
+    409: CommonResponse;
+    /**
+     * Validation error
+     */
+    422: CommonResponse;
+    /**
+     * Internal server error
+     */
+    500: CommonResponse;
+    /**
+     * Upstream failure
+     */
+    502: CommonResponse;
+    /**
+     * Service unavailable
+     */
+    503: CommonResponse;
+};
+
+export type PostApiAgentManifestsValidateError = PostApiAgentManifestsValidateErrors[keyof PostApiAgentManifestsValidateErrors];
+
+export type PostApiAgentManifestsValidateResponses = {
+    /**
+     * OK
+     */
+    200: CommonResponseAgentManifestValidationResponse;
+};
+
+export type PostApiAgentManifestsValidateResponse = PostApiAgentManifestsValidateResponses[keyof PostApiAgentManifestsValidateResponses];
+
 export type DeleteApiAgentsByIdData = {
     body?: never;
     path: {
@@ -1083,6 +1822,131 @@ export type PatchApiAgentVersionsByIdDependenciesByDependencyIdResponses = {
 
 export type PatchApiAgentVersionsByIdDependenciesByDependencyIdResponse = PatchApiAgentVersionsByIdDependenciesByDependencyIdResponses[keyof PatchApiAgentVersionsByIdDependenciesByDependencyIdResponses];
 
+export type GetV1InvocationIntentsByIdData = {
+    body?: never;
+    headers?: {
+        'X-AgentStore-Invocation-Receipt'?: string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/v1/invocation-intents/{id}';
+};
+
+export type GetV1InvocationIntentsByIdErrors = {
+    /**
+     * Bad request
+     */
+    400: CommonResponse;
+    /**
+     * Unauthorized
+     */
+    401: CommonResponse;
+    /**
+     * Forbidden
+     */
+    403: CommonResponse;
+    /**
+     * Not found
+     */
+    404: CommonResponse;
+    /**
+     * Conflict
+     */
+    409: CommonResponse;
+    /**
+     * Validation error
+     */
+    422: CommonResponse;
+    /**
+     * Internal server error
+     */
+    500: CommonResponse;
+    /**
+     * Upstream failure
+     */
+    502: CommonResponse;
+    /**
+     * Service unavailable
+     */
+    503: CommonResponse;
+};
+
+export type GetV1InvocationIntentsByIdError = GetV1InvocationIntentsByIdErrors[keyof GetV1InvocationIntentsByIdErrors];
+
+export type GetV1InvocationIntentsByIdResponses = {
+    /**
+     * OK
+     */
+    200: CommonResponseExternalInvocationStatusResponse;
+};
+
+export type GetV1InvocationIntentsByIdResponse = GetV1InvocationIntentsByIdResponses[keyof GetV1InvocationIntentsByIdResponses];
+
+export type GetV1InvocationIntentsByIdEventsData = {
+    body?: never;
+    headers?: {
+        'X-AgentStore-Invocation-Receipt'?: string;
+        'Last-Event-ID'?: string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/v1/invocation-intents/{id}/events';
+};
+
+export type GetV1InvocationIntentsByIdEventsErrors = {
+    /**
+     * Bad request
+     */
+    400: CommonResponse;
+    /**
+     * Unauthorized
+     */
+    401: CommonResponse;
+    /**
+     * Forbidden
+     */
+    403: CommonResponse;
+    /**
+     * Not found
+     */
+    404: CommonResponse;
+    /**
+     * Conflict
+     */
+    409: CommonResponse;
+    /**
+     * Validation error
+     */
+    422: CommonResponse;
+    /**
+     * Internal server error
+     */
+    500: CommonResponse;
+    /**
+     * Upstream failure
+     */
+    502: CommonResponse;
+    /**
+     * Service unavailable
+     */
+    503: CommonResponse;
+};
+
+export type GetV1InvocationIntentsByIdEventsError = GetV1InvocationIntentsByIdEventsErrors[keyof GetV1InvocationIntentsByIdEventsErrors];
+
+export type GetV1InvocationIntentsByIdEventsResponses = {
+    /**
+     * Server-sent event stream
+     */
+    200: string;
+};
+
+export type GetV1InvocationIntentsByIdEventsResponse = GetV1InvocationIntentsByIdEventsResponses[keyof GetV1InvocationIntentsByIdEventsResponses];
+
 export type GetHealthData = {
     body?: never;
     path?: never;
@@ -1098,6 +1962,124 @@ export type GetHealthResponses = {
 };
 
 export type GetHealthResponse = GetHealthResponses[keyof GetHealthResponses];
+
+export type GetApiFunctionContractsByIdData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/function-contracts/{id}';
+};
+
+export type GetApiFunctionContractsByIdErrors = {
+    /**
+     * Bad request
+     */
+    400: CommonResponse;
+    /**
+     * Unauthorized
+     */
+    401: CommonResponse;
+    /**
+     * Forbidden
+     */
+    403: CommonResponse;
+    /**
+     * Not found
+     */
+    404: CommonResponse;
+    /**
+     * Conflict
+     */
+    409: CommonResponse;
+    /**
+     * Validation error
+     */
+    422: CommonResponse;
+    /**
+     * Internal server error
+     */
+    500: CommonResponse;
+    /**
+     * Upstream failure
+     */
+    502: CommonResponse;
+    /**
+     * Service unavailable
+     */
+    503: CommonResponse;
+};
+
+export type GetApiFunctionContractsByIdError = GetApiFunctionContractsByIdErrors[keyof GetApiFunctionContractsByIdErrors];
+
+export type GetApiFunctionContractsByIdResponses = {
+    /**
+     * OK
+     */
+    200: CommonResponseFunctionContractResponse;
+};
+
+export type GetApiFunctionContractsByIdResponse = GetApiFunctionContractsByIdResponses[keyof GetApiFunctionContractsByIdResponses];
+
+export type GetApiFunctionContractsByIdProvidersData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/function-contracts/{id}/providers';
+};
+
+export type GetApiFunctionContractsByIdProvidersErrors = {
+    /**
+     * Bad request
+     */
+    400: CommonResponse;
+    /**
+     * Unauthorized
+     */
+    401: CommonResponse;
+    /**
+     * Forbidden
+     */
+    403: CommonResponse;
+    /**
+     * Not found
+     */
+    404: CommonResponse;
+    /**
+     * Conflict
+     */
+    409: CommonResponse;
+    /**
+     * Validation error
+     */
+    422: CommonResponse;
+    /**
+     * Internal server error
+     */
+    500: CommonResponse;
+    /**
+     * Upstream failure
+     */
+    502: CommonResponse;
+    /**
+     * Service unavailable
+     */
+    503: CommonResponse;
+};
+
+export type GetApiFunctionContractsByIdProvidersError = GetApiFunctionContractsByIdProvidersErrors[keyof GetApiFunctionContractsByIdProvidersErrors];
+
+export type GetApiFunctionContractsByIdProvidersResponses = {
+    /**
+     * OK
+     */
+    200: CommonResponseListFunctionProviderMetricResponse;
+};
+
+export type GetApiFunctionContractsByIdProvidersResponse = GetApiFunctionContractsByIdProvidersResponses[keyof GetApiFunctionContractsByIdProvidersResponses];
 
 export type GetApiExecutionsByIdData = {
     body?: never;
@@ -1225,9 +2207,8 @@ export type GetApiDevelopersByIdRevenueData = {
     path: {
         id: string;
     };
-    query?: {
-        cursor?: string;
-        limit?: number;
+    query: {
+        request: RevenueQueryRequest;
     };
     url: '/api/developers/{id}/revenue';
 };
@@ -1287,7 +2268,9 @@ export type GetApiAgentsBySlugData = {
     path: {
         slug: string;
     };
-    query?: never;
+    query?: {
+        view?: string;
+    };
     url: '/api/agents/{slug}';
 };
 
@@ -1340,3 +2323,62 @@ export type GetApiAgentsBySlugResponses = {
 };
 
 export type GetApiAgentsBySlugResponse = GetApiAgentsBySlugResponses[keyof GetApiAgentsBySlugResponses];
+
+export type GetApiAgentManifestsAgentVersionsById1Data = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/agent-manifests/agent-versions/{id}';
+};
+
+export type GetApiAgentManifestsAgentVersionsById1Errors = {
+    /**
+     * Bad request
+     */
+    400: CommonResponse;
+    /**
+     * Unauthorized
+     */
+    401: CommonResponse;
+    /**
+     * Forbidden
+     */
+    403: CommonResponse;
+    /**
+     * Not found
+     */
+    404: CommonResponse;
+    /**
+     * Conflict
+     */
+    409: CommonResponse;
+    /**
+     * Validation error
+     */
+    422: CommonResponse;
+    /**
+     * Internal server error
+     */
+    500: CommonResponse;
+    /**
+     * Upstream failure
+     */
+    502: CommonResponse;
+    /**
+     * Service unavailable
+     */
+    503: CommonResponse;
+};
+
+export type GetApiAgentManifestsAgentVersionsById1Error = GetApiAgentManifestsAgentVersionsById1Errors[keyof GetApiAgentManifestsAgentVersionsById1Errors];
+
+export type GetApiAgentManifestsAgentVersionsById1Responses = {
+    /**
+     * OK
+     */
+    200: CommonResponseAgentManifestResponse;
+};
+
+export type GetApiAgentManifestsAgentVersionsById1Response = GetApiAgentManifestsAgentVersionsById1Responses[keyof GetApiAgentManifestsAgentVersionsById1Responses];

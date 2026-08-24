@@ -26,8 +26,9 @@ async function withApiError<T>(operation: () => Promise<T>): Promise<T> {
   }
 }
 
-export type RegisterAgentInput = Omit<PostApiAgentsData['body'], 'responseFormat'> & {
+export type RegisterAgentInput = Omit<PostApiAgentsData['body'], 'responseFormat' | 'usageType'> & {
   responseFormat?: import('./model').AgentResponseFormat
+  usageType?: 'user_facing' | 'internal_component'
 }
 export type CreateVersionInput = Omit<PostApiAgentsByIdVersionsData['body'], 'responseFormat'> & {
   responseFormat?: import('./model').AgentResponseFormat
@@ -42,7 +43,7 @@ export interface MarketplaceAgentPage {
   nextCursor?: string | null
 }
 
-export function listAgents(query?: GetApiAgentsData['query']): Promise<AgentModel[]> {
+export function listAgents(query: MarketplaceAgentQuery = {}): Promise<AgentModel[]> {
   return withApiError(async () => {
     const response = await getApiAgents({
       client: agentStoreClient,
@@ -69,11 +70,12 @@ export function listMarketplaceAgents(query: MarketplaceAgentQuery = {}): Promis
   })
 }
 
-export function getAgentBySlug(slug: string): Promise<AgentModel> {
+export function getAgentBySlug(slug: string, view: 'easy' | 'developer' = 'easy'): Promise<AgentModel> {
   return withApiError(async () => {
     const response = await getApiAgentsBySlug({
       client: agentStoreClient,
       path: { slug },
+      query: { view } as never,
       throwOnError: true,
     })
     return toAgentModel(unwrapCommonResponse<AgentResponse>(response.data))
@@ -84,7 +86,7 @@ export function registerAgent(input: RegisterAgentInput): Promise<AgentModel> {
   return withApiError(async () => {
     const response = await postApiAgents({
       client: agentStoreClient,
-      body: { ...input, responseFormat: input.responseFormat ?? 'JSON' },
+      body: { ...input, responseFormat: input.responseFormat ?? 'JSON', usageType: input.usageType ?? 'internal_component' },
       throwOnError: true,
     })
     return toAgentModel(unwrapCommonResponse<AgentResponse>(response.data))

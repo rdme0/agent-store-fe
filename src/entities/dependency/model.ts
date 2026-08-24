@@ -1,17 +1,19 @@
 import { formatAtomicUsdc } from '../agent/model'
-import type { DependencyResponse, DependencySnapshot, QuoteResponse, QuoteSnapshot as GeneratedQuoteSnapshot, ResolvedVersionSnapshot } from '../../generated'
+import type { DependencyResponse, DependencySnapshotDto, QuoteResponse, QuoteSnapshotDto as GeneratedQuoteSnapshot, ResolvedVersionSnapshotDto } from '../../generated'
 import type { AgentResponseFormat } from '../agent/model'
 
 export type DependencyDto = DependencyResponse
 export type QuoteDto = QuoteResponse
 
-export type QuoteVersionSnapshot = Omit<ResolvedVersionSnapshot, 'responseFormat'> & {
+export type QuoteVersionSnapshot = Omit<ResolvedVersionSnapshotDto, 'responseFormat' | 'agentName' | 'agentDescription'> & {
+  agentName?: string | null
+  agentDescription?: string | null
   responseFormat?: AgentResponseFormat
 }
 
 export type QuoteSnapshot = Omit<GeneratedQuoteSnapshot, 'version' | 'dependencies'> & {
   version: QuoteVersionSnapshot
-  dependencies: Array<Omit<DependencySnapshot, 'resolved'> & { resolved?: QuoteSnapshot | null }>
+  dependencies: Array<Omit<DependencySnapshotDto, 'resolved'> & { resolved?: QuoteSnapshot | null }>
 }
 
 export interface DependencyModel extends DependencyDto {
@@ -33,6 +35,7 @@ export function toDependencyModel(dto: DependencyDto): DependencyModel {
 export function toQuoteModel(dto: QuoteDto): QuoteModel {
   return {
     ...dto,
+    snapshot: dto.snapshot as QuoteSnapshot,
     maxCostLabel: formatAtomicUsdc(dto.maxCostAtomic),
   }
 }

@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, ServerSentEventsResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { DeleteApiAgentsByIdData, DeleteApiAgentsByIdErrors, DeleteApiAgentsByIdResponses, DeleteApiAgentVersionsByIdDependenciesByDependencyIdData, DeleteApiAgentVersionsByIdDependenciesByDependencyIdErrors, DeleteApiAgentVersionsByIdDependenciesByDependencyIdResponses, GetApiAgentsBySlugData, GetApiAgentsBySlugErrors, GetApiAgentsBySlugResponses, GetApiAgentsData, GetApiAgentsErrors, GetApiAgentsResponses, GetApiAgentVersionsByIdDependenciesData, GetApiAgentVersionsByIdDependenciesErrors, GetApiAgentVersionsByIdDependenciesResponses, GetApiDevelopersByIdRevenueData, GetApiDevelopersByIdRevenueErrors, GetApiDevelopersByIdRevenueResponses, GetApiExecutionsByIdData, GetApiExecutionsByIdErrors, GetApiExecutionsByIdEventsData, GetApiExecutionsByIdEventsErrors, GetApiExecutionsByIdEventsResponse, GetApiExecutionsByIdEventsResponses, GetApiExecutionsByIdResponses, GetHealthData, GetHealthResponses, PatchApiAgentsByIdData, PatchApiAgentsByIdErrors, PatchApiAgentsByIdResponses, PatchApiAgentVersionsByIdDependenciesByDependencyIdData, PatchApiAgentVersionsByIdDependenciesByDependencyIdErrors, PatchApiAgentVersionsByIdDependenciesByDependencyIdResponses, PostApiAgentsByIdVersionsData, PostApiAgentsByIdVersionsErrors, PostApiAgentsByIdVersionsResponses, PostApiAgentsBySlugQuotesData, PostApiAgentsBySlugQuotesErrors, PostApiAgentsBySlugQuotesResponses, PostApiAgentsData, PostApiAgentsErrors, PostApiAgentsResponses, PostApiAgentVersionsByIdDependenciesData, PostApiAgentVersionsByIdDependenciesErrors, PostApiAgentVersionsByIdDependenciesResponses, PostApiAgentVersionsByIdDisableData, PostApiAgentVersionsByIdDisableErrors, PostApiAgentVersionsByIdDisableResponses, PostApiAgentVersionsByIdPublishData, PostApiAgentVersionsByIdPublishErrors, PostApiAgentVersionsByIdPublishResponses, PostApiExecutionsData, PostApiExecutionsErrors, PostApiExecutionsResponses } from './types.gen';
+import type { DeleteApiAgentsByIdData, DeleteApiAgentsByIdErrors, DeleteApiAgentsByIdResponses, DeleteApiAgentVersionsByIdDependenciesByDependencyIdData, DeleteApiAgentVersionsByIdDependenciesByDependencyIdErrors, DeleteApiAgentVersionsByIdDependenciesByDependencyIdResponses, GetApiAgentManifestsAgentVersionsById1Data, GetApiAgentManifestsAgentVersionsById1Errors, GetApiAgentManifestsAgentVersionsById1Responses, GetApiAgentManifestsAgentVersionsByIdData, GetApiAgentManifestsAgentVersionsByIdErrors, GetApiAgentManifestsAgentVersionsByIdResponses, GetApiAgentsBySlugData, GetApiAgentsBySlugErrors, GetApiAgentsBySlugResponses, GetApiAgentsData, GetApiAgentsErrors, GetApiAgentsResponses, GetApiAgentVersionsByIdDependenciesData, GetApiAgentVersionsByIdDependenciesErrors, GetApiAgentVersionsByIdDependenciesResponses, GetApiDevelopersByIdRevenueData, GetApiDevelopersByIdRevenueErrors, GetApiDevelopersByIdRevenueResponses, GetApiExecutionsByIdData, GetApiExecutionsByIdErrors, GetApiExecutionsByIdEventsData, GetApiExecutionsByIdEventsErrors, GetApiExecutionsByIdEventsResponse, GetApiExecutionsByIdEventsResponses, GetApiExecutionsByIdResponses, GetApiFunctionContractsByIdData, GetApiFunctionContractsByIdErrors, GetApiFunctionContractsByIdProvidersData, GetApiFunctionContractsByIdProvidersErrors, GetApiFunctionContractsByIdProvidersResponses, GetApiFunctionContractsByIdResponses, GetApiFunctionContractsData, GetApiFunctionContractsErrors, GetApiFunctionContractsResponses, GetHealthData, GetHealthResponses, GetV1InvocationIntentsByIdData, GetV1InvocationIntentsByIdErrors, GetV1InvocationIntentsByIdEventsData, GetV1InvocationIntentsByIdEventsErrors, GetV1InvocationIntentsByIdEventsResponse, GetV1InvocationIntentsByIdEventsResponses, GetV1InvocationIntentsByIdResponses, PatchApiAgentsByIdData, PatchApiAgentsByIdErrors, PatchApiAgentsByIdResponses, PatchApiAgentVersionsByIdDependenciesByDependencyIdData, PatchApiAgentVersionsByIdDependenciesByDependencyIdErrors, PatchApiAgentVersionsByIdDependenciesByDependencyIdResponses, PostApiAgentManifestsData, PostApiAgentManifestsErrors, PostApiAgentManifestsResponses, PostApiAgentManifestsValidateData, PostApiAgentManifestsValidateErrors, PostApiAgentManifestsValidateResponses, PostApiAgentsByIdVersionsData, PostApiAgentsByIdVersionsErrors, PostApiAgentsByIdVersionsResponses, PostApiAgentsBySlugQuotesData, PostApiAgentsBySlugQuotesErrors, PostApiAgentsBySlugQuotesResponses, PostApiAgentsData, PostApiAgentsErrors, PostApiAgentsResponses, PostApiAgentVersionsByIdDependenciesData, PostApiAgentVersionsByIdDependenciesErrors, PostApiAgentVersionsByIdDependenciesResponses, PostApiAgentVersionsByIdDisableData, PostApiAgentVersionsByIdDisableErrors, PostApiAgentVersionsByIdDisableResponses, PostApiAgentVersionsByIdPublishData, PostApiAgentVersionsByIdPublishErrors, PostApiAgentVersionsByIdPublishResponses, PostApiExecutionsData, PostApiExecutionsErrors, PostApiExecutionsResponses, PostApiFunctionContractsData, PostApiFunctionContractsErrors, PostApiFunctionContractsResponses, PostV1InvocationIntentsByIdExecuteData, PostV1InvocationIntentsByIdExecuteErrors, PostV1InvocationIntentsByIdExecuteResponses, PostV1InvocationIntentsData, PostV1InvocationIntentsErrors, PostV1InvocationIntentsResponses, PutApiAgentVersionsByIdManifestData, PutApiAgentVersionsByIdManifestErrors, PutApiAgentVersionsByIdManifestResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -17,6 +17,57 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
      */
     meta?: keyof ClientMeta extends never ? Record<string, unknown> : ClientMeta;
 };
+
+/**
+ * Export agent manifest
+ */
+export const getApiAgentManifestsAgentVersionsById = <ThrowOnError extends boolean = false>(options: Options<GetApiAgentManifestsAgentVersionsByIdData, ThrowOnError>): RequestResult<GetApiAgentManifestsAgentVersionsByIdResponses, GetApiAgentManifestsAgentVersionsByIdErrors, ThrowOnError> => (options.client ?? client).get<GetApiAgentManifestsAgentVersionsByIdResponses, GetApiAgentManifestsAgentVersionsByIdErrors, ThrowOnError>({ url: '/api/agent-versions/{id}/manifest', ...options });
+
+/**
+ * Replace draft agent manifest
+ */
+export const putApiAgentVersionsByIdManifest = <ThrowOnError extends boolean = false>(options: Options<PutApiAgentVersionsByIdManifestData, ThrowOnError>): RequestResult<PutApiAgentVersionsByIdManifestResponses, PutApiAgentVersionsByIdManifestErrors, ThrowOnError> => (options.client ?? client).put<PutApiAgentVersionsByIdManifestResponses, PutApiAgentVersionsByIdManifestErrors, ThrowOnError>({
+    url: '/api/agent-versions/{id}/manifest',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Create an external x402 invocation intent
+ */
+export const postV1InvocationIntents = <ThrowOnError extends boolean = false>(options: Options<PostV1InvocationIntentsData, ThrowOnError>): RequestResult<PostV1InvocationIntentsResponses, PostV1InvocationIntentsErrors, ThrowOnError> => (options.client ?? client).post<PostV1InvocationIntentsResponses, PostV1InvocationIntentsErrors, ThrowOnError>({
+    url: '/v1/invocation-intents',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Pay and start an invocation
+ */
+export const postV1InvocationIntentsByIdExecute = <ThrowOnError extends boolean = false>(options: Options<PostV1InvocationIntentsByIdExecuteData, ThrowOnError>): RequestResult<PostV1InvocationIntentsByIdExecuteResponses, PostV1InvocationIntentsByIdExecuteErrors, ThrowOnError> => (options.client ?? client).post<PostV1InvocationIntentsByIdExecuteResponses, PostV1InvocationIntentsByIdExecuteErrors, ThrowOnError>({ url: '/v1/invocation-intents/{id}/execute', ...options });
+
+/**
+ * List function contracts
+ */
+export const getApiFunctionContracts = <ThrowOnError extends boolean = false>(options?: Options<GetApiFunctionContractsData, ThrowOnError>): RequestResult<GetApiFunctionContractsResponses, GetApiFunctionContractsErrors, ThrowOnError> => (options?.client ?? client).get<GetApiFunctionContractsResponses, GetApiFunctionContractsErrors, ThrowOnError>({ url: '/api/function-contracts', ...options });
+
+/**
+ * Create function contract
+ */
+export const postApiFunctionContracts = <ThrowOnError extends boolean = false>(options: Options<PostApiFunctionContractsData, ThrowOnError>): RequestResult<PostApiFunctionContractsResponses, PostApiFunctionContractsErrors, ThrowOnError> => (options.client ?? client).post<PostApiFunctionContractsResponses, PostApiFunctionContractsErrors, ThrowOnError>({
+    url: '/api/function-contracts',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
 
 /**
  * Create execution
@@ -99,6 +150,30 @@ export const postApiAgentVersionsByIdDependencies = <ThrowOnError extends boolea
 });
 
 /**
+ * Import agent manifest
+ */
+export const postApiAgentManifests = <ThrowOnError extends boolean = false>(options: Options<PostApiAgentManifestsData, ThrowOnError>): RequestResult<PostApiAgentManifestsResponses, PostApiAgentManifestsErrors, ThrowOnError> => (options.client ?? client).post<PostApiAgentManifestsResponses, PostApiAgentManifestsErrors, ThrowOnError>({
+    url: '/api/agent-manifests',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Validate agent manifest
+ */
+export const postApiAgentManifestsValidate = <ThrowOnError extends boolean = false>(options: Options<PostApiAgentManifestsValidateData, ThrowOnError>): RequestResult<PostApiAgentManifestsValidateResponses, PostApiAgentManifestsValidateErrors, ThrowOnError> => (options.client ?? client).post<PostApiAgentManifestsValidateResponses, PostApiAgentManifestsValidateErrors, ThrowOnError>({
+    url: '/api/agent-manifests/validate',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
  * Delete agent
  */
 export const deleteApiAgentsById = <ThrowOnError extends boolean = false>(options: Options<DeleteApiAgentsByIdData, ThrowOnError>): RequestResult<DeleteApiAgentsByIdResponses, DeleteApiAgentsByIdErrors, ThrowOnError> => (options.client ?? client).delete<DeleteApiAgentsByIdResponses, DeleteApiAgentsByIdErrors, ThrowOnError>({ url: '/api/agents/{id}', ...options });
@@ -133,9 +208,29 @@ export const patchApiAgentVersionsByIdDependenciesByDependencyId = <ThrowOnError
 });
 
 /**
+ * Get an external invocation status
+ */
+export const getV1InvocationIntentsById = <ThrowOnError extends boolean = false>(options: Options<GetV1InvocationIntentsByIdData, ThrowOnError>): RequestResult<GetV1InvocationIntentsByIdResponses, GetV1InvocationIntentsByIdErrors, ThrowOnError> => (options.client ?? client).get<GetV1InvocationIntentsByIdResponses, GetV1InvocationIntentsByIdErrors, ThrowOnError>({ url: '/v1/invocation-intents/{id}', ...options });
+
+/**
+ * Stream external invocation events
+ */
+export const getV1InvocationIntentsByIdEvents = <ThrowOnError extends boolean = false>(options: Options<GetV1InvocationIntentsByIdEventsData, ThrowOnError, GetV1InvocationIntentsByIdEventsResponse>): Promise<ServerSentEventsResult<GetV1InvocationIntentsByIdEventsResponses>> => (options.client ?? client).sse.get<GetV1InvocationIntentsByIdEventsResponses, GetV1InvocationIntentsByIdEventsErrors, ThrowOnError>({ url: '/v1/invocation-intents/{id}/events', ...options });
+
+/**
  * Health check
  */
 export const getHealth = <ThrowOnError extends boolean = false>(options?: Options<GetHealthData, ThrowOnError>): RequestResult<GetHealthResponses, unknown, ThrowOnError> => (options?.client ?? client).get<GetHealthResponses, unknown, ThrowOnError>({ url: '/health', ...options });
+
+/**
+ * Get function contract
+ */
+export const getApiFunctionContractsById = <ThrowOnError extends boolean = false>(options: Options<GetApiFunctionContractsByIdData, ThrowOnError>): RequestResult<GetApiFunctionContractsByIdResponses, GetApiFunctionContractsByIdErrors, ThrowOnError> => (options.client ?? client).get<GetApiFunctionContractsByIdResponses, GetApiFunctionContractsByIdErrors, ThrowOnError>({ url: '/api/function-contracts/{id}', ...options });
+
+/**
+ * List function providers
+ */
+export const getApiFunctionContractsByIdProviders = <ThrowOnError extends boolean = false>(options: Options<GetApiFunctionContractsByIdProvidersData, ThrowOnError>): RequestResult<GetApiFunctionContractsByIdProvidersResponses, GetApiFunctionContractsByIdProvidersErrors, ThrowOnError> => (options.client ?? client).get<GetApiFunctionContractsByIdProvidersResponses, GetApiFunctionContractsByIdProvidersErrors, ThrowOnError>({ url: '/api/function-contracts/{id}/providers', ...options });
 
 /**
  * Get execution
@@ -156,3 +251,8 @@ export const getApiDevelopersByIdRevenue = <ThrowOnError extends boolean = false
  * Get agent by slug
  */
 export const getApiAgentsBySlug = <ThrowOnError extends boolean = false>(options: Options<GetApiAgentsBySlugData, ThrowOnError>): RequestResult<GetApiAgentsBySlugResponses, GetApiAgentsBySlugErrors, ThrowOnError> => (options.client ?? client).get<GetApiAgentsBySlugResponses, GetApiAgentsBySlugErrors, ThrowOnError>({ url: '/api/agents/{slug}', ...options });
+
+/**
+ * Export agent manifest
+ */
+export const getApiAgentManifestsAgentVersionsById1 = <ThrowOnError extends boolean = false>(options: Options<GetApiAgentManifestsAgentVersionsById1Data, ThrowOnError>): RequestResult<GetApiAgentManifestsAgentVersionsById1Responses, GetApiAgentManifestsAgentVersionsById1Errors, ThrowOnError> => (options.client ?? client).get<GetApiAgentManifestsAgentVersionsById1Responses, GetApiAgentManifestsAgentVersionsById1Errors, ThrowOnError>({ url: '/api/agent-manifests/agent-versions/{id}', ...options });
