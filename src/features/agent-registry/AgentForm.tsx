@@ -2,18 +2,22 @@ import { useEffect, useRef, useState, type FormEvent, type ReactElement, type Re
 import { DEMO_DEVELOPER_ID } from '../../shared/config/env'
 import type { RegisterAgentInput } from '../../entities/agent/api'
 import { RESPONSE_FORMAT_OPTIONS, type AgentResponseFormat } from '../../entities/agent/model'
+import type { FunctionContractResponse } from '../../generated'
 import { usdcToAtomic, validateAgent, validateUsdcAmount, type FieldErrors, type VersionFormValues } from './validation'
 
-interface AgentFormProps { isSubmitting: boolean; serverError?: string; onSubmit: (input: RegisterAgentInput) => Promise<void> }
+interface AgentFormProps { functionContracts?: FunctionContractResponse[]; isSubmitting: boolean; serverError?: string; onSubmit: (input: RegisterAgentInput) => Promise<void> }
 
 const initialValues: Omit<VersionFormValues, 'priceAtomic'> & { slug: string; name: string; description: string; priceUsdc: string } = {
   slug: '', name: '', description: '', semver: '1.0.0', endpoint: 'http://localhost:8090/agents/demo', priceUsdc: '0.01', network: 'eip155:84532', asset: 'USDC', payTo: '', responseFormat: 'JSON',
 }
 const fieldOrder = ['slug', 'name', 'description', 'semver', 'endpoint', 'priceUsdc', 'payTo'] as const
 
-export function AgentForm({ isSubmitting, onSubmit, serverError }: AgentFormProps) {
+export function AgentForm({ functionContracts = [], isSubmitting, onSubmit, serverError }: AgentFormProps) {
   const [values, setValues] = useState(initialValues)
   const [errors, setErrors] = useState<FieldErrors>({})
+  const [usageType, setUsageType] = useState<'user_facing' | 'internal_component'>('internal_component')
+  const [functionContractId, setFunctionContractId] = useState('')
+  const selectedFunctionContract = functionContracts.find((contract) => contract.id === functionContractId)
   const submittingRef = useRef(false)
   const mountedRef = useRef(true)
   const inputRefs = useRef<Partial<Record<(typeof fieldOrder)[number], HTMLInputElement | HTMLTextAreaElement>>>({})
@@ -60,7 +64,7 @@ export function AgentForm({ isSubmitting, onSubmit, serverError }: AgentFormProp
 
     submittingRef.current = true
     try {
-      await onSubmit({ developerId: DEMO_DEVELOPER_ID, slug: values.slug, name: values.name, description: values.description, semver: values.semver, endpoint: values.endpoint, priceAtomic: priceAtomic!, network: values.network, asset: values.asset, payTo: values.payTo, responseFormat: values.responseFormat ?? 'JSON' })
+      await onSubmit({ developerId: DEMO_DEVELOPER_ID, slug: values.slug, name: values.name, description: values.description, semver: values.semver, endpoint: values.endpoint, priceAtomic: priceAtomic!, network: values.network, asset: values.asset, payTo: values.payTo, responseFormat: selectedFunctionContract?.responseFormat ?? values.responseFormat ?? 'JSON', functionContractId: functionContractId || undefined, usageType })
     } finally {
       if (mountedRef.current) {
         submittingRef.current = false
@@ -78,6 +82,7 @@ export function AgentForm({ isSubmitting, onSubmit, serverError }: AgentFormProp
           <FormField error={errors.name} label="Agent 이름" required help="사용자에게 보여줄 이름입니다."><input ref={(element) => { inputRefs.current.name = element ?? undefined }} aria-describedby={errors.name ? 'name-error' : undefined} aria-invalid={Boolean(errors.name)} id="name" onChange={(event) => update('name', event.target.value)} placeholder="Investment Agent" value={values.name} /></FormField>
         </div>
         <FormField error={errors.description} label="설명" required help="어떤 요청을 처리하고 어떤 결과를 주는지 간단히 설명해 주세요."><textarea ref={(element) => { inputRefs.current.description = element ?? undefined }} aria-describedby={errors.description ? 'description-error' : undefined} aria-invalid={Boolean(errors.description)} id="description" onChange={(event) => update('description', event.target.value)} placeholder="시장·뉴스·위험 정보를 종합해 투자 관점을 정리합니다." rows={4} value={values.description} /></FormField>
+        <div className="form-field"><label htmlFor="usageType">사용 대상</label><select id="usageType" onChange={(event) => setUsageType(event.target.value as 'user_facing' | 'internal_component')} value={usageType}><option value="internal_component">내부 구성요소</option><option value="user_facing">일반 사용자</option></select><p className="form-field__help">일반 사용자용 Agent는 JSON 응답 Version을 공개할 수 없습니다.</p></div>
       </fieldset>
       <fieldset className="registry-form__section" disabled={isSubmitting}>
         <legend>실행 endpoint와 Version</legend><p className="registry-form__section-description">등록 후 이 Version은 DRAFT 상태로 저장됩니다.</p>
@@ -85,7 +90,8 @@ export function AgentForm({ isSubmitting, onSubmit, serverError }: AgentFormProp
           <FormField error={errors.semver} label="Version" required help="Semantic Version 형식입니다. 예: 1.0.0"><input ref={(element) => { inputRefs.current.semver = element ?? undefined }} aria-describedby={errors.semver ? 'semver-error' : undefined} aria-invalid={Boolean(errors.semver)} id="semver" onChange={(event) => update('semver', event.target.value)} value={values.semver} /></FormField>
           <FormField error={errors.endpoint} label="Agent endpoint" required help="AgentStore가 실행 요청을 보낼 HTTPS 또는 개발용 HTTP 주소입니다."><input ref={(element) => { inputRefs.current.endpoint = element ?? undefined }} aria-describedby={errors.endpoint ? 'endpoint-error' : undefined} aria-invalid={Boolean(errors.endpoint)} id="endpoint" onChange={(event) => update('endpoint', event.target.value)} placeholder="https://example.com/agents/investment" value={values.endpoint} /></FormField>
         </div>
-        <ResponseFormatField value={values.responseFormat ?? 'JSON'} onChange={(value) => update('responseFormat', value)} />
+        <div className="form-field"><label htmlFor="functionContractId">기능 계약</label><select id="functionContractId" onChange={(event) => { const nextId = event.target.value; setFunctionContractId(nextId); const contract = functionContracts.find((item) => item.id === nextId); if (contract) update('responseFormat', contract.responseFormat) }} value={functionContractId}><option value="">특정 Agent 직접 호출</option>{functionContracts.map((contract) => <option key={contract.id} value={contract.id}>{contract.name} · {contract.code} v{contract.contractVersion}</option>)}</select><p className="form-field__help">선택하면 같은 기능을 제공하는 공급자로 Marketplace에서 선택될 수 있습니다.</p></div>
+        <ResponseFormatField disabled={Boolean(selectedFunctionContract)} value={selectedFunctionContract?.responseFormat ?? values.responseFormat ?? 'JSON'} onChange={(value) => update('responseFormat', value)} />
       </fieldset>
       <fieldset className="registry-form__section" disabled={isSubmitting}>
         <legend>가격과 결제 정보</legend><p className="registry-form__section-description">결제 network와 asset은 현재 테스트 환경의 Base Sepolia·USDC로 고정됩니다.</p>
@@ -102,11 +108,11 @@ export function AgentForm({ isSubmitting, onSubmit, serverError }: AgentFormProp
   )
 }
 
-function ResponseFormatField({ value, onChange }: { value: AgentResponseFormat; onChange: (value: AgentResponseFormat) => void }) {
+function ResponseFormatField({ disabled = false, value, onChange }: { disabled?: boolean; value: AgentResponseFormat; onChange: (value: AgentResponseFormat) => void }) {
   return (
     <div className="form-field">
       <label htmlFor="responseFormat">응답 형식 <span aria-hidden="true">*</span></label>
-      <select id="responseFormat" onChange={(event) => onChange(event.target.value as AgentResponseFormat)} value={value}>
+      <select disabled={disabled} id="responseFormat" onChange={(event) => onChange(event.target.value as AgentResponseFormat)} value={value}>
         {RESPONSE_FORMAT_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
       </select>
       <p className="form-field__help">{RESPONSE_FORMAT_OPTIONS.find((option) => option.value === value)?.description}</p>

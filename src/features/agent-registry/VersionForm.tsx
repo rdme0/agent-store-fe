@@ -1,9 +1,11 @@
 import { useState, type FormEvent, type HTMLAttributes } from 'react'
 import { RESPONSE_FORMAT_OPTIONS, type AgentResponseFormat } from '../../entities/agent/model'
 import type { CreateVersionInput } from '../../entities/agent/api'
+import type { FunctionContractResponse } from '../../generated'
 import { validateVersion, type FieldErrors, type VersionFormValues } from './validation'
 
 interface VersionFormProps {
+  functionContracts?: FunctionContractResponse[]
   isSubmitting: boolean
   serverError?: string
   onSubmit: (input: CreateVersionInput) => void
@@ -19,9 +21,11 @@ const initialValues: VersionFormValues = {
   responseFormat: 'JSON',
 }
 
-export function VersionForm({ isSubmitting, onSubmit, serverError }: VersionFormProps) {
+export function VersionForm({ functionContracts = [], isSubmitting, onSubmit, serverError }: VersionFormProps) {
   const [values, setValues] = useState(initialValues)
+  const [functionContractId, setFunctionContractId] = useState('')
   const [errors, setErrors] = useState<FieldErrors>({})
+  const selectedFunctionContract = functionContracts.find((contract) => contract.id === functionContractId)
 
   function update(key: keyof VersionFormValues, value: string) {
     setValues((current) => ({ ...current, [key]: value }))
@@ -38,7 +42,11 @@ export function VersionForm({ isSubmitting, onSubmit, serverError }: VersionForm
     const nextErrors = validateVersion(values)
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length > 0) return
-    onSubmit({ ...values, responseFormat: values.responseFormat ?? 'JSON' })
+    onSubmit({
+      ...values,
+      functionContractId: functionContractId || undefined,
+      responseFormat: selectedFunctionContract?.responseFormat ?? values.responseFormat ?? 'JSON',
+    })
   }
 
   return (
@@ -53,8 +61,25 @@ export function VersionForm({ isSubmitting, onSubmit, serverError }: VersionForm
         </div>
         <Field error={errors.endpoint} id="version-endpoint" label="Endpoint" value={values.endpoint} onChange={(value) => update('endpoint', value)} />
         <div className="form-field">
+          <label htmlFor="version-functionContract">기능 계약</label>
+          <select
+            id="version-functionContract"
+            onChange={(event) => {
+              const nextId = event.target.value
+              setFunctionContractId(nextId)
+              const contract = functionContracts.find((item) => item.id === nextId)
+              if (contract) update('responseFormat', contract.responseFormat)
+            }}
+            value={functionContractId}
+          >
+            <option value="">특정 Agent 직접 호출</option>
+            {functionContracts.map((contract) => <option key={contract.id} value={contract.id}>{contract.name} · {contract.code} v{contract.contractVersion}</option>)}
+          </select>
+          <p className="form-field__help">선택하면 이 Version은 해당 입출력 Schema를 구현하는 공급자로 등록됩니다.</p>
+        </div>
+        <div className="form-field">
           <label htmlFor="version-responseFormat">응답 형식 <span aria-hidden="true">*</span></label>
-          <select id="version-responseFormat" onChange={(event) => update('responseFormat', event.target.value as AgentResponseFormat)} value={values.responseFormat ?? 'JSON'}>
+          <select disabled={Boolean(selectedFunctionContract)} id="version-responseFormat" onChange={(event) => update('responseFormat', event.target.value as AgentResponseFormat)} value={selectedFunctionContract?.responseFormat ?? values.responseFormat ?? 'JSON'}>
             {RESPONSE_FORMAT_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
           </select>
           <p className="form-field__help">{RESPONSE_FORMAT_OPTIONS.find((option) => option.value === (values.responseFormat ?? 'JSON'))?.description}</p>

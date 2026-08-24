@@ -8,8 +8,11 @@ import type { QuoteSnapshot } from '../../entities/dependency/model'
 import { ApiRequestError } from '../../shared/api/client'
 import { paymentFailureMessage } from '../execution/paymentPresentation'
 import { DependencyGraphPanel, type DependencyEdgeViewModel, type DependencyNodeViewModel } from './DependencyGraph'
+import { ProviderSelectionProof } from './ProviderSelectionProof'
+import type { DisplayMode } from '../../app/DisplayModeContext'
 
 interface QuotePanelProps {
+  mode?: DisplayMode
   slug: string
   version: AgentVersionModel
 }
@@ -29,9 +32,10 @@ function flattenSnapshot(root: QuoteSnapshot): { edges: DependencyEdgeViewModel[
     if (visited.has(snapshot.version.id)) return
     visited.add(snapshot.version.id)
     for (const dependency of snapshot.dependencies) {
-      nodes.set(dependency.targetAgentId, {
-        id: dependency.targetAgentId,
-        label: dependency.targetAgentSlug,
+      const targetId = dependency.resolved?.version.agentId ?? dependency.targetAgentId ?? dependency.selection?.functionContractId ?? dependency.dependencyId
+      nodes.set(targetId, {
+        id: targetId,
+        label: dependency.resolved?.version.agentSlug ?? dependency.targetAgentSlug ?? dependency.selection?.functionCode ?? '기능 계약',
         optional: !dependency.required,
       })
       edges.push({
@@ -39,7 +43,7 @@ function flattenSnapshot(root: QuoteSnapshot): { edges: DependencyEdgeViewModel[
         label: `${dependency.versionConstraint} · ${dependency.maxCalls} call${dependency.maxCalls === 1 ? '' : 's'}`,
         optional: !dependency.required,
         source: snapshot.version.agentId,
-        target: dependency.targetAgentId,
+        target: targetId,
       })
       if (dependency.resolved) visit(dependency.resolved)
     }
@@ -52,7 +56,7 @@ export function QuotePanel(props: QuotePanelProps) {
   return <QuotePanelForIdentity key={`${props.slug}:${props.version.id}`} {...props} />
 }
 
-function QuotePanelForIdentity({ slug, version }: QuotePanelProps) {
+function QuotePanelForIdentity({ mode = 'developer', slug, version }: QuotePanelProps) {
   const navigate = useNavigate()
   const [question, setQuestion] = useState('')
   const [approved, setApproved] = useState(false)
@@ -142,6 +146,56 @@ function QuotePanelForIdentity({ slug, version }: QuotePanelProps) {
     ? `Optional dependency ${quote.warnings.map((warning) => warning.targetAgentSlug).join(', ')}를 resolve하지 못했습니다.`
     : undefined
 
+  function startExecution() {
+    const trimmedQuestion = question.trim()
+    if (!quote || !trimmedQuestion || executionMutation.isPending || quoteQuery.isFetching) return
+    if (quoteExpired || new Date(quote.expiresAt).getTime() <= Date.now()) {
+      setQuoteExpired(true)
+      return
+    }
+    const lockToken = acquireRequestLock()
+    if (!lockToken) return
+    executionMutation.mutate({
+      generation: quoteGeneration.current,
+      lockToken,
+      snapshot: quote.snapshot,
+      input: {
+        quoteId: quote.id,
+        maxBudgetAtomic: quote.maxCostAtomic,
+        question: trimmedQuestion,
+      },
+    })
+  }
+
+  if (mode === 'easy') {
+    const amountWon = quote?.maxCostKrwEstimate?.amountWon
+    return (
+      <section className="quote-panel quote-panel--easy" aria-labelledby={`quote-${version.id}`}>
+        <div>
+          <p className="eyebrow">내 질문으로 분석하기</p>
+          <h2 id={`quote-${version.id}`}>무엇이 궁금한가요?</h2>
+          <p className="detail-description">질문을 적고 비용을 확인한 뒤 분석을 시작해요.</p>
+        </div>
+        <div className="form-field">
+          <label htmlFor={`execution-question-${version.id}`}>질문</label>
+          <textarea id={`execution-question-${version.id}`} maxLength={4000} onChange={(event) => setQuestion(event.target.value)} placeholder="예: 삼성전자 투자할 때 무엇을 살펴봐야 할까?" required rows={4} value={question} />
+        </div>
+        {!quote ? <button className="button button--primary" disabled={!question.trim() || requestLocked || quoteQuery.isFetching} onClick={() => { void requestQuote() }} type="button">{quoteQuery.isFetching ? '비용 알아보는 중…' : '비용 알아보기'}</button> : null}
+        {quote ? (
+          <div className="easy-cost-card">
+            <strong>{amountWon ? `이 분석은 최대 약 ${amountWon}원 들 수 있어요.` : `이 분석은 최대 ${quote.maxCostLabel}까지 들 수 있어요.`}</strong>
+            <p>실제로 사용한 만큼만 결제돼요.</p>
+            {amountWon ? <small>빗썸 USDC 시세 기준 · 참고용 예상 금액{quote.maxCostKrwEstimate?.stale ? ' (시세 갱신이 늦어졌어요)' : ''}</small> : null}
+            <button className="button button--primary" disabled={quoteExpired || !question.trim() || requestLocked || executionMutation.isPending || quoteQuery.isFetching} onClick={startExecution} type="button">
+              {executionMutation.isPending ? '분석을 시작하는 중…' : amountWon ? `최대 약 ${amountWon}원으로 분석 시작` : `${quote.maxCostLabel}으로 분석 시작`}
+            </button>
+          </div>
+        ) : null}
+        {quoteQuery.isError || executionMutation.isError ? <p className="form-error form-error--summary" role="alert">{errorMessage(quoteQuery.error ?? executionMutation.error)}</p> : null}
+      </section>
+    )
+  }
+
   return (
     <section className="quote-panel" aria-labelledby={`quote-${version.id}`}>
       <div className="section-heading">
@@ -193,33 +247,13 @@ function QuotePanelForIdentity({ slug, version }: QuotePanelProps) {
               title="Quoted dependency graph"
             />
           ) : null}
+          <ProviderSelectionProof snapshot={quote.snapshot} />
           <form
             className="execution-approval"
             onSubmit={(event) => {
               event.preventDefault()
-              const trimmedQuestion = question.trim()
-              if (!trimmedQuestion || !approved || executionMutation.isPending || quoteQuery.isFetching) return
-              if (quoteExpired || new Date(quote.expiresAt).getTime() <= Date.now()) {
-                setQuoteExpired(true)
-                return
-              }
-              const lockToken = acquireRequestLock()
-              if (!lockToken) return
-              try {
-                executionMutation.mutate({
-                  generation: quoteGeneration.current,
-                  lockToken,
-                  snapshot: quote.snapshot,
-                  input: {
-                    quoteId: quote.id,
-                    maxBudgetAtomic: quote.maxCostAtomic,
-                    question: trimmedQuestion,
-                  },
-                })
-              } catch (error) {
-                releaseRequestLock(lockToken)
-                throw error
-              }
+              if (!approved) return
+              startExecution()
             }}
           >
             <div className="form-field">
