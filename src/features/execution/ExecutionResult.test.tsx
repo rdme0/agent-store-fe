@@ -23,6 +23,18 @@ describe('ExecutionResult', () => {
     expect(container.querySelector('a')).not.toHaveAttribute('href')
   })
 
+  it('renders verified investment-analysis source links from Markdown output', () => {
+    render(
+      <ExecutionResult
+        output={'# 투자 분석\n\n## 요약\n신중한 검토가 필요합니다.\n\n## 출처\n- [공식 공시](https://example.com/disclosure)'}
+        responseFormat="MARKDOWN"
+      />,
+    )
+
+    expect(screen.getByRole('heading', { name: '투자 분석' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: '공식 공시' })).toHaveAttribute('href', 'https://example.com/disclosure')
+  })
+
   it('renders the declared structured contract as readable sections', () => {
     render(
       <ExecutionResult

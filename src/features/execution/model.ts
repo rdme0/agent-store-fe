@@ -114,6 +114,7 @@ export interface ExecutionTimelineState<Payload = unknown> extends ExecutionEven
 
 export type ExecutionTimelineAction<Payload = unknown> =
   | { type: 'event'; event: ExecutionEvent<Payload> }
+  | { type: 'snapshot'; events: readonly ExecutionEvent<Payload>[] }
   | { type: 'connection'; status: ExecutionConnectionStatus; error?: ExecutionError }
   | { type: 'reset'; state?: Partial<ExecutionTimelineState<Payload>> }
 

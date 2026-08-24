@@ -1,8 +1,9 @@
-import { act, cleanup, render } from '@testing-library/react'
+import { act, cleanup, render, renderHook, waitFor } from '@testing-library/react'
 import { createElement } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { streamExecutionEvents } from '../../entities/execution/api'
 import { runExecutionStreamLoop, useExecutionEvents } from './useExecutionEvents'
+import type { ExecutionEvent } from './model'
 
 vi.mock('../../entities/execution/api', () => ({ streamExecutionEvents: vi.fn() }))
 
@@ -63,5 +64,77 @@ describe('execution SSE loop', () => {
     expect(vi.getTimerCount()).toBe(0)
     await act(async () => { await vi.runAllTimersAsync() })
     expect(streamMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('reconciles refreshed GET snapshots into the existing timeline', async () => {
+    streamMock.mockImplementation(async (_id, options) => new Promise((resolve) => {
+      options.signal.addEventListener('abort', () => resolve(), { once: true })
+    }))
+    const rootEvent: ExecutionEvent = {
+      id: 'snapshot-root',
+      sequence: -1,
+      step: { id: 'root', label: 'investment', status: 'RUNNING' },
+    }
+    const { result, rerender, unmount } = renderHook(
+      ({ initialEvents }) => useExecutionEvents({ executionId: 'execution-id', initialEvents }),
+      { initialProps: { initialEvents: [rootEvent] } },
+    )
+
+    expect(result.current.steps.map((step) => step.id)).toEqual(['root'])
+    rerender({
+      initialEvents: [
+        {
+          ...rootEvent,
+          sequence: -2,
+          step: { id: 'root', label: 'investment', status: 'COMPLETED' },
+        },
+        { id: 'snapshot-child', sequence: -1, step: { id: 'financial', label: 'financial', status: 'COMPLETED' } },
+      ],
+    })
+
+    await waitFor(() => expect(result.current.steps.map((step) => step.id)).toEqual(['root', 'financial']))
+    unmount()
+  })
+
+  it('resets on execution identity change and ignores events from the previous stream', async () => {
+    const sessions: Array<Parameters<typeof streamExecutionEvents>[1]> = []
+    streamMock.mockImplementation(async (_id, options) => {
+      sessions.push(options)
+      await new Promise<void>((resolve) => {
+        options.signal.addEventListener('abort', () => resolve(), { once: true })
+      })
+    })
+    interface HookProps {
+      executionId: string
+      initialEvents: ExecutionEvent[]
+    }
+    const firstEvents: ExecutionEvent[] = [{
+      id: 'first-root',
+      sequence: -1,
+      step: { id: 'first-root', label: 'first', status: 'RUNNING' },
+    }]
+    const secondEvents: ExecutionEvent[] = [{
+      id: 'second-root',
+      sequence: -1,
+      step: { id: 'second-root', label: 'second', status: 'RUNNING' },
+    }]
+    const { result, rerender, unmount } = renderHook(
+      ({ executionId, initialEvents }: HookProps) => useExecutionEvents({ executionId, initialEvents }),
+      { initialProps: { executionId: 'first-execution', initialEvents: firstEvents } },
+    )
+    await waitFor(() => expect(sessions).toHaveLength(1))
+
+    rerender({ executionId: 'second-execution', initialEvents: secondEvents })
+    await waitFor(() => expect(sessions).toHaveLength(2))
+    act(() => {
+      sessions[0].onEvent({
+        id: 'late-first-event',
+        type: 'STEP_COMPLETED',
+        payload: { stepId: 'first-root' },
+      })
+    })
+
+    expect(result.current.steps.map((step) => step.id)).toEqual(['second-root'])
+    unmount()
   })
 })

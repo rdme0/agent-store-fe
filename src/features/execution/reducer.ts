@@ -18,6 +18,25 @@ function hasAlreadySeen(state: ExecutionTimelineState, event: ExecutionEvent): b
   return event.id !== undefined && state.seenEventIds.includes(event.id)
 }
 
+function isTerminalStepStatus(status: string): boolean {
+  const normalized = status.toLowerCase().replaceAll('_', '-')
+  return normalized === 'completed'
+    || normalized === 'failed'
+    || normalized === 'succeeded'
+    || normalized === 'skipped'
+    || normalized === 'cancelled'
+}
+
+function mergeStepValue(
+  current: ExecutionStep,
+  incoming: Partial<ExecutionStep>,
+): ExecutionStep {
+  const merged = { ...current, ...incoming }
+  return isTerminalStepStatus(current.status)
+    ? { ...merged, status: current.status }
+    : merged
+}
+
 function mergeStep(
   steps: readonly ExecutionStep[],
   incoming: NonNullable<ExecutionEvent['step']>,
@@ -29,7 +48,7 @@ function mergeStep(
   }
 
   const next = [...steps]
-  next[index] = { ...next[index], ...incoming }
+  next[index] = mergeStepValue(next[index], incoming)
   return next
 }
 
@@ -72,6 +91,58 @@ function reduceEvent<Payload>(
   }
 }
 
+function isTerminalStatus(status: ExecutionTimelineState['status']): boolean {
+  return status === 'succeeded'
+    || status === 'failed'
+    || status === 'cancelled'
+    || status === 'timed-out'
+}
+
+function reconcileSnapshot<Payload>(
+  state: ExecutionTimelineState<Payload>,
+  events: readonly ExecutionEvent<Payload>[],
+): ExecutionTimelineState<Payload> {
+  const snapshot = applyExecutionEvents(events)
+  const currentSteps = new Map(state.steps.map((step) => [step.id, step]))
+  const snapshotStepIds = new Set(snapshot.steps.map((step) => step.id))
+  const steps = [
+    ...snapshot.steps.map((step) => {
+      const current = currentSteps.get(step.id)
+      return current ? mergeStepValue(current, step) : step
+    }),
+    ...state.steps.filter((step) => !snapshotStepIds.has(step.id)),
+  ]
+
+  const status = isTerminalStatus(state.status) ? state.status : snapshot.status
+  const payment = snapshot.payment ?? state.payment
+  const cost = snapshot.cost ?? state.cost
+  const error = snapshot.error ?? state.error
+  const currentSnapshot = JSON.stringify({
+    status: state.status,
+    steps: state.steps,
+    payment: state.payment,
+    cost: state.cost,
+    error: state.error,
+  })
+  const nextSnapshot = JSON.stringify({
+    status,
+    steps,
+    payment,
+    cost,
+    error,
+  })
+  if (currentSnapshot === nextSnapshot) return state
+
+  return {
+    ...state,
+    status,
+    steps,
+    payment,
+    cost,
+    error,
+  }
+}
+
 export function executionTimelineReducer<Payload = unknown>(
   state: ExecutionTimelineState<Payload>,
   action: ExecutionTimelineAction<Payload>,
@@ -79,6 +150,8 @@ export function executionTimelineReducer<Payload = unknown>(
   switch (action.type) {
     case 'event':
       return reduceEvent(state, action.event)
+    case 'snapshot':
+      return reconcileSnapshot(state, action.events)
     case 'connection':
       return {
         ...state,

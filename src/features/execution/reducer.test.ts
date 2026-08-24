@@ -60,6 +60,30 @@ describe('execution timeline reducer', () => {
     expect(initial.events).toHaveLength(2)
   })
 
+  it('does not regress a terminal step when earlier payment events are replayed', () => {
+    const completed = applyExecutionEvents([{
+      id: 'snapshot-step',
+      sequence: 0,
+      step: { id: 'step', label: '뉴스 확인', status: 'COMPLETED' },
+    }])
+
+    const replayed = executionTimelineReducer(completed, {
+      type: 'event',
+      event: { id: 'payment-replay', sequence: 3, step: { id: 'step', status: 'PAYMENT_SETTLED' } },
+    })
+    const staleRefresh = executionTimelineReducer(replayed, {
+      type: 'snapshot',
+      events: [{
+        id: 'snapshot-step-running',
+        sequence: 0,
+        step: { id: 'step', label: '뉴스 확인', status: 'RUNNING' },
+      }],
+    })
+
+    expect(replayed.steps[0].status).toBe('COMPLETED')
+    expect(staleRefresh.steps[0].status).toBe('COMPLETED')
+  })
+
   it('accepts ID-only streams and preserves the last cursor on events without IDs', () => {
     const initial = createExecutionTimelineState({ lastEventId: 'event-1' })
     const next = applyExecutionEvents([
@@ -84,6 +108,39 @@ describe('execution timeline reducer', () => {
     expect(next.error).toEqual({ code: 'STREAM_LOST', message: 'Connection lost', retryable: true })
     expect(next.events).toHaveLength(1)
     expect(next.lastEventId).toBe('event-1')
+  })
+
+  it('merges refreshed execution steps without duplicating them or discarding stream state', () => {
+    const initial = applyExecutionEvents([
+      { id: 'snapshot-root', sequence: -1, step: { id: 'root', label: 'investment', status: 'RUNNING' } },
+      { id: 'stream-terminal', sequence: 7, status: 'succeeded' },
+    ], { connection: 'closed' })
+
+    const next = executionTimelineReducer(initial, {
+      type: 'snapshot',
+      events: [
+        { id: 'snapshot-root', sequence: -2, step: { id: 'root', label: 'investment', status: 'COMPLETED' } },
+        { id: 'snapshot-child', sequence: -1, step: { id: 'financial', label: 'financial', status: 'COMPLETED' } },
+        { id: 'snapshot-execution', sequence: 0, status: 'running' },
+      ],
+    })
+
+    expect(next.steps.map((step) => step.id)).toEqual(['root', 'financial'])
+    expect(next.steps[0].status).toBe('COMPLETED')
+    expect(next.status).toBe('succeeded')
+    expect(next.connection).toBe('closed')
+    expect(next.lastEventId).toBe('stream-terminal')
+    expect(next.lastSequence).toBe(7)
+
+    const repeated = executionTimelineReducer(next, {
+      type: 'snapshot',
+      events: [
+        { id: 'snapshot-root', sequence: -2, step: { id: 'root', label: 'investment', status: 'COMPLETED' } },
+        { id: 'snapshot-child', sequence: -1, step: { id: 'financial', label: 'financial', status: 'COMPLETED' } },
+        { id: 'snapshot-execution', sequence: 0, status: 'running' },
+      ],
+    })
+    expect(repeated).toBe(next)
   })
 })
 

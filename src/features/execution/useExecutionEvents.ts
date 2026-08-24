@@ -1,4 +1,4 @@
-import { useEffect, useReducer } from 'react'
+import { useEffect, useReducer, useRef } from 'react'
 import { streamExecutionEvents } from '../../entities/execution/api'
 import { applyExecutionEvents, executionTimelineReducer } from './reducer'
 import type { ExecutionEvent, ExecutionTimelineState } from './model'
@@ -84,31 +84,51 @@ export function useExecutionEvents({
   onEvent,
   onSessionEnd,
 }: UseExecutionEventsOptions): ExecutionTimelineState {
+  const timelineExecutionId = useRef(executionId)
+  const streamGeneration = useRef(0)
   const [timeline, dispatch] = useReducer(
     executionTimelineReducer,
     undefined,
     () => applyExecutionEvents(initialEvents),
   )
   useEffect(() => {
+    if (timelineExecutionId.current !== executionId) {
+      timelineExecutionId.current = executionId
+      dispatch({ type: 'reset', state: applyExecutionEvents(initialEvents) })
+      return
+    }
+
+    dispatch({ type: 'snapshot', events: initialEvents })
+  }, [executionId, initialEvents])
+
+  useEffect(() => {
+    const generation = ++streamGeneration.current
     const controller = new AbortController()
     void runExecutionStreamLoop(executionId, {
       signal: controller.signal,
       onSessionEnd,
       onEvent: (event) => {
+        if (streamGeneration.current !== generation) return
         dispatch({ type: 'event', event: toTimelineEvent(event, labelForVersion) })
         onEvent?.()
       },
-      onConnection: (status, error) => dispatch({
-        type: 'connection',
-        status,
-        error: status === 'error'
-          ? { code: 'SSE_CONNECTION_LOST', message: '실시간 연결이 끊겼습니다. 다시 연결합니다.', retryable: true }
-          : error instanceof Error
-            ? { message: error.message }
-            : undefined,
-      }),
+      onConnection: (status, error) => {
+        if (streamGeneration.current !== generation) return
+        dispatch({
+          type: 'connection',
+          status,
+          error: status === 'error'
+            ? { code: 'SSE_CONNECTION_LOST', message: '실시간 연결이 끊겼습니다. 다시 연결합니다.', retryable: true }
+            : error instanceof Error
+              ? { message: error.message }
+              : undefined,
+        })
+      },
     })
-    return () => controller.abort()
+    return () => {
+      streamGeneration.current += 1
+      controller.abort()
+    }
   }, [executionId, labelForVersion, onEvent, onSessionEnd])
 
   return timeline
