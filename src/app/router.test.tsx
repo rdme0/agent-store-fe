@@ -4,9 +4,13 @@ import {
   createMemoryRouter,
   RouterProvider,
 } from 'react-router-dom'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { routes } from './router'
 import { queryClient } from './queryClient'
+
+vi.mock('../entities/function-contract/api', () => ({
+  listFunctionContracts: vi.fn().mockResolvedValue([]),
+}))
 
 function renderAt(path: string) {
   const memoryRouter = createMemoryRouter(routes, {
@@ -23,7 +27,7 @@ function renderAt(path: string) {
 afterEach(() => cleanup())
 
 describe('application routing', () => {
-  it('uses Marketplace as the root route', () => {
+  it('uses Marketplace as the root route', async () => {
     renderAt('/')
 
     expect(
@@ -33,7 +37,7 @@ describe('application routing', () => {
     fireEvent.click(screen.getByRole('link', { name: 'Agent 등록' }))
 
     expect(
-      screen.getByRole('heading', { name: '새 Agent 등록' }),
+      await screen.findByRole('heading', { name: '새 Agent 등록' }),
     ).toBeInTheDocument()
   })
 

@@ -5,12 +5,14 @@ import { disableAgentVersion, getAgentBySlug, publishAgentVersion } from '../ent
 import { getActiveVersion, type AgentVersionModel } from '../entities/agent/model'
 import { DependencyEditor } from '../features/dependencies/DependencyEditor'
 import { QuotePanel } from '../features/dependencies/QuotePanel'
+import { useDisplayMode } from '../app/DisplayModeContext'
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : 'Agent 정보를 불러오지 못했습니다.'
 }
 
 export function AgentDetailPage() {
+  const { displayMode } = useDisplayMode()
   const { slug = '' } = useParams<{ slug: string }>()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
@@ -32,8 +34,8 @@ export function AgentDetailPage() {
     }
   }, [])
   const agentQuery = useQuery({
-    queryKey: ['agent', slug],
-    queryFn: () => getAgentBySlug(slug),
+    queryKey: ['agent', slug, displayMode],
+    queryFn: () => getAgentBySlug(slug, displayMode),
     enabled: Boolean(slug),
   })
   const actionMutation = useMutation({
@@ -91,6 +93,17 @@ export function AgentDetailPage() {
   }
 
   const agent = agentQuery.data
+  const activeVersion = getActiveVersion(agent)
+  if (displayMode === 'easy') {
+    return (
+      <section className="agent-detail-page agent-detail-page--easy" aria-labelledby="agent-detail-title">
+        <Link className="back-link" to="/">← 다른 Agent 보기</Link>
+        <h1 id="agent-detail-title">{agent.name}</h1>
+        <p className="detail-description">{agent.description}</p>
+        {activeVersion ? <QuotePanel mode="easy" slug={slug} version={activeVersion} /> : <p className="state-card">지금은 이 분석을 준비 중이에요.</p>}
+      </section>
+    )
+  }
   const actionError = actionMutation.error
   return (
     <section className="agent-detail-page" aria-labelledby="agent-detail-title">
@@ -103,9 +116,9 @@ export function AgentDetailPage() {
         </div>
         <aside className="agent-detail-page__pricing" aria-label="현재 Agent 정보">
           <span>현재 호출 비용</span>
-          <strong>{getActiveVersion(agent)?.priceLabel ?? '공개 Version 없음'}</strong>
-          <small>{getActiveVersion(agent) ? `v${getActiveVersion(agent)!.semver} · ${getActiveVersion(agent)!.network}` : '실행하려면 Version을 공개하세요.'}</small>
-          {getActiveVersion(agent) ? <a className="button button--primary" href="#quote-panel">실행 준비</a> : null}
+          <strong>{activeVersion?.priceLabel ?? '공개 Version 없음'}</strong>
+          <small>{activeVersion ? `v${activeVersion.semver} · ${activeVersion.network}` : '실행하려면 Version을 공개하세요.'}</small>
+          {activeVersion ? <a className="button button--primary" href="#quote-panel">실행 준비</a> : null}
         </aside>
       </div>
       <div aria-atomic="true" aria-live="polite" className="visually-hidden">{actionNotice}</div>
@@ -132,12 +145,12 @@ export function AgentDetailPage() {
       {agent.versions.filter((version) => version.status === 'DRAFT').map((version) => (
         <DependencyEditor agent={agent} key={version.id} slug={slug} version={version} />
       ))}
-      {getActiveVersion(agent) ? (
+      {activeVersion ? (
         <div id="quote-panel">
           <QuotePanel
-            key={`${slug}:${getActiveVersion(agent)!.id}`}
+            key={`${slug}:${activeVersion.id}`}
             slug={slug}
-            version={getActiveVersion(agent)!}
+            version={activeVersion}
           />
         </div>
       ) : null}

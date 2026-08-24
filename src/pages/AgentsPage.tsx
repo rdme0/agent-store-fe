@@ -3,6 +3,7 @@ import { type ChangeEvent, type FormEvent, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { listMarketplaceAgents, type MarketplaceAgentSort } from '../entities/agent/api'
 import { getActiveVersion, type AgentModel } from '../entities/agent/model'
+import { useDisplayMode } from '../app/DisplayModeContext'
 
 const PAGE_SIZE = 12
 
@@ -11,13 +12,14 @@ function getErrorMessage(error: unknown): string {
 }
 
 export function AgentsPage() {
+  const { displayMode } = useDisplayMode()
   const [searchDraft, setSearchDraft] = useState('')
   const [criteria, setCriteria] = useState<{ q?: string; sort: MarketplaceAgentSort }>({ sort: 'newest' })
   const loadMoreLockedRef = useRef(false)
   const agentsQuery = useInfiniteQuery({
-    queryKey: ['marketplace-agents', criteria],
+    queryKey: ['marketplace-agents', displayMode, criteria],
     initialPageParam: undefined as string | undefined,
-    queryFn: ({ pageParam }) => listMarketplaceAgents({ ...criteria, cursor: pageParam, limit: PAGE_SIZE }),
+    queryFn: ({ pageParam }) => listMarketplaceAgents({ ...criteria, cursor: pageParam, limit: PAGE_SIZE, view: displayMode }),
     getNextPageParam: (page) => page.nextCursor ?? undefined,
     retry: false,
   })
@@ -55,7 +57,7 @@ export function AgentsPage() {
             목적과 비용을 비교하고, 필요한 Agent를 실행해 보세요.
           </p>
         </div>
-        <Link className="button button--primary" to="/agents/new">새 Agent 등록</Link>
+        {displayMode === 'developer' ? <Link className="button button--primary" to="/agents/new">새 Agent 등록</Link> : null}
       </div>
 
       <form className="marketplace-toolbar" onSubmit={submitSearch} role="search">
@@ -91,14 +93,14 @@ export function AgentsPage() {
       {agentsQuery.isSuccess && agents.length === 0 ? (
         <div className="state-card">
           <h2>등록된 Agent가 없습니다.</h2>
-          <p>첫 번째 Agent를 등록하고 공개할 Version을 준비해 보세요.</p>
-          <Link className="button button--secondary" to="/agents/new">Agent 등록하기</Link>
+          <p>{displayMode === 'easy' ? '지금 이용할 수 있는 분석 Agent가 없습니다.' : '첫 번째 Agent를 등록하고 공개할 Version을 준비해 보세요.'}</p>
+          {displayMode === 'developer' ? <Link className="button button--secondary" to="/agents/new">Agent 등록하기</Link> : null}
         </div>
       ) : null}
       {agentsQuery.isSuccess && agents.length > 0 ? (
         <>
           <div className="marketplace-grid">
-            {agents.map((agent) => <AgentCard agent={agent} key={agent.id} />)}
+            {agents.map((agent) => <AgentCard agent={agent} key={agent.id} mode={displayMode} />)}
           </div>
           {agentsQuery.hasNextPage ? (
             <div className="marketplace-page__more">
@@ -114,28 +116,30 @@ export function AgentsPage() {
   )
 }
 
-function AgentCard({ agent }: { agent: AgentModel }) {
+function AgentCard({ agent, mode }: { agent: AgentModel; mode: 'easy' | 'developer' }) {
   const activeVersion = getActiveVersion(agent)
   return (
     <article className="marketplace-agent-card">
-      <Link aria-label={`${agent.name} 상세 보기`} className="marketplace-agent-card__surface-link" to={`/agents/${agent.slug}`} />
-      <div className="marketplace-agent-card__header">
-        <div>
-          <h2>{agent.name}</h2>
-          <p className="marketplace-agent-card__developer">{agent.developerName}</p>
+      <Link aria-label={`${agent.name} 상세 및 실행`} className="marketplace-agent-card__link" to={`/agents/${agent.slug}`}>
+        <div className="marketplace-agent-card__header">
+          <div>
+            <h2>{agent.name}</h2>
+            {mode === 'developer' ? <p className="marketplace-agent-card__developer">{agent.developerName}</p> : null}
+          </div>
+          <span className="status-badge status-badge--active">공개됨</span>
         </div>
-        <span className="status-badge status-badge--active">공개됨</span>
-      </div>
-      <p className="marketplace-agent-card__description">{agent.description}</p>
-      <dl className="marketplace-agent-card__meta">
-        <div><dt>Version</dt><dd>{activeVersion ? `v${activeVersion.semver}` : '공개 Version 없음'}</dd></div>
-        <div><dt>호출 비용</dt><dd>{activeVersion?.priceLabel ?? '가격 미정'}</dd></div>
-        <div><dt>Version 수</dt><dd>{agent.dependencyCount}개</dd></div>
-      </dl>
-      <div className="marketplace-agent-card__actions">
-        <Link className="text-link" to={`/agents/${agent.slug}`}>상세 보기</Link>
-        <Link className="button button--secondary" to={`/agents/${agent.slug}`}>실행 준비</Link>
-      </div>
+        <p className="marketplace-agent-card__description">{agent.description}</p>
+        {mode === 'easy' ? (
+          <p className="marketplace-agent-card__easy-price">한 번 분석할 때 {activeVersion?.priceLabel ?? '가격 미정'}부터</p>
+        ) : (
+          <dl className="marketplace-agent-card__meta">
+            <div><dt>Version</dt><dd>{activeVersion ? `v${activeVersion.semver}` : '공개 Version 없음'}</dd></div>
+            <div><dt>기본 호출 비용</dt><dd>{activeVersion?.priceLabel ?? '가격 미정'}</dd></div>
+            <div><dt>의존성 수</dt><dd>{agent.dependencyCount}개</dd></div>
+          </dl>
+        )}
+        <span className="marketplace-agent-card__cta">{mode === 'easy' ? '분석해 보기' : '상세 및 실행'} <span aria-hidden="true">→</span></span>
+      </Link>
     </article>
   )
 }

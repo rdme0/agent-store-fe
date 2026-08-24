@@ -1,5 +1,5 @@
 import { Menu, X } from 'lucide-react'
-import { useId, useRef, useState, type KeyboardEvent } from 'react'
+import { useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 import {
   createBrowserRouter,
   isRouteErrorResponse,
@@ -12,7 +12,9 @@ import {
 } from 'react-router-dom'
 import { ConnectionStatus } from '../features/system/ConnectionStatus'
 import { AgentDetailPage } from '../pages/AgentDetailPage'
+import { AgentManifestPage } from '../pages/AgentManifestPage'
 import { AgentsPage } from '../pages/AgentsPage'
+import { FunctionContractsPage } from '../pages/FunctionContractsPage'
 import { DeveloperDashboardPage } from '../pages/DeveloperDashboardPage'
 import { ExecutionPage } from '../pages/ExecutionPage'
 import { NewAgentVersionPage } from '../pages/NewAgentVersionPage'
@@ -20,18 +22,25 @@ import { NotFoundPage } from '../pages/NotFoundPage'
 import { RegisterAgentPage } from '../pages/RegisterAgentPage'
 import { SettingsPage } from '../pages/SettingsPage'
 import { ErrorBoundary } from './ErrorBoundary'
+import { useDisplayMode } from './DisplayModeContext'
 
 const navigationItems = [
   { label: 'Marketplace', to: '/', end: true },
   { label: 'Agent 등록', to: '/agents/new', end: false },
+  { label: '기능 계약', to: '/function-contracts', end: true },
+  { label: '매니페스트 등록', to: '/agent-manifests/new', end: true },
   { label: '개발자 대시보드', to: '/developer/revenue', end: true },
 ]
 
 function AppShell() {
+  const { displayMode, setDisplayMode } = useDisplayMode()
   const [isMenuOpen, setMenuOpen] = useState(false)
   const menuId = useId()
   const menuButtonRef = useRef<HTMLButtonElement>(null)
   const drawerRef = useRef<HTMLElement>(null)
+  const visibleNavigationItems = displayMode === 'developer'
+    ? navigationItems
+    : navigationItems.filter((item) => item.to === '/')
 
   function closeMenu(restoreFocus: boolean) {
     setMenuOpen(false)
@@ -81,7 +90,7 @@ function AppShell() {
             <span>AgentStore</span>
           </NavLink>
           <nav aria-label="주요 탐색" className="app-navigation">
-            {navigationItems.map((item) => (
+            {visibleNavigationItems.map((item) => (
               <NavLink
                 className={({ isActive }) => isActive ? 'app-navigation__link app-navigation__link--active' : 'app-navigation__link'}
                 end={item.end}
@@ -94,6 +103,7 @@ function AppShell() {
             ))}
           </nav>
           <div className="app-header__actions">
+            <DisplayModeToggle displayMode={displayMode} onChange={setDisplayMode} />
             <ConnectionStatus />
             <button
               aria-controls={menuId}
@@ -112,7 +122,8 @@ function AppShell() {
           <div className="mobile-drawer-layer">
             <button aria-label="메뉴 닫기" className="mobile-drawer-layer__backdrop" onClick={() => closeMenu(true)} type="button" />
             <nav aria-label="모바일 주요 탐색" aria-modal="true" className="mobile-navigation" id={menuId} onKeyDown={handleDrawerKeyDown} ref={drawerRef} role="dialog">
-              {navigationItems.map((item) => (
+              <DisplayModeToggle displayMode={displayMode} onChange={setDisplayMode} />
+              {visibleNavigationItems.map((item) => (
                 <NavLink
                   className={({ isActive }) => isActive ? 'mobile-navigation__link mobile-navigation__link--active' : 'mobile-navigation__link'}
                   end={item.end}
@@ -123,12 +134,21 @@ function AppShell() {
                   {item.label}
                 </NavLink>
               ))}
-              <NavLink className="mobile-navigation__link" onClick={() => closeMenu(false)} to="/settings">연결 정보</NavLink>
+              {displayMode === 'developer' ? <NavLink className="mobile-navigation__link" onClick={() => closeMenu(false)} to="/settings">연결 정보</NavLink> : null}
             </nav>
           </div>
         ) : null}
       </header>
       <main className="app-main" id="main-content"><Outlet /></main>
+    </div>
+  )
+}
+
+function DisplayModeToggle({ displayMode, onChange }: { displayMode: 'easy' | 'developer'; onChange: (mode: 'easy' | 'developer') => void }) {
+  return (
+    <div aria-label="화면 모드" className="display-mode-toggle" role="group">
+      <button aria-pressed={displayMode === 'easy'} className={displayMode === 'easy' ? 'display-mode-toggle__button display-mode-toggle__button--active' : 'display-mode-toggle__button'} onClick={() => onChange('easy')} type="button">쉬운 사용</button>
+      <button aria-pressed={displayMode === 'developer'} className={displayMode === 'developer' ? 'display-mode-toggle__button display-mode-toggle__button--active' : 'display-mode-toggle__button'} onClick={() => onChange('developer')} type="button">개발자</button>
     </div>
   )
 }
@@ -147,6 +167,11 @@ function RouteErrorPage() {
   )
 }
 
+function DeveloperRoute({ children }: { children: ReactNode }) {
+  const { displayMode } = useDisplayMode()
+  return displayMode === 'developer' ? children : <Navigate replace to="/" />
+}
+
 // eslint-disable-next-line react-refresh/only-export-components
 export const routes: RouteObject[] = [
   {
@@ -156,12 +181,14 @@ export const routes: RouteObject[] = [
     children: [
       { index: true, element: <AgentsPage /> },
       { path: 'agents', element: <Navigate replace to="/" /> },
-      { path: 'agents/new', element: <RegisterAgentPage /> },
-      { path: 'agents/:slug/versions/new', element: <NewAgentVersionPage /> },
+      { path: 'agents/new', element: <DeveloperRoute><RegisterAgentPage /></DeveloperRoute> },
+      { path: 'agent-manifests/new', element: <DeveloperRoute><AgentManifestPage /></DeveloperRoute> },
+      { path: 'agents/:slug/versions/new', element: <DeveloperRoute><NewAgentVersionPage /></DeveloperRoute> },
       { path: 'agents/:slug', element: <AgentDetailPage /> },
+      { path: 'function-contracts', element: <DeveloperRoute><FunctionContractsPage /></DeveloperRoute> },
       { path: 'runs/:id', element: <ExecutionPage /> },
-      { path: 'developer/revenue', element: <DeveloperDashboardPage /> },
-      { path: 'settings', element: <SettingsPage /> },
+      { path: 'developer/revenue', element: <DeveloperRoute><DeveloperDashboardPage /></DeveloperRoute> },
+      { path: 'settings', element: <DeveloperRoute><SettingsPage /></DeveloperRoute> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },

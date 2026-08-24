@@ -11,6 +11,7 @@ import {
   registerAgent,
 } from '../entities/agent/api'
 import type { AgentModel, AgentVersionModel } from '../entities/agent/model'
+import { listFunctionContracts } from '../entities/function-contract/api'
 import { AgentDetailPage } from './AgentDetailPage'
 import { AgentsPage } from './AgentsPage'
 import { NewAgentVersionPage } from './NewAgentVersionPage'
@@ -24,6 +25,7 @@ vi.mock('../entities/agent/api', () => ({
   publishAgentVersion: vi.fn(),
   registerAgent: vi.fn(),
 }))
+vi.mock('../entities/function-contract/api', () => ({ listFunctionContracts: vi.fn() }))
 vi.mock('../shared/config/env', () => ({
   API_BASE_URL: 'http://localhost:8080',
   DEMO_DEVELOPER_ID: '123e4567-e89b-12d3-a456-426614174000',
@@ -36,6 +38,7 @@ const createAgentVersionMock = vi.mocked(createAgentVersion)
 const disableAgentVersionMock = vi.mocked(disableAgentVersion)
 const publishAgentVersionMock = vi.mocked(publishAgentVersion)
 const registerAgentMock = vi.mocked(registerAgent)
+const listFunctionContractsMock = vi.mocked(listFunctionContracts)
 
 const baseAgent: AgentModel = {
   id: 'agent-id',
@@ -78,6 +81,7 @@ function renderRoute(path: string, route: { path: string; element: React.ReactEl
 
 beforeEach(() => {
   vi.resetAllMocks()
+  listFunctionContractsMock.mockResolvedValue([])
 })
 
 afterEach(() => {
@@ -102,7 +106,7 @@ describe('Marketplace public states', () => {
     await waitFor(() => expect(listMarketplaceAgentsMock).toHaveBeenCalledTimes(2))
   })
 
-  it('passes search and sort criteria only to the Marketplace adapter', async () => {
+  it('passes search, sort, and the selected display mode to the Marketplace adapter', async () => {
     listMarketplaceAgentsMock.mockResolvedValue({ items: [baseAgent], nextCursor: null })
     renderWithQuery(<AgentsPage />)
 
@@ -111,7 +115,7 @@ describe('Marketplace public states', () => {
     fireEvent.change(screen.getByLabelText('정렬'), { target: { value: 'name_asc' } })
     fireEvent.submit(screen.getByRole('search'))
 
-    await waitFor(() => expect(listMarketplaceAgentsMock).toHaveBeenLastCalledWith({ cursor: undefined, limit: 12, q: 'risk', sort: 'name_asc' }))
+    await waitFor(() => expect(listMarketplaceAgentsMock).toHaveBeenLastCalledWith({ cursor: undefined, limit: 12, q: 'risk', sort: 'name_asc', view: 'developer' }))
     expect(await screen.findByRole('heading', { name: 'Demo Agent' })).toBeInTheDocument()
   })
 
@@ -119,7 +123,18 @@ describe('Marketplace public states', () => {
     listMarketplaceAgentsMock.mockResolvedValue({ items: [{ ...baseAgent, dependencyCount: 3, versions: [] }], nextCursor: null })
     renderWithQuery(<AgentsPage />)
 
+    expect(await screen.findByText('의존성 수')).toBeInTheDocument()
     expect(await screen.findByText('3개')).toBeInTheDocument()
+  })
+
+  it('shows the active Version price in one card-wide detail and execution navigation', async () => {
+    listMarketplaceAgentsMock.mockResolvedValue({ items: [baseAgent], nextCursor: null })
+    renderWithQuery(<AgentsPage />)
+
+    expect(await screen.findByText('기본 호출 비용')).toBeInTheDocument()
+    expect(screen.getByText('0.01 USDC')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Demo Agent 상세 및 실행' })).toHaveAttribute('href', '/agents/demo-agent')
+    expect(screen.getByText('상세 및 실행')).toBeInTheDocument()
   })
 
   it('appends the next cursor page once when load more is clicked twice in the same tick', async () => {
@@ -215,7 +230,7 @@ describe('Agent registration flow', () => {
     const invalidate = vi.spyOn(queryClient, 'invalidateQueries').mockResolvedValue(undefined)
     render(<QueryClientProvider client={queryClient}><RouterProvider router={router} /></QueryClientProvider>)
 
-    fireEvent.change(screen.getByLabelText(/Agent 주소/), { target: { value: 'demo-agent' } })
+    fireEvent.change(await screen.findByLabelText(/Agent 주소/), { target: { value: 'demo-agent' } })
     fireEvent.change(screen.getByLabelText(/Agent 이름/), { target: { value: 'Demo Agent' } })
     fireEvent.change(screen.getByLabelText(/^설명/), { target: { value: 'Fixture agent' } })
     fireEvent.change(screen.getByLabelText(/수익 수령 지갑/), { target: { value: '0x0000000000000000000000000000000000000001' } })
