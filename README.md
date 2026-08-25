@@ -22,8 +22,8 @@ flowchart LR
 | `/` | Marketplace | 서버 검색·정렬, cursor pagination, ACTIVE Agent 카드 |
 | `/agents` | redirect | `/`로 이동 |
 | `/agents/new` | Agent 등록 | Agent와 최초 Version, 응답 형식 입력 |
-| `/agents/:slug` | Agent Detail | Version publish/disable, dependency 관리, Quote/실행 |
-| `/agents/:slug/versions/new` | Version 등록 | endpoint, 가격, network, asset, payTo, 응답 형식 입력 |
+| `/agents/:code` | Agent Detail | Version publish/disable, dependency 관리, Quote/실행 |
+| `/agents/:code/versions/new` | Version 등록 | endpoint, 가격, network, asset, payTo, 응답 형식 입력 |
 | `/runs/:id` | Execution | 초기 snapshot + SSE timeline, 결과와 결제 표시 |
 | `/developer/revenue` | 개발자 대시보드 | direct/dependency 수익과 거래 참조 |
 | `/settings` | 연결 정보 | 적용 중인 API URL과 developer ID 설정 상태 |
@@ -102,13 +102,14 @@ flowchart TD
 
 ## 5. Agent와 Version 관리
 
-- Agent 등록은 slug/name/description과 최초 Version 계약을 함께 전송합니다.
+- Agent 등록은 code/name/description과 최초 Version 계약을 함께 전송합니다.
 - 새 Version은 semver, endpoint, atomic price, network, asset, payTo와 응답 형식을 입력합니다. 기본값은 `JSON`입니다.
 - 응답 형식은 `TEXT`, `MARKDOWN`, `STRUCTURED`, `JSON`이며, Version 상세에서 선택한 형식을 확인할 수 있습니다.
 - `DRAFT` Version을 publish하면 Marketplace/Quote 대상이 됩니다.
 - ACTIVE Version은 disable할 수 있습니다.
-- dependency는 대상 Agent, Version constraint, required 여부, 가격 상한, 최대 호출 수를 가집니다.
-- publish/disable confirmation은 현재 slug를 owner로 보관합니다. 이동 중 완료된 이전 mutation이 새 Agent 화면의 dialog나 상태를 덮지 않게 합니다.
+- dependency는 대상 Agent, Python식 Version constraint(`==1.0.0`, `>=1.0.0,<2.0.0`, `*`), required 여부, 가격 상한,
+  최대 호출 수를 가집니다.
+- publish/disable confirmation은 현재 code를 owner로 보관합니다. 이동 중 완료된 이전 mutation이 새 Agent 화면의 dialog나 상태를 덮지 않게 합니다.
 - mutation 성공 뒤 관련 Agent query를 invalidate해 서버 상태를 다시 읽습니다.
 
 서버가 최종 검증자입니다. FE의 required/maxLength는 빠른 피드백을 위한 것이며 권한·가격·상태 검증을 대신하지 않습니다.

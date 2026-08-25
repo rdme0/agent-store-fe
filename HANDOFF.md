@@ -1,6 +1,17 @@
 # AgentStore FE 인수인계서
 
-최종 갱신: 2026-08-24
+최종 갱신: 2026-08-25
+
+## AgentCode/OpenAPI HIGH_RISK failure matrix
+
+| ID | 실패 경계·불변식 | 회귀 검증 |
+|---|---|---|
+| AC-FE-01 | generated client, adapter, form payload와 public JSON은 `slug`가 아닌 `code`/`agentCode`/`targetAgentCode` 계약만 사용한다. | `entities/agent/api.test.ts`, `entities/dependency/api.test.ts`, `npm run api:generate` 후 `rg` 계약 검사 |
+| AC-FE-02 | `/agents/:code` route identity가 바뀌어도 이전 요청·lazy page 응답이 새 Agent 화면을 덮어쓰지 않는다. | `pages/RegistryPages.test.tsx`의 `keeps the next code page visible when the previous route request resolves late` deferred-route test |
+| AC-FE-03 | Quote 발급·새 Version 전환·route unmount 중에는 owner/generation lock을 유지하고 stale quote가 새 Version에 적용되지 않는다. | `features/dependencies/QuotePanel.test.tsx` request owner, reset, unmount cases |
+| AC-FE-06 | 새 Dependency와 Version별 Quote는 Python식 comparator를 전송하며 `^` 문법을 새로 만들지 않는다. | `features/dependencies/DependencyEditor.test.tsx`, `features/dependencies/QuotePanel.test.tsx` |
+| AC-FE-04 | execution snapshot의 Root·dependency·provider candidate `agentCode`를 새로고침/SSE 병합 뒤에도 표시하며 terminal replay가 되돌리지 않는다. | `pages/ExecutionPage.test.tsx`, `features/execution/ExecutionJourney.test.tsx`, `features/execution/reducer.test.ts` |
+| AC-FE-05 | atomic payment 값은 string으로 유지하고 code 전환이 금액·결제 UI 계산을 바꾸지 않는다. | `entities/agent/model.test.ts`, `features/execution/paymentPresentation.test.ts` |
 
 ## Function Contract Marketplace
 
