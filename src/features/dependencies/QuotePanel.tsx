@@ -13,7 +13,7 @@ import type { DisplayMode } from '../../app/DisplayModeContext'
 
 interface QuotePanelProps {
   mode?: DisplayMode
-  slug: string
+  code: string
   version: AgentVersionModel
 }
 
@@ -25,7 +25,7 @@ function errorMessage(error: unknown): string {
 }
 
 function flattenSnapshot(root: QuoteSnapshot): { edges: DependencyEdgeViewModel[]; nodes: DependencyNodeViewModel[] } {
-  const nodes = new Map<string, DependencyNodeViewModel>([[root.version.agentId, { id: root.version.agentId, label: root.version.agentSlug }]])
+  const nodes = new Map<string, DependencyNodeViewModel>([[root.version.agentId, { id: root.version.agentId, label: root.version.agentCode }]])
   const edges: DependencyEdgeViewModel[] = []
   const visited = new Set<string>()
   function visit(snapshot: QuoteSnapshot) {
@@ -35,7 +35,7 @@ function flattenSnapshot(root: QuoteSnapshot): { edges: DependencyEdgeViewModel[
       const targetId = dependency.resolved?.version.agentId ?? dependency.targetAgentId ?? dependency.selection?.functionContractId ?? dependency.dependencyId
       nodes.set(targetId, {
         id: targetId,
-        label: dependency.resolved?.version.agentSlug ?? dependency.targetAgentSlug ?? dependency.selection?.functionCode ?? '기능 계약',
+        label: dependency.resolved?.version.agentCode ?? dependency.targetAgentCode ?? dependency.selection?.functionCode ?? '기능 계약',
         optional: !dependency.required,
       })
       edges.push({
@@ -53,10 +53,10 @@ function flattenSnapshot(root: QuoteSnapshot): { edges: DependencyEdgeViewModel[
 }
 
 export function QuotePanel(props: QuotePanelProps) {
-  return <QuotePanelForIdentity key={`${props.slug}:${props.version.id}`} {...props} />
+  return <QuotePanelForIdentity key={`${props.code}:${props.version.id}`} {...props} />
 }
 
-function QuotePanelForIdentity({ mode = 'developer', slug, version }: QuotePanelProps) {
+function QuotePanelForIdentity({ mode = 'developer', code, version }: QuotePanelProps) {
   const navigate = useNavigate()
   const [question, setQuestion] = useState('')
   const [approved, setApproved] = useState(false)
@@ -113,9 +113,9 @@ function QuotePanelForIdentity({ mode = 'developer', slug, version }: QuotePanel
     onSettled: (_data, _error, variables) => releaseRequestLock(variables.lockToken),
   })
   const quoteQuery = useQuery({
-    queryKey: ['quote', slug, version.id],
+    queryKey: ['quote', code, version.id],
     queryFn: async () => {
-      const nextQuote = await createAgentQuote(slug, { versionConstraint: version.semver })
+      const nextQuote = await createAgentQuote(code, { versionConstraint: version.semver })
       if (mounted.current) {
         executionMutation.reset()
         setApproved(false)
@@ -143,7 +143,7 @@ function QuotePanelForIdentity({ mode = 'developer', slug, version }: QuotePanel
   }
   const graph = useMemo(() => quote ? flattenSnapshot(quote.snapshot) : undefined, [quote])
   const optionalWarning = quote?.warnings.length
-    ? `Optional dependency ${quote.warnings.map((warning) => warning.targetAgentSlug).join(', ')}를 resolve하지 못했습니다.`
+    ? `Optional dependency ${quote.warnings.map((warning) => warning.targetAgentCode).join(', ')}를 resolve하지 못했습니다.`
     : undefined
 
   function startExecution() {

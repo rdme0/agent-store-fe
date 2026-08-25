@@ -18,7 +18,7 @@ describe('Agent API boundary', () => {
       id: 'agent-id',
       developerId: 'developer-id',
       developerName: 'Demo Developer',
-      slug: 'demo-agent',
+      code: 'demo-agent',
       name: 'Demo Agent',
       description: 'Fixture',
       dependencyCount: 0,
@@ -41,7 +41,7 @@ describe('Agent API boundary', () => {
 
     const result = await registerAgent({
       developerId: '123e4567-e89b-12d3-a456-426614174000',
-      slug: 'demo-agent',
+      code: 'demo-agent',
       name: 'Demo Agent',
       description: 'Fixture',
       semver: '1.0.0',
@@ -56,14 +56,14 @@ describe('Agent API boundary', () => {
     expect(request.url).toBe('http://localhost:8080/api/agents')
     expect(request.method).toBe('POST')
     expect(result.versions[0]?.priceLabel).toBe('0.01 USDC')
-    await expect(request.json()).resolves.toMatchObject({ slug: 'demo-agent', priceAtomic: '10000', responseFormat: 'JSON' })
+    await expect(request.json()).resolves.toMatchObject({ code: 'demo-agent', priceAtomic: '10000', responseFormat: 'JSON' })
     expect(result.versions[0]?.responseFormat).toBe('JSON')
   })
 
   it('forwards Marketplace criteria through the generated list query and preserves dependencyCount', async () => {
     fetchMock.mockResolvedValue(new Response(JSON.stringify({ isSuccess: true, message: '요청이 성공했습니다.', errorCode: null, result: {
       items: [{
-        id: 'agent-id', developerId: 'developer-id', developerName: 'Demo Developer', slug: 'demo-agent',
+        id: 'agent-id', developerId: 'developer-id', developerName: 'Demo Developer', code: 'demo-agent',
         name: 'Demo Agent', description: 'Fixture', dependencyCount: 3, versions: [],
         createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z',
       }], nextCursor: null,

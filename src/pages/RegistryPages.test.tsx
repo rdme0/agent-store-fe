@@ -1,11 +1,11 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { createMemoryRouter, MemoryRouter, RouterProvider } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   createAgentVersion,
   disableAgentVersion,
-  getAgentBySlug,
+  getAgentByCode,
   listMarketplaceAgents,
   publishAgentVersion,
   registerAgent,
@@ -20,7 +20,7 @@ import { RegisterAgentPage } from './RegisterAgentPage'
 vi.mock('../entities/agent/api', () => ({
   createAgentVersion: vi.fn(),
   disableAgentVersion: vi.fn(),
-  getAgentBySlug: vi.fn(),
+  getAgentByCode: vi.fn(),
   listMarketplaceAgents: vi.fn(),
   publishAgentVersion: vi.fn(),
   registerAgent: vi.fn(),
@@ -33,7 +33,7 @@ vi.mock('../shared/config/env', () => ({
 }))
 
 const listMarketplaceAgentsMock = vi.mocked(listMarketplaceAgents)
-const getAgentBySlugMock = vi.mocked(getAgentBySlug)
+const getAgentByCodeMock = vi.mocked(getAgentByCode)
 const createAgentVersionMock = vi.mocked(createAgentVersion)
 const disableAgentVersionMock = vi.mocked(disableAgentVersion)
 const publishAgentVersionMock = vi.mocked(publishAgentVersion)
@@ -44,7 +44,7 @@ const baseAgent: AgentModel = {
   id: 'agent-id',
   developerId: 'developer-id',
   developerName: 'Demo Developer',
-  slug: 'demo-agent',
+  code: 'demo-agent',
   name: 'Demo Agent',
   description: 'Fixture agent',
   dependencyCount: 3,
@@ -150,17 +150,40 @@ describe('Marketplace public states', () => {
     fireEvent.click(loadMore)
     expect(listMarketplaceAgentsMock).toHaveBeenCalledTimes(2)
 
-    resolveNextPage?.({ items: [{ ...baseAgent, id: 'second-agent', slug: 'second-agent', name: 'Second Agent' }], nextCursor: null })
+    resolveNextPage?.({ items: [{ ...baseAgent, id: 'second-agent', code: 'second-agent', name: 'Second Agent' }], nextCursor: null })
     expect(await screen.findByRole('heading', { name: 'Second Agent' })).toBeInTheDocument()
   })
 })
 
 describe('Agent detail actions', () => {
+  it('keeps the next code page visible when the previous route request resolves late', async () => {
+    let resolveFirst: ((value: AgentModel) => void) | undefined
+    const secondAgent = { ...baseAgent, id: 'second-agent', code: 'second-agent', name: 'Second Agent' }
+    getAgentByCodeMock
+      .mockImplementationOnce(() => new Promise<AgentModel>((resolve) => { resolveFirst = resolve }))
+      .mockResolvedValueOnce(secondAgent)
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    const router = createMemoryRouter(
+      [{ path: '/agents/:code', element: <AgentDetailPage /> }],
+      { initialEntries: ['/agents/first-agent'] },
+    )
+    render(<QueryClientProvider client={queryClient}><RouterProvider router={router} /></QueryClientProvider>)
+
+    await waitFor(() => expect(getAgentByCodeMock).toHaveBeenCalledWith('first-agent', 'developer'))
+    await act(async () => { await router.navigate('/agents/second-agent') })
+    expect(await screen.findByRole('heading', { name: 'Second Agent' })).toBeInTheDocument()
+
+    resolveFirst?.({ ...baseAgent, code: 'first-agent', name: 'First Agent' })
+
+    await waitFor(() => expect(screen.queryByRole('heading', { name: 'First Agent' })).not.toBeInTheDocument())
+    expect(screen.getByRole('heading', { name: 'Second Agent' })).toBeInTheDocument()
+  })
+
   it('requires confirmation, serializes the action, and invalidates the relevant queries', async () => {
-    getAgentBySlugMock.mockResolvedValue(baseAgent)
+    getAgentByCodeMock.mockResolvedValue(baseAgent)
     publishAgentVersionMock.mockResolvedValue({ ...baseAgent.versions[0], status: 'ACTIVE' })
     disableAgentVersionMock.mockResolvedValue({ ...baseAgent.versions[0], status: 'DISABLED' })
-    const queryClient = renderRoute('/agents/demo-agent', { path: '/agents/:slug', element: <AgentDetailPage /> })
+    const queryClient = renderRoute('/agents/demo-agent', { path: '/agents/:code', element: <AgentDetailPage /> })
     const invalidate = vi.spyOn(queryClient, 'invalidateQueries')
 
     expect(await screen.findByRole('heading', { name: 'Demo Agent' })).toBeInTheDocument()
@@ -177,9 +200,9 @@ describe('Agent detail actions', () => {
 
   it('returns focus to the triggering action and blocks duplicate confirmation clicks', async () => {
     let resolveDisable: ((value: AgentVersionModel) => void) | undefined
-    getAgentBySlugMock.mockResolvedValue(baseAgent)
+    getAgentByCodeMock.mockResolvedValue(baseAgent)
     disableAgentVersionMock.mockImplementationOnce(() => new Promise((resolve) => { resolveDisable = resolve }))
-    renderRoute('/agents/demo-agent', { path: '/agents/:slug', element: <AgentDetailPage /> })
+    renderRoute('/agents/demo-agent', { path: '/agents/:code', element: <AgentDetailPage /> })
 
     const trigger = await screen.findByRole('button', { name: '비활성화' })
     fireEvent.click(screen.getByRole('button', { name: '비활성화' }))
@@ -199,8 +222,8 @@ describe('Agent detail actions', () => {
 
 describe('New Version flow', () => {
   it('shows query error retry and invalidates cached lists before navigation', async () => {
-    getAgentBySlugMock.mockRejectedValueOnce(new Error('Agent 조회 오류')).mockResolvedValue(baseAgent)
-    const queryClient = renderRoute('/agents/demo-agent/versions/new', { path: '/agents/:slug/versions/new', element: <NewAgentVersionPage /> })
+    getAgentByCodeMock.mockRejectedValueOnce(new Error('Agent 조회 오류')).mockResolvedValue(baseAgent)
+    const queryClient = renderRoute('/agents/demo-agent/versions/new', { path: '/agents/:code/versions/new', element: <NewAgentVersionPage /> })
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Agent 조회 오류')
     fireEvent.click(screen.getByRole('button', { name: '다시 시도' }))
@@ -225,7 +248,7 @@ describe('Agent registration flow', () => {
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     const router = createMemoryRouter([
       { path: '/agents/new', element: <RegisterAgentPage /> },
-      { path: '/agents/:slug', element: <p>Agent detail route</p> },
+      { path: '/agents/:code', element: <p>Agent detail route</p> },
     ], { initialEntries: ['/agents/new'] })
     const invalidate = vi.spyOn(queryClient, 'invalidateQueries').mockResolvedValue(undefined)
     render(<QueryClientProvider client={queryClient}><RouterProvider router={router} /></QueryClientProvider>)
@@ -236,7 +259,7 @@ describe('Agent registration flow', () => {
     fireEvent.change(screen.getByLabelText(/수익 수령 지갑/), { target: { value: '0x0000000000000000000000000000000000000001' } })
     fireEvent.click(screen.getByRole('button', { name: 'Agent 등록' }))
 
-    await waitFor(() => expect(registerAgentMock).toHaveBeenCalledWith(expect.objectContaining({ slug: 'demo-agent' })))
+    await waitFor(() => expect(registerAgentMock).toHaveBeenCalledWith(expect.objectContaining({ code: 'demo-agent' })))
     await waitFor(() => expect(invalidate).toHaveBeenCalledWith({ queryKey: ['agents'] }))
     expect(invalidate).toHaveBeenCalledWith({ queryKey: ['marketplace-agents'] })
     expect(await screen.findByText('Agent detail route')).toBeInTheDocument()

@@ -16,10 +16,10 @@ describe('agent registry form validation', () => {
     expect(errors.priceAtomic).toContain('atomic string')
   })
 
-  it('rejects invalid slug and developer identifiers', () => {
+  it('rejects invalid code and developer identifiers', () => {
     const errors = validateAgent({
       developerId: 'demo',
-      slug: 'Demo Agent',
+      code: 'Demo Agent',
       name: 'Demo',
       description: 'Fixture',
       semver: '1.0.0',
@@ -30,7 +30,7 @@ describe('agent registry form validation', () => {
       payTo: '0x1',
     })
 
-    expect(errors.slug).toBeDefined()
+    expect(errors.code).toBeDefined()
     expect(errors.developerId).toContain('UUID')
   })
 

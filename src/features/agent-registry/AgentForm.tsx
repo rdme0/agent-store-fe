@@ -7,10 +7,10 @@ import { usdcToAtomic, validateAgent, validateUsdcAmount, type FieldErrors, type
 
 interface AgentFormProps { functionContracts?: FunctionContractResponse[]; isSubmitting: boolean; serverError?: string; onSubmit: (input: RegisterAgentInput) => Promise<void> }
 
-const initialValues: Omit<VersionFormValues, 'priceAtomic'> & { slug: string; name: string; description: string; priceUsdc: string } = {
-  slug: '', name: '', description: '', semver: '1.0.0', endpoint: 'http://localhost:8090/agents/demo', priceUsdc: '0.01', network: 'eip155:84532', asset: 'USDC', payTo: '', responseFormat: 'JSON',
+const initialValues: Omit<VersionFormValues, 'priceAtomic'> & { code: string; name: string; description: string; priceUsdc: string } = {
+  code: '', name: '', description: '', semver: '1.0.0', endpoint: 'http://localhost:8090/agents/demo', priceUsdc: '0.01', network: 'eip155:84532', asset: 'USDC', payTo: '', responseFormat: 'JSON',
 }
-const fieldOrder = ['slug', 'name', 'description', 'semver', 'endpoint', 'priceUsdc', 'payTo'] as const
+const fieldOrder = ['code', 'name', 'description', 'semver', 'endpoint', 'priceUsdc', 'payTo'] as const
 
 export function AgentForm({ functionContracts = [], isSubmitting, onSubmit, serverError }: AgentFormProps) {
   const [values, setValues] = useState(initialValues)
@@ -64,7 +64,7 @@ export function AgentForm({ functionContracts = [], isSubmitting, onSubmit, serv
 
     submittingRef.current = true
     try {
-      await onSubmit({ developerId: DEMO_DEVELOPER_ID, slug: values.slug, name: values.name, description: values.description, semver: values.semver, endpoint: values.endpoint, priceAtomic: priceAtomic!, network: values.network, asset: values.asset, payTo: values.payTo, responseFormat: selectedFunctionContract?.responseFormat ?? values.responseFormat ?? 'JSON', functionContractId: functionContractId || undefined, usageType })
+      await onSubmit({ developerId: DEMO_DEVELOPER_ID, code: values.code, name: values.name, description: values.description, semver: values.semver, endpoint: values.endpoint, priceAtomic: priceAtomic!, network: values.network, asset: values.asset, payTo: values.payTo, responseFormat: selectedFunctionContract?.responseFormat ?? values.responseFormat ?? 'JSON', functionContractId: functionContractId || undefined, usageType })
     } finally {
       if (mountedRef.current) {
         submittingRef.current = false
@@ -78,7 +78,7 @@ export function AgentForm({ functionContracts = [], isSubmitting, onSubmit, serv
       <fieldset className="registry-form__section" disabled={isSubmitting}>
         <legend>기본 정보</legend><p className="registry-form__section-description">Marketplace에 표시될 Agent 정보를 입력해 주세요.</p>
         <div className="form-grid">
-          <FormField error={errors.slug} label="Agent 주소" required help="영문 소문자, 숫자, 하이픈만 사용합니다. 예: investment-agent"><input ref={(element) => { inputRefs.current.slug = element ?? undefined }} aria-describedby={errors.slug ? 'slug-error' : undefined} aria-invalid={Boolean(errors.slug)} id="slug" onChange={(event) => update('slug', event.target.value)} placeholder="investment-agent" value={values.slug} /></FormField>
+          <FormField error={errors.code} label="Agent 주소" required help="영문 소문자, 숫자, 하이픈만 사용합니다. 예: investment-agent"><input ref={(element) => { inputRefs.current.code = element ?? undefined }} aria-describedby={errors.code ? 'code-error' : undefined} aria-invalid={Boolean(errors.code)} id="code" onChange={(event) => update('code', event.target.value)} placeholder="investment-agent" value={values.code} /></FormField>
           <FormField error={errors.name} label="Agent 이름" required help="사용자에게 보여줄 이름입니다."><input ref={(element) => { inputRefs.current.name = element ?? undefined }} aria-describedby={errors.name ? 'name-error' : undefined} aria-invalid={Boolean(errors.name)} id="name" onChange={(event) => update('name', event.target.value)} placeholder="Investment Agent" value={values.name} /></FormField>
         </div>
         <FormField error={errors.description} label="설명" required help="어떤 요청을 처리하고 어떤 결과를 주는지 간단히 설명해 주세요."><textarea ref={(element) => { inputRefs.current.description = element ?? undefined }} aria-describedby={errors.description ? 'description-error' : undefined} aria-invalid={Boolean(errors.description)} id="description" onChange={(event) => update('description', event.target.value)} placeholder="시장·뉴스·위험 정보를 종합해 투자 관점을 정리합니다." rows={4} value={values.description} /></FormField>

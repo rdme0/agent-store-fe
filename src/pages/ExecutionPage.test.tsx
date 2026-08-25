@@ -43,7 +43,7 @@ function renderPage(withLocationSnapshot = true, displayMode: 'easy' | 'develope
       state: withLocationSnapshot ? {
         quoteSnapshot: {
           version: {
-            id: 'root-version', agentId: 'root-agent', agentSlug: 'investment', semver: '1.0.0',
+            id: 'root-version', agentId: 'root-agent', agentCode: 'investment', semver: '1.0.0',
             endpoint: 'http://localhost:8090/investment', priceAtomic: '1000000', network: 'eip155:84532',
             asset: 'USDC', payTo: '0x0000000000000000000000000000000000000001',
           },
@@ -155,7 +155,7 @@ describe('ExecutionPage', () => {
       reservedCostAtomic: '0', actualCostAtomic: '1000', steps: [],
       quoteSnapshot: {
         version: {
-          id: 'root-version', agentId: 'root-agent', agentSlug: 'investment', agentName: '투자 분석', semver: '1.0.0',
+          id: 'root-version', agentId: 'root-agent', agentCode: 'investment', agentName: '투자 분석', semver: '1.0.0',
           agentDescription: '시장·뉴스·위험 분석을 모아 최종 답변을 만들어요.',
           endpoint: 'http://localhost:8090/investment', priceAtomic: '1000', network: 'eip155:84532',
           asset: 'USDC', payTo: '0x0000000000000000000000000000000000000001', responseFormat: 'MARKDOWN',
@@ -167,11 +167,11 @@ describe('ExecutionPage', () => {
             strategy: 'lowest_price', providerScope: 'marketplace', functionContractId: 'function-contract-id', functionCode: 'news-analysis',
             functionContractVersion: '1.0.0', selectedVersionId: 'news-version', selectedReason: 'selected_by_lowest_price',
             explorationSelected: false,
-            candidates: [{ agentId: 'news-agent', agentSlug: 'news-fast', versionId: 'news-version', semver: '1.0.0', priceAtomic: '500', status: 'selected' }],
+            candidates: [{ agentId: 'news-agent', agentCode: 'news-fast', versionId: 'news-version', semver: '1.0.0', priceAtomic: '500', status: 'selected' }],
           },
           resolved: {
             version: {
-              id: 'news-version', agentId: 'news-agent', agentSlug: 'news-fast', agentName: '빠른 뉴스', semver: '1.0.0',
+              id: 'news-version', agentId: 'news-agent', agentCode: 'news-fast', agentName: '빠른 뉴스', semver: '1.0.0',
               agentDescription: '시장과 관련된 최신 기사를 살펴봐요.',
               endpoint: 'http://localhost:8091/news-fast', priceAtomic: '500', network: 'eip155:84532',
               asset: 'USDC', payTo: '0x0000000000000000000000000000000000000002', responseFormat: 'JSON',
@@ -207,7 +207,7 @@ describe('ExecutionPage', () => {
       }],
       quoteSnapshot: {
         version: {
-          id: 'root-version', agentId: 'root-agent', agentSlug: 'investment', semver: '1.0.0',
+          id: 'root-version', agentId: 'root-agent', agentCode: 'investment', semver: '1.0.0',
           endpoint: 'http://localhost:8090/investment', priceAtomic: '1000', network: 'eip155:84532',
           asset: 'USDC', payTo, responseFormat: 'MARKDOWN',
         },
@@ -236,7 +236,7 @@ describe('ExecutionPage', () => {
       }],
       quoteSnapshot: {
         version: {
-          id: 'root-version', agentId: 'root-agent', agentSlug: 'investment', agentName: '투자 분석',
+          id: 'root-version', agentId: 'root-agent', agentCode: 'investment', agentName: '투자 분석',
           agentDescription: '여러 분석을 모아 답변을 만들어요.', semver: '1.0.0',
           endpoint: 'http://localhost:8090/investment', priceAtomic: '1000', network: 'eip155:84532',
           asset: 'USDC', payTo: '0x0000000000000000000000000000000000000001', responseFormat: 'MARKDOWN',
@@ -260,7 +260,7 @@ describe('ExecutionPage', () => {
       reservedCostAtomic: '1000', actualCostAtomic: '0', steps: [],
       quoteSnapshot: {
         version: {
-          id: 'root-version', agentId: 'root-agent', agentSlug: 'investment', semver: '1.0.0',
+          id: 'root-version', agentId: 'root-agent', agentCode: 'investment', semver: '1.0.0',
           endpoint: 'http://localhost:8090/investment', priceAtomic: '1000', network: 'eip155:84532',
           asset: 'USDC', payTo: '0x0000000000000000000000000000000000000001', responseFormat: 'MARKDOWN',
         },

@@ -15,7 +15,7 @@ export function RegisterAgentPage() {
         queryClient.invalidateQueries({ queryKey: ['agents'] }),
         queryClient.invalidateQueries({ queryKey: ['marketplace-agents'] }),
       ])
-      navigate(`/agents/${agent.slug}`)
+      navigate(`/agents/${agent.code}`)
     },
   })
 

@@ -18,7 +18,7 @@ import { DependencyGraphPanel, type DependencyEdgeViewModel, type DependencyNode
 
 interface DependencyEditorProps {
   agent: AgentModel
-  slug: string
+  code: string
   version: AgentVersionModel
 }
 
@@ -233,7 +233,7 @@ function DependencyForm({ agents, functionContracts, idPrefix, isSubmitting, onC
           <label htmlFor={`dependency-function-${idPrefix}`}>필요한 기능</label>
           {isEditing ? (
             <output className="form-output" id={`dependency-function-${idPrefix}`}>
-              {value?.functionCode ?? value?.targetAgentSlug ?? '특정 Agent 직접 호출'}
+              {value?.functionCode ?? value?.targetAgentCode ?? '특정 Agent 직접 호출'}
             </output>
           ) : (
             <select id={`dependency-function-${idPrefix}`} onChange={(event) => setValues((current) => ({ ...current, functionContractId: event.target.value }))} value={values.functionContractId}>
@@ -257,7 +257,7 @@ function DependencyForm({ agents, functionContracts, idPrefix, isSubmitting, onC
             <label htmlFor={`dependency-target-${idPrefix}`}>{values.targetMode === 'direct' ? '호출할 Agent' : '고정 Agent'}</label>
             <select disabled={isEditing} id={`dependency-target-${idPrefix}`} onChange={(event) => setValues((current) => ({ ...current, targetAgentId: event.target.value }))} value={values.targetAgentId}>
               <option value="">Agent 선택</option>
-              {targetAgents.map((agent) => <option key={agent.id} value={agent.id}>{agent.name} · {agent.slug}</option>)}
+              {targetAgents.map((agent) => <option key={agent.id} value={agent.id}>{agent.name} · {agent.code}</option>)}
             </select>
           </div>
         ) : null}
@@ -265,7 +265,7 @@ function DependencyForm({ agents, functionContracts, idPrefix, isSubmitting, onC
           <div className="form-field">
             <label htmlFor={`dependency-allowlist-${idPrefix}`}>허용 Agent</label>
             <select disabled={isEditing} id={`dependency-allowlist-${idPrefix}`} multiple onChange={(event) => setValues((current) => ({ ...current, allowedProviderAgentIds: Array.from(event.target.selectedOptions, (option) => option.value) }))} value={values.allowedProviderAgentIds}>
-              {targetAgents.map((agent) => <option key={agent.id} value={agent.id}>{agent.name} · {agent.slug}</option>)}
+              {targetAgents.map((agent) => <option key={agent.id} value={agent.id}>{agent.name} · {agent.code}</option>)}
             </select>
           </div>
         ) : null}
@@ -364,7 +364,7 @@ function graphForDependencies(agent: AgentModel, dependencies: DependencyModel[]
   for (const dependency of dependencies) {
     const targetId = dependency.targetAgentId ?? dependency.functionContractId ?? dependency.id
     if (!nodes.some((node) => node.id === targetId)) {
-      nodes.push({ id: targetId, label: dependency.targetAgentSlug ?? dependency.functionCode ?? '기능 계약', optional: !dependency.required })
+      nodes.push({ id: targetId, label: dependency.targetAgentCode ?? dependency.functionCode ?? '기능 계약', optional: !dependency.required })
     }
   }
   return {
@@ -379,7 +379,7 @@ function graphForDependencies(agent: AgentModel, dependencies: DependencyModel[]
   }
 }
 
-export function DependencyEditor({ agent, slug, version }: DependencyEditorProps) {
+export function DependencyEditor({ agent, code, version }: DependencyEditorProps) {
   const queryClient = useQueryClient()
   const mutationLocked = useRef(false)
   const [editingId, setEditingId] = useState<string>()
@@ -403,8 +403,8 @@ export function DependencyEditor({ agent, slug, version }: DependencyEditorProps
   const invalidateDependencyQueries = async () => {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: ['dependencies', version.id] }),
-      queryClient.invalidateQueries({ queryKey: ['agent', slug] }),
-      queryClient.invalidateQueries({ queryKey: ['quote', slug] }),
+      queryClient.invalidateQueries({ queryKey: ['agent', code] }),
+      queryClient.invalidateQueries({ queryKey: ['quote', code] }),
     ])
   }
   const createMutation = useMutation({
@@ -495,7 +495,7 @@ export function DependencyEditor({ agent, slug, version }: DependencyEditorProps
             ) : (
               <>
                 <div>
-                  <strong>{dependency.targetAgentSlug ?? dependency.functionCode ?? '기능 계약'}</strong>
+                  <strong>{dependency.targetAgentCode ?? dependency.functionCode ?? '기능 계약'}</strong>
                   <p className="version-row__meta">{dependency.versionConstraint} · 최대 {dependency.maxCalls}회 · {dependency.maxPriceLabel}</p>
                   <p className="version-row__meta">{dependency.required ? '필수' : '선택'}{dependency.providerScope ? ` · ${providerScopeLabel(dependency.providerScope)}` : ''}{dependency.selectionStrategy ? ` · ${strategyLabel(dependency.selectionStrategy)}` : ''}</p>
                 </div>

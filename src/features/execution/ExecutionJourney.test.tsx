@@ -10,7 +10,7 @@ const snapshot: QuoteSnapshot = {
   version: {
     id: 'root-version',
     agentId: 'root-agent',
-    agentSlug: 'investment',
+    agentCode: 'investment',
     agentName: '투자 분석',
     agentDescription: '여러 전문 분석을 모아 이해하기 쉬운 답변을 만들어요.',
     semver: '1.2.0',
@@ -24,7 +24,7 @@ const snapshot: QuoteSnapshot = {
   dependencies: [{
     dependencyId: 'news-dependency',
     targetAgentId: 'news-agent',
-    targetAgentSlug: 'news',
+    targetAgentCode: 'news',
     versionConstraint: '*',
     required: true,
     maxPriceAtomic: '1000',
@@ -33,7 +33,7 @@ const snapshot: QuoteSnapshot = {
       version: {
         id: 'news-version',
         agentId: 'news-agent',
-        agentSlug: 'news',
+        agentCode: 'news',
         agentName: '최근 뉴스 확인',
         agentDescription: '시장과 관련된 최신 기사를 살펴봐요.',
         semver: '1.0.0',
@@ -76,7 +76,7 @@ function execution(overrides: Partial<ExecutionDto> = {}): ExecutionDto {
 const rootStep: ExecutionDto['steps'][number] = {
   id: 'root-step',
   agentVersionId: 'root-version',
-  agentSlug: 'investment',
+  agentCode: 'investment',
   agentName: '투자 분석',
   status: 'RUNNING',
   costAtomic: '1000',
@@ -109,7 +109,7 @@ describe('ExecutionJourney', () => {
       id: 'news-step',
       parentStepId: 'root-step',
       agentVersionId: 'news-version',
-      agentSlug: 'news',
+      agentCode: 'news',
       agentName: '최근 뉴스 확인',
       status: 'CREATED',
       responseFormat: 'JSON',
@@ -160,7 +160,7 @@ describe('ExecutionJourney', () => {
       id: `news-step-${index}`,
       parentStepId: 'root-step',
       agentVersionId: 'news-version',
-      agentSlug: 'news',
+      agentCode: 'news',
       agentName: '최근 뉴스 확인',
       status: 'COMPLETED',
       costAtomic: costAtomic.toString(),

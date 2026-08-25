@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { disableAgentVersion, getAgentBySlug, publishAgentVersion } from '../entities/agent/api'
+import { disableAgentVersion, getAgentByCode, publishAgentVersion } from '../entities/agent/api'
 import { getActiveVersion, type AgentVersionModel } from '../entities/agent/model'
 import { DependencyEditor } from '../features/dependencies/DependencyEditor'
 import { QuotePanel } from '../features/dependencies/QuotePanel'
@@ -13,19 +13,19 @@ function errorMessage(error: unknown): string {
 
 export function AgentDetailPage() {
   const { displayMode } = useDisplayMode()
-  const { slug = '' } = useParams<{ slug: string }>()
+  const { code = '' } = useParams<{ code: string }>()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const mountedRef = useRef(true)
-  const slugRef = useRef(slug)
+  const codeRef = useRef(code)
   const actionLockedRef = useRef(false)
   const actionTriggerRef = useRef<HTMLButtonElement>(null)
   const [confirmation, setConfirmation] = useState<VersionAction | null>(null)
   const [actionNotice, setActionNotice] = useState<string | null>(null)
 
   useEffect(() => {
-    slugRef.current = slug
-  }, [slug])
+    codeRef.current = code
+  }, [code])
 
   useEffect(() => {
     mountedRef.current = true
@@ -34,9 +34,9 @@ export function AgentDetailPage() {
     }
   }, [])
   const agentQuery = useQuery({
-    queryKey: ['agent', slug, displayMode],
-    queryFn: () => getAgentBySlug(slug, displayMode),
-    enabled: Boolean(slug),
+    queryKey: ['agent', code, displayMode],
+    queryFn: () => getAgentByCode(code, displayMode),
+    enabled: Boolean(code),
   })
   const actionMutation = useMutation({
     mutationFn: ({ kind, versionId }: VersionAction) => {
@@ -52,17 +52,17 @@ export function AgentDetailPage() {
     if (!currentAction || actionLockedRef.current) {
       return
     }
-    const ownerSlug = slug
+    const ownerCode = code
     actionLockedRef.current = true
     setActionNotice(null)
     try {
       await actionMutation.mutateAsync(currentAction)
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['agent', ownerSlug] }),
+        queryClient.invalidateQueries({ queryKey: ['agent', ownerCode] }),
         queryClient.invalidateQueries({ queryKey: ['agents'] }),
         queryClient.invalidateQueries({ queryKey: ['marketplace-agents'] }),
       ])
-      if (mountedRef.current && slugRef.current === ownerSlug) {
+      if (mountedRef.current && codeRef.current === ownerCode) {
         setConfirmation(null)
         window.requestAnimationFrame(() => actionTriggerRef.current?.focus())
         setActionNotice(currentAction.kind === 'publish' ? 'Version을 Marketplace에 공개했습니다.' : 'Version을 비활성화했습니다.')
@@ -100,7 +100,7 @@ export function AgentDetailPage() {
         <Link className="back-link" to="/">← 다른 Agent 보기</Link>
         <h1 id="agent-detail-title">{agent.name}</h1>
         <p className="detail-description">{agent.description}</p>
-        {activeVersion ? <QuotePanel mode="easy" slug={slug} version={activeVersion} /> : <p className="state-card">지금은 이 분석을 준비 중이에요.</p>}
+        {activeVersion ? <QuotePanel mode="easy" code={code} version={activeVersion} /> : <p className="state-card">지금은 이 분석을 준비 중이에요.</p>}
       </section>
     )
   }
@@ -111,7 +111,7 @@ export function AgentDetailPage() {
         <div>
           <Link className="back-link" to="/agents">← Marketplace</Link>
           <h1 id="agent-detail-title">{agent.name}</h1>
-          <p className="agent-detail-page__identity">{agent.developerName} · /{agent.slug}</p>
+          <p className="agent-detail-page__identity">{agent.developerName} · /{agent.code}</p>
           <p className="detail-description">{agent.description}</p>
         </div>
         <aside className="agent-detail-page__pricing" aria-label="현재 Agent 정보">
@@ -125,37 +125,37 @@ export function AgentDetailPage() {
       {actionNotice ? <p className="agent-detail-page__notice" role="status">{actionNotice}</p> : null}
       {actionError ? <p className="form-error form-error--summary" role="alert">{errorMessage(actionError)}</p> : null}
       <section className="version-list" aria-labelledby="versions-title">
-        <div className="section-heading"><h2 id="versions-title">Version</h2><Link className="button button--secondary" to={`/agents/${agent.slug}/versions/new`}>새 Version</Link></div>
+        <div className="section-heading"><h2 id="versions-title">Version</h2><Link className="button button--secondary" to={`/agents/${agent.code}/versions/new`}>새 Version</Link></div>
         {agent.versions.length === 0 ? (
           <div className="state-card">
             <h2>아직 Version이 없습니다.</h2>
             <p>DRAFT Version을 추가해 Agent의 실행 정보를 준비하세요.</p>
-            <Link className="button button--secondary" to={`/agents/${agent.slug}/versions/new`}>Version 추가</Link>
+            <Link className="button button--secondary" to={`/agents/${agent.code}/versions/new`}>Version 추가</Link>
           </div>
         ) : agent.versions.map((version) => (
           <VersionRow
             actionPending={actionMutation.isPending}
             key={version.id}
-            onDisable={(trigger) => requestVersionAction({ kind: 'disable', ownerSlug: slug, versionId: version.id, semver: version.semver }, trigger)}
-            onPublish={(trigger) => requestVersionAction({ kind: 'publish', ownerSlug: slug, versionId: version.id, semver: version.semver }, trigger)}
+            onDisable={(trigger) => requestVersionAction({ kind: 'disable', ownerCode: code, versionId: version.id, semver: version.semver }, trigger)}
+            onPublish={(trigger) => requestVersionAction({ kind: 'publish', ownerCode: code, versionId: version.id, semver: version.semver }, trigger)}
             version={version}
           />
         ))}
       </section>
       {agent.versions.filter((version) => version.status === 'DRAFT').map((version) => (
-        <DependencyEditor agent={agent} key={version.id} slug={slug} version={version} />
+        <DependencyEditor agent={agent} key={version.id} code={code} version={version} />
       ))}
       {activeVersion ? (
         <div id="quote-panel">
           <QuotePanel
-            key={`${slug}:${activeVersion.id}`}
-            slug={slug}
+            key={`${code}:${activeVersion.id}`}
+            code={code}
             version={activeVersion}
           />
         </div>
       ) : null}
       <button className="text-link-button" onClick={() => navigate('/agents')} type="button">목록으로 돌아가기</button>
-      {confirmation?.ownerSlug === slug ? (
+      {confirmation?.ownerCode === code ? (
         <VersionActionDialog
           action={confirmation}
           error={actionMutation.isError ? errorMessage(actionMutation.error) : null}
@@ -182,7 +182,7 @@ interface VersionRowProps {
 
 interface VersionAction {
   kind: 'publish' | 'disable'
-  ownerSlug: string
+  ownerCode: string
   semver: string
   versionId: string
 }

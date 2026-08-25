@@ -1,27 +1,27 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { createAgentVersion, getAgentBySlug, type CreateVersionInput } from '../entities/agent/api'
+import { createAgentVersion, getAgentByCode, type CreateVersionInput } from '../entities/agent/api'
 import { listFunctionContracts } from '../entities/function-contract/api'
 import { VersionForm } from '../features/agent-registry/VersionForm'
 
 export function NewAgentVersionPage() {
-  const { slug = '' } = useParams<{ slug: string }>()
+  const { code = '' } = useParams<{ code: string }>()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const agentQuery = useQuery({
-    queryKey: ['agent', slug, 'developer'],
-    queryFn: () => getAgentBySlug(slug, 'developer'),
-    enabled: Boolean(slug),
+    queryKey: ['agent', code, 'developer'],
+    queryFn: () => getAgentByCode(code, 'developer'),
+    enabled: Boolean(code),
   })
   const functionContractsQuery = useQuery({ queryKey: ['function-contracts'], queryFn: listFunctionContracts })
   const mutation = useMutation({
     mutationFn: (input: CreateVersionInput) => createAgentVersion(agentQuery.data?.id ?? '', input),
     onSuccess: async () => {
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['agent', slug] }),
+        queryClient.invalidateQueries({ queryKey: ['agent', code] }),
         queryClient.invalidateQueries({ queryKey: ['agents'] }),
       ])
-      navigate(`/agents/${slug}`)
+      navigate(`/agents/${code}`)
     },
   })
 
@@ -44,7 +44,7 @@ export function NewAgentVersionPage() {
 
   return (
     <section className="registry-page registry-page--narrow" aria-labelledby="new-version-title">
-      <Link className="back-link" to={`/agents/${slug}`}>← {agentQuery.data.name}</Link>
+      <Link className="back-link" to={`/agents/${code}`}>← {agentQuery.data.name}</Link>
       <p className="eyebrow">New Version</p>
       <h1 id="new-version-title">새 Version을 추가하세요.</h1>
       <p className="page-placeholder__description">새 Version은 DRAFT로 저장되며, Agent Detail에서 Publish할 수 있습니다.</p>

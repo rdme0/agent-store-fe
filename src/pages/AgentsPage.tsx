@@ -120,7 +120,7 @@ function AgentCard({ agent, mode }: { agent: AgentModel; mode: 'easy' | 'develop
   const activeVersion = getActiveVersion(agent)
   return (
     <article className="marketplace-agent-card">
-      <Link aria-label={`${agent.name} 상세 및 실행`} className="marketplace-agent-card__link" to={`/agents/${agent.slug}`}>
+      <Link aria-label={`${agent.name} 상세 및 실행`} className="marketplace-agent-card__link" to={`/agents/${agent.code}`}>
         <div className="marketplace-agent-card__header">
           <div>
             <h2>{agent.name}</h2>

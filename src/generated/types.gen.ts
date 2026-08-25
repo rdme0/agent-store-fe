@@ -29,7 +29,7 @@ export type CommonResponseAgentManifestResponse = {
 };
 
 export type CreateExternalInvocationIntentRequest = {
-    agentSlug?: string | null;
+    agentCode?: string | null;
     functionCode?: string | null;
     contractVersion?: string | null;
     selectionStrategy?: 'lowest_price' | 'latest_version' | 'highest_reliability' | 'fastest' | 'balanced';
@@ -118,7 +118,7 @@ export type CommonResponseExecutionResponse = {
 export type DependencySnapshotDto = {
     dependencyId: string;
     targetAgentId?: string | null;
-    targetAgentSlug?: string | null;
+    targetAgentCode?: string | null;
     selection?: ProviderSelectionSnapshotDto | null;
     versionConstraint: string;
     required: boolean;
@@ -149,7 +149,7 @@ export type ExecutionStepResponse = {
     id: string;
     parentStepId?: string | null;
     agentVersionId: string;
-    agentSlug?: string | null;
+    agentCode?: string | null;
     agentName?: string | null;
     status: 'CREATED' | 'PAYMENT_REQUIRED' | 'PAYMENT_SETTLED' | 'RUNNING' | 'COMPLETED' | 'FAILED';
     costAtomic: string;
@@ -195,7 +195,7 @@ export type PaymentAttemptResponse = {
 
 export type ProviderCandidateSnapshotDto = {
     agentId: string;
-    agentSlug: string;
+    agentCode: string;
     versionId: string;
     semver: string;
     priceAtomic: string;
@@ -228,7 +228,7 @@ export type QuoteSnapshotDto = {
 export type ResolvedVersionSnapshotDto = {
     id: string;
     agentId: string;
-    agentSlug: string;
+    agentCode: string;
     agentName?: string | null;
     agentDescription?: string | null;
     semver: string;
@@ -243,7 +243,7 @@ export type ResolvedVersionSnapshotDto = {
 
 export type CreateAgentRequest = {
     developerId: string;
-    slug: string;
+    code: string;
     name: string;
     description: string;
     semver: string;
@@ -261,7 +261,7 @@ export type AgentResponse = {
     id: string;
     developerId: string;
     developerName: string;
-    slug: string;
+    code: string;
     name: string;
     description: string;
     usageType: 'user_facing' | 'internal_component';
@@ -294,6 +294,24 @@ export type CommonResponseAgentResponse = {
     result?: AgentResponse | null;
 };
 
+export type CreateAgentVersionRequest = {
+    semver: string;
+    endpoint: string;
+    priceAtomic: string;
+    network: string;
+    asset: string;
+    payTo: string;
+    responseFormat: 'TEXT' | 'MARKDOWN' | 'STRUCTURED' | 'JSON';
+    functionContractId?: string | null;
+};
+
+export type CommonResponseAgentVersionResponse = {
+    isSuccess: boolean;
+    message: string;
+    errorCode?: string | null;
+    result?: AgentVersionResponse | null;
+};
+
 export type QuoteRequest = {
     versionConstraint?: string | null;
 };
@@ -319,28 +337,10 @@ export type QuoteWarning = {
     code: string;
     dependencyId: string;
     targetAgentId?: string | null;
-    targetAgentSlug?: string | null;
+    targetAgentCode?: string | null;
     functionContractId?: string | null;
     functionCode?: string | null;
     versionConstraint: string;
-};
-
-export type CreateAgentVersionRequest = {
-    semver: string;
-    endpoint: string;
-    priceAtomic: string;
-    network: string;
-    asset: string;
-    payTo: string;
-    responseFormat: 'TEXT' | 'MARKDOWN' | 'STRUCTURED' | 'JSON';
-    functionContractId?: string | null;
-};
-
-export type CommonResponseAgentVersionResponse = {
-    isSuccess: boolean;
-    message: string;
-    errorCode?: string | null;
-    result?: AgentVersionResponse | null;
 };
 
 export type CreateDependencyRequest = {
@@ -372,7 +372,7 @@ export type DependencyResponse = {
     id: string;
     sourceVersionId: string;
     targetAgentId?: string | null;
-    targetAgentSlug?: string | null;
+    targetAgentCode?: string | null;
     functionContractId?: string | null;
     functionCode?: string | null;
     functionContractVersion?: string | null;
@@ -1116,65 +1116,6 @@ export type PostApiAgentsResponses = {
 
 export type PostApiAgentsResponse = PostApiAgentsResponses[keyof PostApiAgentsResponses];
 
-export type PostApiAgentsBySlugQuotesData = {
-    body?: QuoteRequest;
-    path: {
-        slug: string;
-    };
-    query?: never;
-    url: '/api/agents/{slug}/quotes';
-};
-
-export type PostApiAgentsBySlugQuotesErrors = {
-    /**
-     * Bad request
-     */
-    400: CommonResponse;
-    /**
-     * Unauthorized
-     */
-    401: CommonResponse;
-    /**
-     * Forbidden
-     */
-    403: CommonResponse;
-    /**
-     * Not found
-     */
-    404: CommonResponse;
-    /**
-     * Conflict
-     */
-    409: CommonResponse;
-    /**
-     * Validation error
-     */
-    422: CommonResponse;
-    /**
-     * Internal server error
-     */
-    500: CommonResponse;
-    /**
-     * Upstream failure
-     */
-    502: CommonResponse;
-    /**
-     * Service unavailable
-     */
-    503: CommonResponse;
-};
-
-export type PostApiAgentsBySlugQuotesError = PostApiAgentsBySlugQuotesErrors[keyof PostApiAgentsBySlugQuotesErrors];
-
-export type PostApiAgentsBySlugQuotesResponses = {
-    /**
-     * Created
-     */
-    201: CommonResponseQuoteResponse;
-};
-
-export type PostApiAgentsBySlugQuotesResponse = PostApiAgentsBySlugQuotesResponses[keyof PostApiAgentsBySlugQuotesResponses];
-
 export type PostApiAgentsByIdVersionsData = {
     body: CreateAgentVersionRequest;
     path: {
@@ -1233,6 +1174,65 @@ export type PostApiAgentsByIdVersionsResponses = {
 };
 
 export type PostApiAgentsByIdVersionsResponse = PostApiAgentsByIdVersionsResponses[keyof PostApiAgentsByIdVersionsResponses];
+
+export type PostApiAgentsByCodeQuotesData = {
+    body?: QuoteRequest;
+    path: {
+        code: string;
+    };
+    query?: never;
+    url: '/api/agents/{code}/quotes';
+};
+
+export type PostApiAgentsByCodeQuotesErrors = {
+    /**
+     * Bad request
+     */
+    400: CommonResponse;
+    /**
+     * Unauthorized
+     */
+    401: CommonResponse;
+    /**
+     * Forbidden
+     */
+    403: CommonResponse;
+    /**
+     * Not found
+     */
+    404: CommonResponse;
+    /**
+     * Conflict
+     */
+    409: CommonResponse;
+    /**
+     * Validation error
+     */
+    422: CommonResponse;
+    /**
+     * Internal server error
+     */
+    500: CommonResponse;
+    /**
+     * Upstream failure
+     */
+    502: CommonResponse;
+    /**
+     * Service unavailable
+     */
+    503: CommonResponse;
+};
+
+export type PostApiAgentsByCodeQuotesError = PostApiAgentsByCodeQuotesErrors[keyof PostApiAgentsByCodeQuotesErrors];
+
+export type PostApiAgentsByCodeQuotesResponses = {
+    /**
+     * Created
+     */
+    201: CommonResponseQuoteResponse;
+};
+
+export type PostApiAgentsByCodeQuotesResponse = PostApiAgentsByCodeQuotesResponses[keyof PostApiAgentsByCodeQuotesResponses];
 
 export type PostApiAgentVersionsByIdPublishData = {
     body?: never;
@@ -2263,18 +2263,18 @@ export type GetApiDevelopersByIdRevenueResponses = {
 
 export type GetApiDevelopersByIdRevenueResponse = GetApiDevelopersByIdRevenueResponses[keyof GetApiDevelopersByIdRevenueResponses];
 
-export type GetApiAgentsBySlugData = {
+export type GetApiAgentsByCodeData = {
     body?: never;
     path: {
-        slug: string;
+        code: string;
     };
     query?: {
         view?: string;
     };
-    url: '/api/agents/{slug}';
+    url: '/api/agents/{code}';
 };
 
-export type GetApiAgentsBySlugErrors = {
+export type GetApiAgentsByCodeErrors = {
     /**
      * Bad request
      */
@@ -2313,16 +2313,16 @@ export type GetApiAgentsBySlugErrors = {
     503: CommonResponse;
 };
 
-export type GetApiAgentsBySlugError = GetApiAgentsBySlugErrors[keyof GetApiAgentsBySlugErrors];
+export type GetApiAgentsByCodeError = GetApiAgentsByCodeErrors[keyof GetApiAgentsByCodeErrors];
 
-export type GetApiAgentsBySlugResponses = {
+export type GetApiAgentsByCodeResponses = {
     /**
      * OK
      */
     200: CommonResponseAgentResponse;
 };
 
-export type GetApiAgentsBySlugResponse = GetApiAgentsBySlugResponses[keyof GetApiAgentsBySlugResponses];
+export type GetApiAgentsByCodeResponse = GetApiAgentsByCodeResponses[keyof GetApiAgentsByCodeResponses];
 
 export type GetApiAgentManifestsAgentVersionsById1Data = {
     body?: never;

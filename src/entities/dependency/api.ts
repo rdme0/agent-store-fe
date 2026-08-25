@@ -3,12 +3,12 @@ import {
   getApiAgentVersionsByIdDependencies,
   patchApiAgentVersionsByIdDependenciesByDependencyId,
   postApiAgentVersionsByIdDependencies,
-  postApiAgentsBySlugQuotes,
+  postApiAgentsByCodeQuotes,
   type DependencyResponse,
   type QuoteResponse,
   type PatchApiAgentVersionsByIdDependenciesByDependencyIdData,
   type PostApiAgentVersionsByIdDependenciesData,
-  type PostApiAgentsBySlugQuotesData,
+  type PostApiAgentsByCodeQuotesData,
 } from '../../generated'
 import { normalizeApiRequestError, unwrapCommonResponse } from '../../shared/api/client'
 import { agentStoreClient } from '../../shared/api/generatedClient'
@@ -24,7 +24,7 @@ async function withApiError<T>(operation: () => Promise<T>): Promise<T> {
 
 export type CreateDependencyInput = PostApiAgentVersionsByIdDependenciesData['body']
 export type UpdateDependencyInput = PatchApiAgentVersionsByIdDependenciesByDependencyIdData['body']
-export type CreateQuoteInput = PostApiAgentsBySlugQuotesData['body']
+export type CreateQuoteInput = PostApiAgentsByCodeQuotesData['body']
 
 export function listDependencies(versionId: string): Promise<DependencyModel[]> {
   return withApiError(async () => {
@@ -78,12 +78,12 @@ export function removeDependency(versionId: string, dependencyId: string): Promi
   })
 }
 
-export function createAgentQuote(slug: string, input: CreateQuoteInput = {}): Promise<QuoteModel> {
+export function createAgentQuote(code: string, input: CreateQuoteInput = {}): Promise<QuoteModel> {
   return withApiError(async () => {
-    const response = await postApiAgentsBySlugQuotes({
+    const response = await postApiAgentsByCodeQuotes({
       client: agentStoreClient,
       body: input,
-      path: { slug },
+      path: { code },
       throwOnError: true,
     })
     return toQuoteModel(unwrapCommonResponse<QuoteResponse>(response.data))

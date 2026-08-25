@@ -31,7 +31,7 @@ export function validateUsdcAmount(value: string): string | undefined {
 }
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
-const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
+const CODE_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 const SEMVER_PATTERN = /^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-(?:0|[1-9]\d*|[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9]\d*|[A-Za-z-][0-9A-Za-z-]*))*)?(?:\+(?:[0-9A-Za-z-]+)(?:\.[0-9A-Za-z-]+)*)?$/
 const EVM_ADDRESS_PATTERN = /^0x[0-9a-fA-F]{40}$/
 
@@ -99,26 +99,26 @@ export function validateVersion(values: VersionFormValues): FieldErrors {
 export function validateAgent(
   values: VersionFormValues & {
     developerId: string
-    slug: string
+    code: string
     name: string
     description: string
   },
 ): FieldErrors {
   const errors = validateVersion(values)
   required(values.developerId, 'Developer ID', errors, 'developerId')
-  required(values.slug, 'Slug', errors, 'slug')
+  required(values.code, 'Code', errors, 'code')
   required(values.name, '이름', errors, 'name')
   required(values.description, '설명', errors, 'description')
 
-  bounded(values.slug, 'Slug', 'slug', 1, 80, errors)
+  bounded(values.code, 'Code', 'code', 1, 80, errors)
   bounded(values.name, '이름', 'name', 1, 120, errors)
   bounded(values.description, '설명', 'description', 1, 2000, errors)
 
   if (values.developerId && !UUID_PATTERN.test(values.developerId)) {
     errors.developerId = 'Developer ID는 UUID 형식이어야 합니다.'
   }
-  if (values.slug && !SLUG_PATTERN.test(values.slug)) {
-    errors.slug = 'Slug는 영문 소문자, 숫자, 하이픈만 사용할 수 있습니다.'
+  if (values.code && !CODE_PATTERN.test(values.code)) {
+    errors.code = 'Code는 영문 소문자, 숫자, 하이픈만 사용할 수 있습니다.'
   }
   return errors
 }

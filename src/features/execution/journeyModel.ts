@@ -60,7 +60,7 @@ interface BuildContext {
 const ROOT_PARENT_ID = '__root__'
 
 function displayName(snapshot: QuoteSnapshot): string {
-  return snapshot.version.agentName?.trim() || snapshot.version.agentSlug || '분석 단계'
+  return snapshot.version.agentName?.trim() || snapshot.version.agentCode || '분석 단계'
 }
 
 function displayDescription(snapshot: QuoteSnapshot): string {
@@ -80,7 +80,7 @@ function sourceTree(snapshot: QuoteSnapshot, depth = 0, path = 'root'): JourneyS
       const dependencyPath = `${path}/${dependency.dependencyId || index}`
       if (dependency.resolved) return sourceTree(dependency.resolved, depth + 1, dependencyPath)
 
-      const agentName = dependency.targetAgentSlug
+      const agentName = dependency.targetAgentCode
         || dependency.selection?.functionCode
         || '추가 분석 단계'
       return {
@@ -112,7 +112,7 @@ function actualSourceTree(execution: ExecutionDto): JourneySourceNode[] {
 
   function visit(steps: ExecutionDto['steps'], depth: number, path: string): JourneySourceNode {
     const first = steps[0]
-    const name = first.agentName?.trim() || first.agentSlug?.trim() || '분석 단계'
+    const name = first.agentName?.trim() || first.agentCode?.trim() || '분석 단계'
     const children = steps.flatMap((step) => childrenByParent.get(step.id) ?? [])
     return {
       id: `actual:${path}:${first.agentVersionId}`,

@@ -27,7 +27,7 @@ function collectVersionLabels(snapshot: QuoteSnapshot | undefined): Map<string, 
   function visit(node: QuoteSnapshot) {
     if (visited.has(node.version.id)) return
     visited.add(node.version.id)
-    labels.set(node.version.id, node.version.agentSlug)
+    labels.set(node.version.id, node.version.agentCode)
     node.dependencies.forEach((dependency) => {
       if (dependency.resolved) visit(dependency.resolved)
     })
@@ -45,12 +45,12 @@ function quotedGraph(snapshot: QuoteSnapshot | undefined): { edges: DependencyEd
   function visit(node: QuoteSnapshot) {
     if (visited.has(node.version.id)) return
     visited.add(node.version.id)
-    nodes.set(node.version.id, { id: node.version.id, label: node.version.agentName ?? node.version.agentSlug })
+    nodes.set(node.version.id, { id: node.version.id, label: node.version.agentName ?? node.version.agentCode })
     node.dependencies.forEach((dependency) => {
       const targetId = dependency.resolved?.version.id ?? dependency.selection?.functionContractId ?? dependency.dependencyId
       nodes.set(targetId, {
         id: targetId,
-        label: dependency.resolved?.version.agentName ?? dependency.resolved?.version.agentSlug ?? dependency.selection?.functionCode ?? '선택되지 않은 공급자',
+        label: dependency.resolved?.version.agentName ?? dependency.resolved?.version.agentCode ?? dependency.selection?.functionCode ?? '선택되지 않은 공급자',
         optional: !dependency.required,
       })
       edges.push({
@@ -207,7 +207,7 @@ function ExecutionPageContent({ displayMode, execution, labelForVersion, onUpdat
           <Link className="back-link" to="/agents">← Marketplace</Link>
           <p className="section-label">실행</p>
           <h1 id="execution-title">실행 상세</h1>
-          <p className="agent-card__slug">{execution.id}</p>
+          <p className="agent-card__code">{execution.id}</p>
         </div>
       </div>
       {execution.question ? <p className="execution-page__question"><strong>질문</strong>{execution.question}</p> : null}

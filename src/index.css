@@ -447,7 +447,7 @@ a {
 }
 
 .agent-card__version,
-.agent-card__slug,
+.agent-card__code,
 .agent-card__meta,
 .version-row__meta,
 .version-row__endpoint {
@@ -471,7 +471,7 @@ a {
   color: var(--accent-strong);
 }
 
-.agent-card__slug {
+.agent-card__code {
   margin: 0;
 }
 
@@ -1423,7 +1423,7 @@ select:focus-visible {
 .status-badge, .execution-timeline__status { border-radius: 6px; letter-spacing: 0; }
 .status-badge--active { color: #177344; background: #e9f8ef; }.status-badge--draft { color: #8a5900; background: #fff7db; }.status-badge--disabled { color: #5f6b76; background: #eef1f4; }
 
-.agent-grid { gap: 16px; }.agent-card { min-height: 232px; padding: 20px; }.agent-card h2 { margin-top: 20px; font-size: 20px; }.agent-card__description { margin: 14px 0; }.agent-card__meta { font-variant-numeric: tabular-nums; }.agent-card__version, .agent-card__slug, .agent-card__meta, .version-row__meta, .version-row__endpoint { font-size: 13px; }
+.agent-grid { gap: 16px; }.agent-card { min-height: 232px; padding: 20px; }.agent-card h2 { margin-top: 20px; font-size: 20px; }.agent-card__description { margin: 14px 0; }.agent-card__meta { font-variant-numeric: tabular-nums; }.agent-card__version, .agent-card__code, .agent-card__meta, .version-row__meta, .version-row__endpoint { font-size: 13px; }
 .version-row { padding: 18px; }.version-list { max-width: none; }
 
 .registry-form { gap: 16px; }.registry-form fieldset { padding: 20px; border-radius: 12px; }.registry-form legend { font-size: 15px; }.form-field input, .form-field textarea, .form-field select { padding: 11px 12px; border-color: #cbd2da; border-radius: 8px; background: #fff; }.form-field input:focus, .form-field textarea:focus, .form-field select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgb(36 93 255 / 12%); outline: none; }.form-error { color: #c23b32; }.form-error--summary { border-radius: 8px; }

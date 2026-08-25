@@ -1,6 +1,6 @@
 import {
   getApiAgents,
-  getApiAgentsBySlug,
+  getApiAgentsByCode,
   patchApiAgentsById,
   postApiAgentVersionsByIdDisable,
   postApiAgentVersionsByIdPublish,
@@ -70,11 +70,11 @@ export function listMarketplaceAgents(query: MarketplaceAgentQuery = {}): Promis
   })
 }
 
-export function getAgentBySlug(slug: string, view: 'easy' | 'developer' = 'easy'): Promise<AgentModel> {
+export function getAgentByCode(code: string, view: 'easy' | 'developer' = 'easy'): Promise<AgentModel> {
   return withApiError(async () => {
-    const response = await getApiAgentsBySlug({
+    const response = await getApiAgentsByCode({
       client: agentStoreClient,
-      path: { slug },
+      path: { code },
       query: { view } as never,
       throwOnError: true,
     })

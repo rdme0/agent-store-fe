@@ -13,7 +13,7 @@ describe('Agent UI mapping', () => {
       id: 'agent-id',
       developerId: 'developer-id',
       developerName: 'Demo Developer',
-      slug: 'demo-agent',
+      code: 'demo-agent',
       name: 'Demo Agent',
       description: 'Fixture',
       dependencyCount: 3,
