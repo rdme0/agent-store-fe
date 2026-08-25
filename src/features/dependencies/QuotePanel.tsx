@@ -115,7 +115,7 @@ function QuotePanelForIdentity({ mode = 'developer', code, version }: QuotePanel
   const quoteQuery = useQuery({
     queryKey: ['quote', code, version.id],
     queryFn: async () => {
-      const nextQuote = await createAgentQuote(code, { versionConstraint: version.semver })
+      const nextQuote = await createAgentQuote(code, { versionConstraint: `==${version.semver}` })
       if (mounted.current) {
         executionMutation.reset()
         setApproved(false)

@@ -69,7 +69,7 @@ function initialValues(value?: DependencyModel): FormValues {
     speedWeight: value?.speedWeight?.toString() ?? '',
     targetAgentId: value?.targetAgentId ?? '',
     targetMode: value?.targetAgentId && !value.functionContractId ? 'direct' : 'function',
-    versionConstraint: value?.versionConstraint ?? '^1.0.0',
+    versionConstraint: value?.versionConstraint ?? '>=1.0.0,<2.0.0',
   }
 }
 
@@ -289,6 +289,7 @@ function DependencyForm({ agents, functionContracts, idPrefix, isSubmitting, onC
             onChange={(event) => setValues((current) => ({ ...current, versionConstraint: event.target.value }))}
             value={values.versionConstraint}
           />
+          <p className="form-field__help">예: ==1.0.0 또는 &gt;=1.0.0,&lt;2.0.0. 여러 조건은 모두 충족해야 합니다.</p>
         </div>
         <div className="form-field">
           <label htmlFor={`dependency-price-${idPrefix}`}>Max price (atomic USDC)</label>

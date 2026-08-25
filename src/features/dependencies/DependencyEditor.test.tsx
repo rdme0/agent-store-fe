@@ -25,15 +25,15 @@ const createDependencyMock = vi.mocked(createDependency)
 const listFunctionContractsMock = vi.mocked(listFunctionContracts)
 
 const agent: AgentModel = {
-  id: 'source-agent', developerId: 'developer', developerName: 'Developer', slug: 'investment', name: 'Investment',
+  id: 'source-agent', developerId: 'developer', developerName: 'Developer', code: 'investment', name: 'Investment',
   description: 'Fixture', dependencyCount: 0, createdAt: '', updatedAt: '', versions: [],
 }
 const target: AgentModel = {
-  ...agent, id: 'target-agent', slug: 'risk', name: 'Risk',
+  ...agent, id: 'target-agent', code: 'risk', name: 'Risk',
 }
 const dependency: DependencyModel = {
-  id: 'dependency-id', sourceVersionId: 'version-id', targetAgentId: target.id, targetAgentSlug: target.slug,
-  versionConstraint: '^1.0.0', required: false, maxPriceAtomic: '1000000', maxPriceLabel: '1 USDC', maxCalls: 2,
+  id: 'dependency-id', sourceVersionId: 'version-id', targetAgentId: target.id, targetAgentCode: target.code,
+  versionConstraint: '>=1.0.0,<2.0.0', required: false, maxPriceAtomic: '1000000', maxPriceLabel: '1 USDC', maxCalls: 2,
   createdAt: '', updatedAt: '',
 }
 const functionContract = {
@@ -44,7 +44,7 @@ const functionContract = {
 
 function renderEditor() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  render(<QueryClientProvider client={queryClient}><DependencyEditor agent={agent} slug={agent.slug} version={{
+  render(<QueryClientProvider client={queryClient}><DependencyEditor agent={agent} code={agent.code} version={{
     id: 'version-id', agentId: agent.id, semver: '1.0.0', status: 'DRAFT', endpoint: 'http://localhost:8090',
     priceAtomic: '1000000', priceLabel: '1 USDC', network: 'eip155:84532', asset: 'USDC', payTo: '0x1', createdAt: '', updatedAt: '',
   }} /></QueryClientProvider>)
@@ -61,6 +61,14 @@ beforeEach(() => {
 afterEach(() => cleanup())
 
 describe('DependencyEditor', () => {
+  it('defaults new dependencies to a Python style version range and explains the syntax', async () => {
+    renderEditor()
+
+    expect(await screen.findByRole('heading', { name: 'v1.0.0 Dependencies' })).toBeInTheDocument()
+    expect(screen.getByLabelText('Version constraint')).toHaveValue('>=1.0.0,<2.0.0')
+    expect(screen.getByText(/==1\.0\.0 또는/)).toBeInTheDocument()
+  })
+
   it('renders the dependency graph and invalidates it after adding a dependency', async () => {
     const queryClient = renderEditor()
     createDependencyMock.mockResolvedValue(dependency)
@@ -117,6 +125,7 @@ describe('DependencyEditor', () => {
       providerScope: 'marketplace',
       selectionStrategy: 'latest_version',
       targetAgentId: undefined,
+      versionConstraint: '>=1.0.0,<2.0.0',
     })))
   })
 

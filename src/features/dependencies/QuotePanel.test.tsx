@@ -21,10 +21,10 @@ const version: AgentVersionModel = {
 const quote: QuoteModel = {
   id: 'quote-id', rootVersionId: version.id, expiresAt: '2099-01-01T00:05:00.000Z', maxCostAtomic: '2500000', maxCostLabel: '2.5 USDC',
   snapshot: {
-    version: { id: version.id, agentId: version.agentId, agentSlug: 'investment', semver: version.semver, endpoint: version.endpoint, priceAtomic: version.priceAtomic, network: version.network, asset: version.asset, payTo: version.payTo },
-    dependencies: [{ dependencyId: 'dependency-id', targetAgentId: 'risk-id', targetAgentSlug: 'risk', versionConstraint: '^1.0.0', required: false, maxPriceAtomic: '1500000', maxCalls: 1 }],
+    version: { id: version.id, agentId: version.agentId, agentCode: 'investment', semver: version.semver, endpoint: version.endpoint, priceAtomic: version.priceAtomic, network: version.network, asset: version.asset, payTo: version.payTo },
+  dependencies: [{ dependencyId: 'dependency-id', targetAgentId: 'risk-id', targetAgentCode: 'risk', versionConstraint: '>=1.0.0,<2.0.0', required: false, maxPriceAtomic: '1500000', maxCalls: 1 }],
   },
-  warnings: [{ code: 'OPTIONAL_DEPENDENCY_NOT_RESOLVED', dependencyId: 'dependency-id', targetAgentId: 'risk-id', targetAgentSlug: 'risk', versionConstraint: '^1.0.0' }],
+  warnings: [{ code: 'OPTIONAL_DEPENDENCY_NOT_RESOLVED', dependencyId: 'dependency-id', targetAgentId: 'risk-id', targetAgentCode: 'risk', versionConstraint: '>=1.0.0,<2.0.0' }],
 }
 
 function deferred<T>() {
@@ -40,7 +40,7 @@ describe('QuotePanel', () => {
   it('blocks an expired quote locally and guides the user to issue a new one', async () => {
     createAgentQuoteMock.mockResolvedValue({ ...quote, expiresAt: '2020-01-01T00:00:00.000Z' })
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-    render(<QueryClientProvider client={queryClient}><MemoryRouter><QuotePanel slug="investment" version={version} /></MemoryRouter></QueryClientProvider>)
+    render(<QueryClientProvider client={queryClient}><MemoryRouter><QuotePanel code="investment" version={version} /></MemoryRouter></QueryClientProvider>)
 
     fireEvent.click(screen.getByRole('button', { name: 'Quote 발급' }))
     expect(await screen.findByRole('alert')).toHaveTextContent('Quote가 만료되었습니다')
@@ -52,7 +52,7 @@ describe('QuotePanel', () => {
     createAgentQuoteMock.mockResolvedValueOnce(quote).mockResolvedValueOnce(refreshedQuote)
     createExecutionMock.mockRejectedValue(new ApiRequestError('실행 Quote가 만료되었습니다.', 409, { errorCode: 'QUOTE_409_001' }))
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-    render(<QueryClientProvider client={queryClient}><MemoryRouter><QuotePanel slug="investment" version={version} /></MemoryRouter></QueryClientProvider>)
+    render(<QueryClientProvider client={queryClient}><MemoryRouter><QuotePanel code="investment" version={version} /></MemoryRouter></QueryClientProvider>)
 
     fireEvent.click(screen.getByRole('button', { name: 'Quote 발급' }))
     const executeButton = await screen.findByRole('button', { name: 'Maximum Cost 승인 후 실행' })
@@ -71,13 +71,13 @@ describe('QuotePanel', () => {
   it('issues a typed quote and renders maximum cost, warning, and graph', async () => {
     createAgentQuoteMock.mockResolvedValue(quote)
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-    render(<QueryClientProvider client={queryClient}><MemoryRouter><QuotePanel slug="investment" version={version} /></MemoryRouter></QueryClientProvider>)
+    render(<QueryClientProvider client={queryClient}><MemoryRouter><QuotePanel code="investment" version={version} /></MemoryRouter></QueryClientProvider>)
 
     fireEvent.click(screen.getByRole('button', { name: 'Quote 발급' }))
     expect((await screen.findAllByText('2.5 USDC')).length).toBeGreaterThan(0)
     expect(screen.getByRole('note')).toHaveTextContent('risk')
     expect(screen.getByRole('heading', { name: 'Quoted dependency graph' })).toBeInTheDocument()
-    expect(createAgentQuoteMock).toHaveBeenCalledWith('investment', { versionConstraint: '1.0.0' })
+    expect(createAgentQuoteMock).toHaveBeenCalledWith('investment', { versionConstraint: '==1.0.0' })
   })
 
   it('submits the exact quoted maximum budget only after question and approval', async () => {
@@ -87,7 +87,7 @@ describe('QuotePanel', () => {
       reservedCostAtomic: '0', actualCostAtomic: '0', question: '시장 위험은?', steps: [], createdAt: '', updatedAt: '',
     })
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-    render(<QueryClientProvider client={queryClient}><MemoryRouter><QuotePanel slug="investment" version={version} /></MemoryRouter></QueryClientProvider>)
+    render(<QueryClientProvider client={queryClient}><MemoryRouter><QuotePanel code="investment" version={version} /></MemoryRouter></QueryClientProvider>)
 
     fireEvent.click(screen.getByRole('button', { name: 'Quote 발급' }))
     await screen.findByText(/Maximum Cost를 확인한 뒤/i)
@@ -108,7 +108,7 @@ describe('QuotePanel', () => {
     createAgentQuoteMock.mockResolvedValue(quote)
     createExecutionMock.mockReturnValue(new Promise(() => undefined))
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-    render(<QueryClientProvider client={queryClient}><MemoryRouter><QuotePanel slug="investment" version={version} /></MemoryRouter></QueryClientProvider>)
+    render(<QueryClientProvider client={queryClient}><MemoryRouter><QuotePanel code="investment" version={version} /></MemoryRouter></QueryClientProvider>)
 
     fireEvent.click(screen.getByRole('button', { name: 'Quote 발급' }))
     const executeButton = await screen.findByRole('button', { name: 'Maximum Cost 승인 후 실행' })
@@ -128,7 +128,7 @@ describe('QuotePanel', () => {
     createAgentQuoteMock.mockResolvedValueOnce(quote).mockResolvedValueOnce(nextQuote)
     createExecutionMock.mockRejectedValueOnce(new Error('이전 실행 오류'))
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-    render(<QueryClientProvider client={queryClient}><MemoryRouter><QuotePanel slug="investment" version={version} /></MemoryRouter></QueryClientProvider>)
+    render(<QueryClientProvider client={queryClient}><MemoryRouter><QuotePanel code="investment" version={version} /></MemoryRouter></QueryClientProvider>)
 
     fireEvent.click(screen.getByRole('button', { name: 'Quote 발급' }))
     const executeButton = await screen.findByRole('button', { name: 'Maximum Cost 승인 후 실행' })
@@ -148,7 +148,7 @@ describe('QuotePanel', () => {
     const pendingQuote = deferred<QuoteModel>()
     createAgentQuoteMock.mockResolvedValueOnce(quote).mockReturnValueOnce(pendingQuote.promise)
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-    render(<QueryClientProvider client={queryClient}><MemoryRouter><QuotePanel slug="investment" version={version} /></MemoryRouter></QueryClientProvider>)
+    render(<QueryClientProvider client={queryClient}><MemoryRouter><QuotePanel code="investment" version={version} /></MemoryRouter></QueryClientProvider>)
 
     fireEvent.click(screen.getByRole('button', { name: 'Quote 발급' }))
     const executeButton = await screen.findByRole('button', { name: 'Maximum Cost 승인 후 실행' })
@@ -175,7 +175,7 @@ describe('QuotePanel', () => {
       .mockRejectedValueOnce(new Error('Quote 갱신 오류'))
       .mockReturnValueOnce(retryQuote.promise)
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-    render(<QueryClientProvider client={queryClient}><MemoryRouter><QuotePanel slug="investment" version={version} /></MemoryRouter></QueryClientProvider>)
+    render(<QueryClientProvider client={queryClient}><MemoryRouter><QuotePanel code="investment" version={version} /></MemoryRouter></QueryClientProvider>)
 
     fireEvent.click(screen.getByRole('button', { name: 'Quote 발급' }))
     const executeButton = await screen.findByRole('button', { name: 'Maximum Cost 승인 후 실행' })
@@ -201,7 +201,7 @@ describe('QuotePanel', () => {
   it('atomically rejects same-tick duplicate quote requests', () => {
     createAgentQuoteMock.mockReturnValue(new Promise(() => undefined))
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-    render(<QueryClientProvider client={queryClient}><MemoryRouter><QuotePanel slug="investment" version={version} /></MemoryRouter></QueryClientProvider>)
+    render(<QueryClientProvider client={queryClient}><MemoryRouter><QuotePanel code="investment" version={version} /></MemoryRouter></QueryClientProvider>)
 
     const quoteButton = screen.getByRole('button', { name: 'Quote 발급' })
     fireEvent.click(quoteButton)
@@ -214,7 +214,7 @@ describe('QuotePanel', () => {
     createAgentQuoteMock.mockResolvedValue(quote)
     createExecutionMock.mockReturnValue(new Promise(() => undefined))
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-    render(<QueryClientProvider client={queryClient}><MemoryRouter><QuotePanel slug="investment" version={version} /></MemoryRouter></QueryClientProvider>)
+    render(<QueryClientProvider client={queryClient}><MemoryRouter><QuotePanel code="investment" version={version} /></MemoryRouter></QueryClientProvider>)
 
     fireEvent.click(screen.getByRole('button', { name: 'Quote 발급' }))
     const executeButton = await screen.findByRole('button', { name: 'Maximum Cost 승인 후 실행' })
@@ -237,7 +237,7 @@ describe('QuotePanel', () => {
       <QueryClientProvider client={queryClient}>
         <MemoryRouter initialEntries={['/agents/investment']}>
           <Routes>
-            <Route path="/agents/:slug" element={<QuotePanel slug="investment" version={version} />} />
+            <Route path="/agents/:code" element={<QuotePanel code="investment" version={version} />} />
             <Route path="/runs/:id" element={<p>실행 화면으로 이동됨</p>} />
           </Routes>
         </MemoryRouter>
@@ -269,7 +269,7 @@ describe('QuotePanel', () => {
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     const view = render(
       <QueryClientProvider client={queryClient}>
-        <MemoryRouter><QuotePanel slug="investment" version={version} /></MemoryRouter>
+        <MemoryRouter><QuotePanel code="investment" version={version} /></MemoryRouter>
       </QueryClientProvider>,
     )
 
@@ -277,7 +277,7 @@ describe('QuotePanel', () => {
     const nextVersion = { ...version, id: 'version-new' }
     view.rerender(
       <QueryClientProvider client={queryClient}>
-        <MemoryRouter><QuotePanel slug="investment" version={nextVersion} /></MemoryRouter>
+        <MemoryRouter><QuotePanel code="investment" version={nextVersion} /></MemoryRouter>
       </QueryClientProvider>,
     )
     const newQuoteButton = screen.getByRole('button', { name: 'Quote 발급' })
@@ -303,7 +303,7 @@ describe('QuotePanel', () => {
       <QueryClientProvider client={queryClient}>
         <MemoryRouter initialEntries={['/agents/investment']}>
           <Routes>
-            <Route path="/agents/:slug" element={<QuotePanel slug="investment" version={currentVersion} />} />
+            <Route path="/agents/:code" element={<QuotePanel code="investment" version={currentVersion} />} />
             <Route path="/runs/:id" element={<p>실행 화면으로 이동됨</p>} />
           </Routes>
         </MemoryRouter>
