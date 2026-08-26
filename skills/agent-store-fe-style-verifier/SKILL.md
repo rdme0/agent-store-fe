@@ -26,6 +26,12 @@ Require the original requirement, risk class and reason, changed invariants, dev
 - Controls have semantic elements, labels, keyboard behavior, and visible focus.
 - Money and payment values avoid floating-point arithmetic.
 - No unnecessary dependency, abstraction, or broad folder reorganization was introduced.
+- No catalog, generated contract, status, server fact, or async lifecycle is represented by multiple
+  independently mutable models. Require one owner and selectors or generated projections instead of
+  synchronized handwritten copies.
+- No speculative state, switch, fallback, adapter, context, hook, or extension point was added without
+  a current user flow. Splitting an existing condition tree into one-use files without reducing
+  behavior is still a snowball complexity finding.
 - Changed production code has relevant public-behavior test coverage or a documented reason it cannot.
 - Existing user changes and unrelated files are preserved.
 - High-risk async work prevents same-tick duplicate entry without relying only on render-updated query flags.

@@ -37,6 +37,23 @@ Apply these rules only when the classified risk is present.
 - Do not hand-edit generated API files.
 - Avoid barrel exports unless they remove a real import cycle or match an established local convention.
 
+## Complexity and snowball control
+
+- Give each server fact and client lifecycle one authoritative representation. Do not copy generated
+  API contracts into handwritten models or maintain parallel snapshot, reducer, journey, graph, and
+  presentation states when selectors can derive the views from one projection.
+- Before adding a field, status, display mode, adapter, context, hook, or shared abstraction, trace
+  every component, test, API boundary, and sibling repository it would affect. Do not make a browser
+  presentation concept part of the backend contract when a domain filter or local selector is enough.
+- Implement only behavior exercised by a current user flow. Do not add speculative states, feature
+  switches, fallback branches, configuration knobs, or generic extension points for possible future
+  screens.
+- Reduce behavior and duplicate ownership before splitting a large component into more files. Moving
+  the same condition tree into one-use hooks or helpers does not reduce complexity.
+- Prefer semantic HTML, browser primitives, existing project libraries, and generated contracts when
+  they remove custom lifecycle code. Do not add a dependency whose integration surface is larger than
+  the small behavior it replaces.
+
 ## Verification
 
 Run the narrowest relevant checks first, then the full available checks:
