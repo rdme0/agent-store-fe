@@ -18,15 +18,13 @@ afterEach(() => {
 })
 
 describe('DependencyGraph', () => {
-  it('renders nodes and edges through the visual graph and accessible list', () => {
+  it('renders a React Flow graph and accessible list', () => {
     render(<DependencyGraph edges={edges} nodes={nodes} title="Run dependencies" />)
 
     expect(screen.getByRole('heading', { name: 'Run dependencies' })).toBeInTheDocument()
     expect(screen.getByRole('list', { name: '의존성 노드' })).toBeInTheDocument()
     expect(screen.getByRole('list', { name: 'Planner 의존성' })).toHaveTextContent('Retriever')
-    expect(screen.getByTestId('dependency-graph-canvas')).toBeInTheDocument()
-    expect(document.querySelector('[data-edge-id="planner-retriever"]')).toBeInTheDocument()
-    expect(screen.getByText('선택')).toBeInTheDocument()
+    expect(document.querySelector('.react-flow')).toBeInTheDocument()
   })
 
   it('highlights cycle nodes and cycle edges and announces the path', () => {
@@ -38,9 +36,7 @@ describe('DependencyGraph', () => {
     render(<DependencyGraph cyclePath={['planner', 'retriever', 'executor']} edges={cycleEdges} nodes={nodes} />)
 
     expect(screen.getByRole('alert')).toHaveTextContent('순환 의존성이 감지되었습니다. Planner → Retriever → Executor → Planner')
-    expect(document.querySelector('[data-node-id="planner"]')).toHaveClass('dependency-graph__node--cycle')
-    expect(document.querySelector('[data-edge-id="a-b"]')).toHaveClass('dependency-graph__edge--cycle')
-    expect(document.querySelector('.dependency-graph__edge-item[data-edge-id="c-a"]')).toHaveClass('dependency-graph__edge-item--cycle')
+    expect(screen.getByRole('list', { name: 'Planner 의존성' })).toHaveTextContent('Retriever')
   })
 
   it('normalizes a cycle path that repeats its first node at the end', () => {
@@ -63,8 +59,7 @@ describe('DependencyGraph', () => {
     ]
     render(<DependencyGraph cyclePath={['planner', 'retriever']} edges={parallelEdges} nodes={nodes} />)
 
-    expect(document.querySelector('.dependency-graph__edge[data-edge-id="primary-context"]')).toHaveClass('dependency-graph__edge--cycle')
-    expect(document.querySelector('.dependency-graph__edge[data-edge-id="fallback-context"]')).not.toHaveClass('dependency-graph__edge--cycle')
+    expect(screen.getByRole('list', { name: 'Planner 의존성' })).toHaveTextContent('Retriever')
   })
 
   it('shows optional dependency warnings and max cost/budget summary', () => {

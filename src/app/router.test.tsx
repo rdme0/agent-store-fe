@@ -7,19 +7,21 @@ import {
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { routes } from './router'
 import { queryClient } from './queryClient'
+import { DisplayModeProvider } from './DisplayModeContext'
 
 vi.mock('../entities/function-contract/api', () => ({
   listFunctionContracts: vi.fn().mockResolvedValue([]),
 }))
 
 function renderAt(path: string) {
+  window.localStorage.setItem('agentstore.display-mode', 'developer')
   const memoryRouter = createMemoryRouter(routes, {
     initialEntries: [path],
   })
 
   render(
     <QueryClientProvider client={queryClient}>
-      <RouterProvider router={memoryRouter} />
+      <DisplayModeProvider><RouterProvider router={memoryRouter} /></DisplayModeProvider>
     </QueryClientProvider>,
   )
 }

@@ -35,18 +35,14 @@ interface DependencyFormProps {
 
 interface FormValues {
   allowedProviderAgentIds: string[]
-  explorationPercent: string
   functionContractId: string
   maxCalls: string
   maxPriceAtomic: string
   maxP95LatencyMillis: string
   minReliabilityPercent: string
-  priceWeight: string
   providerScope: '' | 'pinned' | 'allowlist' | 'marketplace'
   required: boolean
-  reliabilityWeight: string
-  selectionStrategy: '' | 'lowest_price' | 'latest_version' | 'highest_reliability' | 'fastest' | 'balanced'
-  speedWeight: string
+  selectionStrategy: '' | 'lowest_price' | 'latest_version' | 'highest_reliability' | 'fastest'
   targetAgentId: string
   targetMode: 'direct' | 'function'
   versionConstraint: string
@@ -55,18 +51,14 @@ interface FormValues {
 function initialValues(value?: DependencyModel): FormValues {
   return {
     allowedProviderAgentIds: [],
-    explorationPercent: String(value?.explorationPercent ?? 0),
     functionContractId: value?.functionContractId ?? '',
     maxCalls: String(value?.maxCalls ?? 1),
     maxPriceAtomic: value?.maxPriceAtomic ?? '',
     maxP95LatencyMillis: value?.maxP95LatencyMillis?.toString() ?? '',
     minReliabilityPercent: value?.minReliabilityPercent?.toString() ?? '',
-    priceWeight: value?.priceWeight?.toString() ?? '',
     providerScope: value?.providerScope ?? (value ? '' : 'marketplace'),
     required: value?.required ?? true,
-    reliabilityWeight: value?.reliabilityWeight?.toString() ?? '',
-    selectionStrategy: value?.selectionStrategy ?? '',
-    speedWeight: value?.speedWeight?.toString() ?? '',
+    selectionStrategy: value?.selectionStrategy === 'lowest_price' || value?.selectionStrategy === 'latest_version' || value?.selectionStrategy === 'highest_reliability' || value?.selectionStrategy === 'fastest' ? value.selectionStrategy : '',
     targetAgentId: value?.targetAgentId ?? '',
     targetMode: value?.targetAgentId && !value.functionContractId ? 'direct' : 'function',
     versionConstraint: value?.versionConstraint ?? '>=1.0.0,<2.0.0',
@@ -99,8 +91,7 @@ function strategyLabel(strategy: NonNullable<DependencyModel['selectionStrategy'
     latest_version: '최신 Version',
     highest_reliability: '가장 높은 신뢰도',
     fastest: '가장 빠른 응답',
-    balanced: '균형 선택',
-  }[strategy]
+  }[strategy as 'lowest_price' | 'latest_version' | 'highest_reliability' | 'fastest']
 }
 
 function cyclePathFromError(error: unknown): string[] | undefined {
@@ -130,12 +121,8 @@ function DependencyForm({ agents, functionContracts, idPrefix, isSubmitting, onC
   function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const maxCalls = Number(values.maxCalls)
-    const explorationPercent = Number(values.explorationPercent)
     const minReliabilityPercent = optionalNumber(values.minReliabilityPercent)
     const maxP95LatencyMillis = optionalNumber(values.maxP95LatencyMillis)
-    const reliabilityWeight = optionalNumber(values.reliabilityWeight)
-    const priceWeight = optionalNumber(values.priceWeight)
-    const speedWeight = optionalNumber(values.speedWeight)
     if (!isEditing && values.targetMode === 'function' && !values.functionContractId) {
       setValidationError('필요한 기능 계약을 선택하세요.')
       return
@@ -168,10 +155,6 @@ function DependencyForm({ agents, functionContracts, idPrefix, isSubmitting, onC
       setValidationError('Version constraint를 입력하세요.')
       return
     }
-    if (!Number.isInteger(explorationPercent) || explorationPercent < 0 || explorationPercent > 20) {
-      setValidationError('탐색 비율은 0에서 20 사이의 정수여야 합니다.')
-      return
-    }
     if (minReliabilityPercent !== undefined && (minReliabilityPercent < 0 || minReliabilityPercent > 100)) {
       setValidationError('최소 신뢰도는 0에서 100 사이여야 합니다.')
       return
@@ -180,23 +163,13 @@ function DependencyForm({ agents, functionContracts, idPrefix, isSubmitting, onC
       setValidationError('최대 p95 지연 시간은 1ms 이상이어야 합니다.')
       return
     }
-    if (values.selectionStrategy === 'balanced') {
-      if (reliabilityWeight === undefined || priceWeight === undefined || speedWeight === undefined || reliabilityWeight + priceWeight + speedWeight !== 100) {
-        setValidationError('균형 전략의 신뢰도·가격·속도 가중치 합계는 100이어야 합니다.')
-        return
-      }
-    }
     setValidationError(undefined)
     const selection = values.targetMode === 'function' ? {
       allowedProviderAgentIds: values.providerScope === 'allowlist' ? values.allowedProviderAgentIds : undefined,
-      explorationPercent,
       maxP95LatencyMillis,
       minReliabilityPercent,
-      priceWeight: values.selectionStrategy === 'balanced' ? priceWeight : undefined,
       providerScope: values.providerScope || undefined,
-      reliabilityWeight: values.selectionStrategy === 'balanced' ? reliabilityWeight : undefined,
       selectionStrategy: requiresStrategy ? values.selectionStrategy || undefined : undefined,
-      speedWeight: values.selectionStrategy === 'balanced' ? speedWeight : undefined,
     } : {}
     if (isEditing) {
       onSubmit({
@@ -278,7 +251,6 @@ function DependencyForm({ agents, functionContracts, idPrefix, isSubmitting, onC
               <option value="latest_version">최신 Version</option>
               <option value="highest_reliability">가장 높은 신뢰도</option>
               <option value="fastest">가장 빠른 응답</option>
-              <option value="balanced">균형 선택</option>
             </select>
           </div>
         ) : null}
@@ -314,30 +286,12 @@ function DependencyForm({ agents, functionContracts, idPrefix, isSubmitting, onC
         </div>
         {requiresStrategy ? <>
           <div className="form-field">
-            <label htmlFor={`dependency-exploration-${idPrefix}`}>신규 공급자 탐색 비율 (0–20%)</label>
-            <input id={`dependency-exploration-${idPrefix}`} inputMode="numeric" max="20" min="0" onChange={(event) => setValues((current) => ({ ...current, explorationPercent: event.target.value }))} type="number" value={values.explorationPercent} />
-          </div>
-          <div className="form-field">
             <label htmlFor={`dependency-reliability-${idPrefix}`}>최소 신뢰도 (%)</label>
             <input id={`dependency-reliability-${idPrefix}`} inputMode="numeric" max="100" min="0" onChange={(event) => setValues((current) => ({ ...current, minReliabilityPercent: event.target.value }))} type="number" value={values.minReliabilityPercent} />
           </div>
           <div className="form-field">
             <label htmlFor={`dependency-latency-${idPrefix}`}>최대 p95 지연 시간 (ms)</label>
             <input id={`dependency-latency-${idPrefix}`} inputMode="numeric" min="1" onChange={(event) => setValues((current) => ({ ...current, maxP95LatencyMillis: event.target.value }))} type="number" value={values.maxP95LatencyMillis} />
-          </div>
-        </> : null}
-        {values.selectionStrategy === 'balanced' ? <>
-          <div className="form-field">
-            <label htmlFor={`dependency-weight-reliability-${idPrefix}`}>신뢰도 가중치</label>
-            <input id={`dependency-weight-reliability-${idPrefix}`} inputMode="numeric" max="100" min="0" onChange={(event) => setValues((current) => ({ ...current, reliabilityWeight: event.target.value }))} type="number" value={values.reliabilityWeight} />
-          </div>
-          <div className="form-field">
-            <label htmlFor={`dependency-weight-price-${idPrefix}`}>가격 가중치</label>
-            <input id={`dependency-weight-price-${idPrefix}`} inputMode="numeric" max="100" min="0" onChange={(event) => setValues((current) => ({ ...current, priceWeight: event.target.value }))} type="number" value={values.priceWeight} />
-          </div>
-          <div className="form-field">
-            <label htmlFor={`dependency-weight-speed-${idPrefix}`}>속도 가중치</label>
-            <input id={`dependency-weight-speed-${idPrefix}`} inputMode="numeric" max="100" min="0" onChange={(event) => setValues((current) => ({ ...current, speedWeight: event.target.value }))} type="number" value={values.speedWeight} />
           </div>
         </> : null}
       </div>
@@ -392,8 +346,8 @@ export function DependencyEditor({ agent, code, version }: DependencyEditorProps
     retry: false,
   })
   const agentsQuery = useQuery({
-    queryKey: ['agents', 'developer'],
-    queryFn: () => listAgents({ view: 'developer' }),
+    queryKey: ['agents'],
+    queryFn: () => listAgents(),
     retry: false,
   })
   const functionContractsQuery = useQuery({

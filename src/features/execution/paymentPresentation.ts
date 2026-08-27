@@ -1,10 +1,6 @@
-export type PaymentMode = 'simulated' | 'x402'
-
 const BASE_SEPOLIA_TRANSACTION_HASH = /^0x[0-9a-fA-F]{64}$/
 
-export function paymentModeLabel(mode: PaymentMode): string {
-  return mode === 'x402' ? 'x402 실제 결제 (Base Sepolia)' : 'simulated 결제'
-}
+export function paymentNetworkLabel(): string { return 'x402 실제 결제 (Base Sepolia)' }
 
 /** Only transaction hashes can be linked; arbitrary payment identifiers stay plain text. */
 export function baseSepoliaExplorerUrl(transactionHash: string | undefined): string | undefined {

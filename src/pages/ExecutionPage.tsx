@@ -1,39 +1,18 @@
 import { useQuery } from '@tanstack/react-query'
-import { Link, useLocation, useParams } from 'react-router-dom'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Link, useParams } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
 import type { QuoteSnapshot } from '../entities/dependency/model'
 import { getExecution } from '../entities/execution/api'
 import { toExecutionModel } from '../entities/execution/model'
-import { ExecutionTimelinePanel } from '../features/execution/ExecutionTimeline'
 import { ExecutionResult } from '../features/execution/ExecutionResult'
 import { ExecutionJourney } from '../features/execution/ExecutionJourney'
 import { DependencyGraphPanel, type DependencyEdgeViewModel, type DependencyNodeViewModel } from '../features/dependencies/DependencyGraph'
 import { ProviderSelectionProof } from '../features/dependencies/ProviderSelectionProof'
-import { executionSnapshotEvents, type StepLabelResolver } from '../features/execution/eventAdapter'
 import { useExecutionEvents } from '../features/execution/useExecutionEvents'
 import { useDisplayMode } from '../app/DisplayModeContext'
 
-interface ExecutionLocationState {
-  quoteSnapshot?: QuoteSnapshot
-}
-
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : '실행 정보를 불러오지 못했습니다.'
-}
-
-function collectVersionLabels(snapshot: QuoteSnapshot | undefined): Map<string, string> {
-  const labels = new Map<string, string>()
-  const visited = new Set<string>()
-  function visit(node: QuoteSnapshot) {
-    if (visited.has(node.version.id)) return
-    visited.add(node.version.id)
-    labels.set(node.version.id, node.version.agentCode)
-    node.dependencies.forEach((dependency) => {
-      if (dependency.resolved) visit(dependency.resolved)
-    })
-  }
-  if (snapshot) visit(snapshot)
-  return labels
 }
 
 function quotedGraph(snapshot: QuoteSnapshot | undefined): { edges: DependencyEdgeViewModel[]; nodes: DependencyNodeViewModel[] } | undefined {
@@ -93,23 +72,14 @@ function useNarrowViewport(): boolean {
 export function ExecutionPage() {
   const { displayMode } = useDisplayMode()
   const { id = '' } = useParams<{ id: string }>()
-  const location = useLocation()
-  const state = location.state as ExecutionLocationState | null
   const executionQuery = useQuery({
     queryKey: ['execution', id],
     queryFn: () => getExecution(id),
     enabled: Boolean(id),
     retry: false,
   })
-  const snapshot = executionQuery.data?.quoteSnapshot ?? state?.quoteSnapshot
-  const labels = useMemo(() => collectVersionLabels(snapshot), [snapshot])
-  const labelForVersion: StepLabelResolver = useCallback(
-    (versionId: string) => labels.get(versionId) ?? `Agent ${versionId.slice(0, 8)}`,
-    [labels],
-  )
-
   if (executionQuery.isPending) {
-    return <ExecutionTimelinePanel state="loading" title="실행 상세" />
+    return <p className="state-card">실행 정보를 불러오는 중이에요.</p>
   }
   if (executionQuery.isError) {
     return (
@@ -125,9 +95,7 @@ export function ExecutionPage() {
     <ExecutionPageContent
       execution={executionQuery.data}
       displayMode={displayMode}
-      labelForVersion={labelForVersion}
-      onUpdate={executionQuery.refetch}
-      snapshot={snapshot}
+      refetch={executionQuery.refetch}
     />
   )
 }
@@ -135,38 +103,32 @@ export function ExecutionPage() {
 interface ExecutionPageContentProps {
   displayMode: 'easy' | 'developer'
   execution: Awaited<ReturnType<typeof getExecution>>
-  labelForVersion: StepLabelResolver
-  onUpdate: () => void
-  snapshot?: QuoteSnapshot
+  refetch: () => Promise<unknown>
 }
 
-function ExecutionPageContent({ displayMode, execution, labelForVersion, onUpdate, snapshot }: ExecutionPageContentProps) {
+function ExecutionPageContent({ displayMode, execution, refetch }: ExecutionPageContentProps) {
   const narrowViewport = useNarrowViewport()
-  const snapshotEvents = useMemo(
-    () => executionSnapshotEvents(execution, labelForVersion),
-    [execution, labelForVersion],
-  )
-  const timeline = useExecutionEvents({
+  const connection = useExecutionEvents({
     executionId: execution.id,
-    initialEvents: snapshotEvents,
-    labelForVersion,
-    onEvent: onUpdate,
+    refetch,
+    terminal: execution.status === 'COMPLETED' || execution.status === 'FAILED',
   })
   const model = toExecutionModel(execution)
-  const persistedGraph = useMemo(() => quotedGraph(snapshot), [snapshot])
+  const quoteSnapshot = execution.quoteSnapshot
+  const persistedGraph = useMemo(() => quotedGraph(quoteSnapshot), [quoteSnapshot])
   const rootStep = executionRootStep(execution)
-  const stepById = new Map(timeline.steps.map((step) => [step.id, step]))
-  const graphNodes = timeline.steps.map((step) => ({
+  const stepById = new Map(execution.steps.map((step) => [step.id, step]))
+  const graphNodes = execution.steps.map((step) => ({
     id: step.id,
-    label: `${step.label} · ${step.status}`,
-    description: step.error?.code ?? step.cost?.label,
+    label: `${step.agentName ?? step.agentCode ?? '분석 단계'} · ${step.status}`,
+    description: step.failureCode ?? step.costAtomic,
   }))
   const graphEdges = execution.steps.flatMap((step) => step.parentStepId && stepById.has(step.parentStepId) && stepById.has(step.id)
     ? [{ id: `${step.parentStepId}-${step.id}`, source: step.parentStepId, target: step.id, label: 'runtime call' }]
     : [])
   const reconciliationRequired = execution.steps.some((step) => (
     step.payments.some((payment) => payment.status === 'RECONCILIATION_REQUIRED')
-  )) || timeline.payment?.error?.code === 'PAYMENT_RECONCILIATION_REQUIRED'
+  ))
 
   if (displayMode === 'easy') {
     const amountWon = execution.actualCostKrwEstimate?.amountWon
@@ -194,7 +156,7 @@ function ExecutionPageContent({ displayMode, execution, labelForVersion, onUpdat
             <ExecutionResult output={rootStep.output} responseFormat={rootStep.responseFormat} />
           </section>
         ) : null}
-        <ExecutionJourney execution={execution} mode="easy" snapshot={snapshot} timeline={timeline} />
+        <ExecutionJourney displayMode="easy" execution={execution} quoteSnapshot={quoteSnapshot} />
         <p className="easy-cost-summary">{amountWon ? `총 약 ${amountWon}원 사용했어요.` : `총 ${model.actualCostLabel} 사용했어요.`} <span>{model.actualCostLabel}</span></p>
       </section>
     )
@@ -216,7 +178,7 @@ function ExecutionPageContent({ displayMode, execution, labelForVersion, onUpdat
         <div><dt>실제 사용 비용</dt><dd>{model.actualCostLabel}</dd></div>
         <div><dt>예약된 비용</dt><dd>{model.reservedCostLabel}</dd></div>
       </dl>
-      <ExecutionJourney execution={execution} mode="developer" snapshot={snapshot} timeline={timeline} />
+      <ExecutionJourney displayMode="developer" execution={execution} quoteSnapshot={quoteSnapshot} />
       {rootStep?.output !== undefined ? (
         <section className="execution-page__output" aria-labelledby="execution-output-title">
           <h2 id="execution-output-title">최종 결과</h2>
@@ -237,7 +199,7 @@ function ExecutionPageContent({ displayMode, execution, labelForVersion, onUpdat
               title="Quote에 고정된 거래 그래프"
             />
           ) : null}
-          {snapshot ? <ProviderSelectionProof snapshot={snapshot} /> : null}
+          {quoteSnapshot ? <ProviderSelectionProof snapshot={quoteSnapshot} /> : null}
           {!narrowViewport ? (
             <DependencyGraphPanel
               costSummary={{ budget: model.maxBudgetLabel }}
@@ -247,7 +209,7 @@ function ExecutionPageContent({ displayMode, execution, labelForVersion, onUpdat
               title="실시간 의존성 그래프"
             />
           ) : <p className="state-card">모바일에서는 거래 그래프 대신 아래 실행 기록을 확인할 수 있어요.</p>}
-          <ExecutionTimelinePanel state="ready" timeline={timeline} title="Agent 실행 흐름" />
+          <p className="state-card" role="status">실시간 연결 상태: {connection === 'connected' ? '연결됨' : connection}</p>
         </div>
       </details>
     </section>

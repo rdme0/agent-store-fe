@@ -24,7 +24,6 @@ function strategyLabel(strategy?: string | null): string {
     latest_version: '최신 Version',
     highest_reliability: '가장 높은 신뢰도',
     fastest: '가장 빠른 응답',
-    balanced: '균형 선택',
   }[strategy ?? ''] ?? '고정 공급자'
 }
 

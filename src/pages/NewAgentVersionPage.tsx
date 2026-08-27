@@ -9,8 +9,8 @@ export function NewAgentVersionPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const agentQuery = useQuery({
-    queryKey: ['agent', code, 'developer'],
-    queryFn: () => getAgentByCode(code, 'developer'),
+    queryKey: ['agent', code],
+    queryFn: () => getAgentByCode(code),
     enabled: Boolean(code),
   })
   const functionContractsQuery = useQuery({ queryKey: ['function-contracts'], queryFn: listFunctionContracts })

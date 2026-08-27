@@ -2,7 +2,7 @@ import { useInfiniteQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { formatAtomicUsdc } from '../entities/agent/model'
 import { getDeveloperRevenue } from '../entities/revenue/api'
-import { baseSepoliaExplorerUrl, paymentModeLabel } from '../features/execution/paymentPresentation'
+import { baseSepoliaExplorerUrl, paymentNetworkLabel } from '../features/execution/paymentPresentation'
 import { DEMO_DEVELOPER_ID } from '../shared/config/env'
 
 const PAGE_SIZE = 20
@@ -54,7 +54,7 @@ export function DeveloperDashboardPage() {
         <div className="developer-dashboard__entries-heading"><div><h2 id="revenue-entries-title">정산 내역</h2><p>정산이 완료된 결제만 표시합니다.</p></div><span>{entries.length}건 표시</span></div>
         {entries.length === 0 ? <div className="state-card developer-dashboard__empty"><h3>아직 정산된 수익이 없습니다.</h3><p>Agent가 호출되고 결제가 완료되면 이곳에서 확인할 수 있습니다.</p></div> : <div className="developer-dashboard__table-wrap"><table className="developer-dashboard__table"><thead><tr><th scope="col">구분</th><th scope="col">수익</th><th scope="col">결제 방식</th><th scope="col">발생 시각</th><th scope="col">거래</th></tr></thead><tbody>{entries.map((entry) => {
           const explorerUrl = baseSepoliaExplorerUrl(entry.transactionHash ?? undefined)
-          return <tr key={entry.id}><td data-label="구분"><strong>{entry.type === 'DIRECT' ? '직접 호출' : '의존성 호출'}</strong><code className="developer-dashboard__payment-id">{entry.paymentIdentifier ?? '결제 식별자 없음'}</code></td><td data-label="수익" className="developer-dashboard__amount">{formatAtomicUsdc(entry.amountAtomic)}</td><td data-label="결제 방식">{paymentModeLabel(entry.paymentMode === 'x402' ? 'x402' : 'simulated')}</td><td data-label="발생 시각"><time dateTime={entry.createdAt}>{formatRevenueDate(entry.createdAt)}</time></td><td data-label="거래">{explorerUrl ? <a href={explorerUrl} rel="noreferrer" target="_blank">Base Sepolia 보기</a> : <span className="developer-dashboard__muted">거래 없음</span>}</td></tr>
+          return <tr key={entry.id}><td data-label="구분"><strong>{entry.type === 'DIRECT' ? '직접 호출' : '의존성 호출'}</strong><code className="developer-dashboard__payment-id">{entry.paymentIdentifier ?? '결제 식별자 없음'}</code></td><td data-label="수익" className="developer-dashboard__amount">{formatAtomicUsdc(entry.amountAtomic)}</td><td data-label="결제 방식">{paymentNetworkLabel()}</td><td data-label="발생 시각"><time dateTime={entry.createdAt}>{formatRevenueDate(entry.createdAt)}</time></td><td data-label="거래">{explorerUrl ? <a href={explorerUrl} rel="noreferrer" target="_blank">Base Sepolia 보기</a> : <span className="developer-dashboard__muted">거래 없음</span>}</td></tr>
         })}</tbody></table></div>}
         {revenue.hasNextPage ? <button className="button button--secondary" disabled={revenue.isFetchingNextPage} onClick={() => void revenue.fetchNextPage()} type="button">{revenue.isFetchingNextPage ? '불러오는 중…' : '더 불러오기'}</button> : null}
       </section>

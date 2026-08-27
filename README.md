@@ -10,7 +10,7 @@ AgentStore의 React 19 + TypeScript + Vite 프론트엔드입니다. 사용자�
 flowchart LR
     Market["Marketplace\n검색, 정렬, 더 보기"] --> Detail["Agent Detail\nVersion과 dependency"]
     Detail --> Quote["Quote\nGraph와 Maximum Cost"]
-    Quote -->|질문 입력과 명시적 승인| Run["Execution\n실시간 timeline"]
+    Quote -->|질문 입력과 명시적 승인| Run["Execution\n실시간 실행 여정"]
     Run --> Result["결과, 실제 비용, 결제 상태"]
     Register["Agent 등록"] --> Detail
     Detail --> Version["새 Version 등록"]
@@ -24,7 +24,7 @@ flowchart LR
 | `/agents/new` | Agent 등록 | Agent와 최초 Version, 응답 형식 입력 |
 | `/agents/:code` | Agent Detail | Version publish/disable, dependency 관리, Quote/실행 |
 | `/agents/:code/versions/new` | Version 등록 | endpoint, 가격, network, asset, payTo, 응답 형식 입력 |
-| `/runs/:id` | Execution | 초기 snapshot + SSE timeline, 결과와 결제 표시 |
+| `/runs/:id` | Execution | 초기 snapshot + SSE 실행 여정, 결과와 결제 표시 |
 | `/developer/revenue` | 개발자 대시보드 | direct/dependency 수익과 거래 참조 |
 | `/settings` | 연결 정보 | 적용 중인 API URL과 developer ID 설정 상태 |
 | 그 외 | 404 | Marketplace 복귀 링크 |
@@ -45,7 +45,7 @@ flowchart TB
 
 - `src/app`: route, 공통 shell, 최상위 error boundary.
 - `src/pages`: URL 단위 화면 조립. 서버 계약을 직접 재구현하지 않습니다.
-- `src/features`: Quote 승인, dependency graph, SSE reducer 같은 사용자 동작.
+- `src/features`: Quote 승인, dependency graph, 실행 여정과 SSE 연결 같은 사용자 동작.
 - `src/entities`: 생성 API를 호출하고 `CommonResponse`를 풀어 화면 model로 변환.
 - `src/shared`: API base URL, 공통 오류, UI utility.
 - `src/generated`: OpenAPI에서 생성됩니다. **직접 수정하지 않습니다.**
@@ -161,17 +161,17 @@ Execution 화면은 최초 `GET /api/executions/{id}` snapshot으로 즉시 그�
 sequenceDiagram
     participant Page as Execution Page
     participant API as Spring API
-    participant Reducer as Timeline Reducer
+    participant Query as TanStack Query
     Page->>API: GET execution snapshot
     API-->>Page: execution status와 steps/payments snapshot
-    Page->>Page: snapshot을 synthetic timeline events로 변환
-    Page->>Reducer: 변환한 초기 events 적용
+    Page->>Page: snapshot과 quoteSnapshot으로 실행 여정 계산
     Page->>API: SSE connect
-    API-->>Reducer: live event
+    API-->>Page: live event
+    Page->>Query: 현재 execution snapshot refetch
     API--xPage: 연결 종료 또는 오류
     Page->>Page: 1초 대기
     Page->>API: Last-Event-ID 이후 재연결
-    API-->>Reducer: 누락 event replay 후 live
+    API-->>Page: 누락 event replay 후 current snapshot refetch
 ```
 
 SSE loop의 작은 규칙:
@@ -183,13 +183,11 @@ SSE loop의 작은 규칙:
 - hook은 session 종료 callback을 지원하지만 현재 Execution 화면은 event를 받을 때마다 execution snapshot query를 refetch합니다.
 - 연결 유실은 실행 실패와 다른 `SSE_CONNECTION_LOST` 재시도 가능 오류입니다.
 
-Reducer 규칙:
+실행 상태 규칙:
 
-- numeric sequence가 있으면 더 큰 event만 적용합니다.
-- event ID를 이미 봤으면 replay/live 중복으로 보고 무시합니다.
-- step은 ID 기준으로 부분 필드를 merge합니다. 새 step은 label과 status가 모두 있을 때만 추가합니다.
-- payment도 부분 update를 merge하되 최초 payment에는 status가 필요합니다.
-- status, cost, error가 없는 event는 기존 값을 지우지 않습니다.
+- SSE hook은 event ID를 cursor로 기억하고 replay/live 중복을 무시합니다.
+- event payload는 화면 상태를 직접 바꾸지 않습니다. 이벤트가 도착하면 현재 execution query를 single-flight refetch합니다.
+- `ExecutionDto + quoteSnapshot`만으로 예정 단계와 실제 step을 계산하므로 stale event가 화면을 되돌리지 않습니다.
 
 결제 identifier가 Base Sepolia transaction hash일 때만 explorer link를 만듭니다. 임의 문자열을 외부 URL로 만들지 않고 plain text로 표시합니다.
 
@@ -280,7 +278,7 @@ npm run build
 git diff --check
 ```
 
-Vitest와 Testing Library가 adapter, page, reducer, SSE reconnect 같은 로직을 검사합니다. Playwright/E2E script는 현재 구성되어 있지 않습니다.
+Vitest와 Testing Library가 adapter, page, 실행 여정, SSE reconnect 같은 로직을 검사합니다. Playwright/E2E script는 현재 구성되어 있지 않습니다.
 
 ## 13. 자주 겪는 문제
 

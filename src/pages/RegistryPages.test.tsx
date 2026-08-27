@@ -16,6 +16,7 @@ import { AgentDetailPage } from './AgentDetailPage'
 import { AgentsPage } from './AgentsPage'
 import { NewAgentVersionPage } from './NewAgentVersionPage'
 import { RegisterAgentPage } from './RegisterAgentPage'
+import { DisplayModeProvider } from '../app/DisplayModeContext'
 
 vi.mock('../entities/agent/api', () => ({
   createAgentVersion: vi.fn(),
@@ -68,19 +69,20 @@ const baseAgent: AgentModel = {
 
 function renderWithQuery(element: React.ReactElement) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  render(<QueryClientProvider client={queryClient}><MemoryRouter>{element}</MemoryRouter></QueryClientProvider>)
+  render(<QueryClientProvider client={queryClient}><DisplayModeProvider><MemoryRouter>{element}</MemoryRouter></DisplayModeProvider></QueryClientProvider>)
   return queryClient
 }
 
 function renderRoute(path: string, route: { path: string; element: React.ReactElement }) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   const router = createMemoryRouter([route], { initialEntries: [path] })
-  render(<QueryClientProvider client={queryClient}><RouterProvider router={router} /></QueryClientProvider>)
+  render(<QueryClientProvider client={queryClient}><DisplayModeProvider><RouterProvider router={router} /></DisplayModeProvider></QueryClientProvider>)
   return queryClient
 }
 
 beforeEach(() => {
   vi.resetAllMocks()
+  window.localStorage.setItem('agentstore.display-mode', 'developer')
   listFunctionContractsMock.mockResolvedValue([])
 })
 
@@ -115,7 +117,7 @@ describe('Marketplace public states', () => {
     fireEvent.change(screen.getByLabelText('정렬'), { target: { value: 'name_asc' } })
     fireEvent.submit(screen.getByRole('search'))
 
-    await waitFor(() => expect(listMarketplaceAgentsMock).toHaveBeenLastCalledWith({ cursor: undefined, limit: 12, q: 'risk', sort: 'name_asc', view: 'developer' }))
+    await waitFor(() => expect(listMarketplaceAgentsMock).toHaveBeenLastCalledWith({ cursor: undefined, limit: 12, q: 'risk', sort: 'name_asc', usageType: undefined }))
     expect(await screen.findByRole('heading', { name: 'Demo Agent' })).toBeInTheDocument()
   })
 
@@ -169,7 +171,7 @@ describe('Agent detail actions', () => {
     )
     render(<QueryClientProvider client={queryClient}><RouterProvider router={router} /></QueryClientProvider>)
 
-    await waitFor(() => expect(getAgentByCodeMock).toHaveBeenCalledWith('first-agent', 'developer'))
+    await waitFor(() => expect(getAgentByCodeMock).toHaveBeenCalledWith('first-agent'))
     await act(async () => { await router.navigate('/agents/second-agent') })
     expect(await screen.findByRole('heading', { name: 'Second Agent' })).toBeInTheDocument()
 

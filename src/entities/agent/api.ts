@@ -35,7 +35,17 @@ export type CreateVersionInput = Omit<PostApiAgentsByIdVersionsData['body'], 're
 }
 export type UpdateAgentInput = PatchApiAgentsByIdData['body']
 
-export type MarketplaceAgentQuery = NonNullable<GetApiAgentsData['query']>
+/**
+ * The generated client is refreshed from Spring's OpenAPI document after the database-backed
+ * application is available. Keep the handwritten boundary on the new API contract meanwhile.
+ */
+export interface MarketplaceAgentQuery {
+  limit?: number
+  cursor?: string
+  q?: string
+  sort?: 'newest' | 'name_asc'
+  usageType?: 'user_facing' | 'internal_component'
+}
 export type MarketplaceAgentSort = NonNullable<MarketplaceAgentQuery['sort']>
 
 export interface MarketplaceAgentPage {
@@ -47,7 +57,7 @@ export function listAgents(query: MarketplaceAgentQuery = {}): Promise<AgentMode
   return withApiError(async () => {
     const response = await getApiAgents({
       client: agentStoreClient,
-      query,
+      query: query as NonNullable<GetApiAgentsData['query']>,
       throwOnError: true,
     })
     const data = unwrapCommonResponse<AgentListResponse>(response.data)
@@ -59,7 +69,7 @@ export function listMarketplaceAgents(query: MarketplaceAgentQuery = {}): Promis
   return withApiError(async () => {
     const response = await getApiAgents({
       client: agentStoreClient,
-      query,
+      query: query as NonNullable<GetApiAgentsData['query']>,
       throwOnError: true,
     })
     const data = unwrapCommonResponse<AgentListResponse>(response.data)
@@ -70,12 +80,11 @@ export function listMarketplaceAgents(query: MarketplaceAgentQuery = {}): Promis
   })
 }
 
-export function getAgentByCode(code: string, view: 'easy' | 'developer' = 'easy'): Promise<AgentModel> {
+export function getAgentByCode(code: string): Promise<AgentModel> {
   return withApiError(async () => {
     const response = await getApiAgentsByCode({
       client: agentStoreClient,
       path: { code },
-      query: { view } as never,
       throwOnError: true,
     })
     return toAgentModel(unwrapCommonResponse<AgentResponse>(response.data))

@@ -1,7 +1,6 @@
 import { formatAtomicUsdc } from '../../entities/agent/model'
 import type { QuoteSnapshot } from '../../entities/dependency/model'
 import type { ExecutionDto } from '../../entities/execution/api'
-import type { ExecutionTimelineState } from './model'
 
 export type ExecutionJourneyStatus =
   | 'planned'
@@ -50,8 +49,6 @@ interface JourneySourceNode {
 }
 
 interface BuildContext {
-  statusByStepId: Map<string, string>
-  errorByStepId: Map<string, string | undefined>
   stepsByParentId: Map<string, ExecutionDto['steps']>
   claimedStepIds: Set<string>
   terminal: boolean
@@ -150,13 +147,10 @@ function confirmedCosts(steps: ExecutionDto['steps']): { amountAtomic: string; c
   }
 }
 
-function actualStatus(step: ExecutionDto['steps'][number], context: BuildContext): string {
-  return context.statusByStepId.get(step.id) ?? step.status
-}
+function actualStatus(step: ExecutionDto['steps'][number]): string { return step.status }
 
-function hasReconciliation(step: ExecutionDto['steps'][number], context: BuildContext): boolean {
+function hasReconciliation(step: ExecutionDto['steps'][number]): boolean {
   return step.payments.some((payment) => payment.status === 'RECONCILIATION_REQUIRED')
-    || context.errorByStepId.get(step.id) === 'PAYMENT_RECONCILIATION_REQUIRED'
 }
 
 function nodeStatus(
@@ -168,14 +162,14 @@ function nodeStatus(
     const parentFinished = parentSteps !== undefined
       && parentSteps.length > 0
       && parentSteps.every((step) => {
-        const status = actualStatus(step, context)
+        const status = actualStatus(step)
         return status === 'COMPLETED' || status === 'FAILED'
       })
     return context.terminal || parentFinished ? 'not-used' : 'planned'
   }
-  if (steps.some((step) => hasReconciliation(step, context))) return 'reconciliation'
+  if (steps.some((step) => hasReconciliation(step))) return 'reconciliation'
 
-  const statuses = steps.map((step) => actualStatus(step, context))
+  const statuses = steps.map(actualStatus)
   if (statuses.some((status) => status === 'FAILED')) return 'failed'
   if (statuses.some((status) => status === 'RUNNING' || status === 'PAYMENT_SETTLED')) return 'active'
   if (statuses.some((status) => status === 'CREATED' || status === 'PAYMENT_REQUIRED')) return 'preparing'
@@ -206,7 +200,7 @@ function buildNode(
     depth: source.depth,
     status: nodeStatus(steps, parentSteps, context),
     callCount: steps.length,
-    completedCallCount: steps.filter((step) => actualStatus(step, context) === 'COMPLETED').length,
+    completedCallCount: steps.filter((step) => actualStatus(step) === 'COMPLETED').length,
     hasConfirmedCost: costs.confirmed,
     costAtomic: costs.amountAtomic,
     costLabel: formatAtomicUsdc(costs.amountAtomic),
@@ -236,11 +230,7 @@ function pathToNode(nodes: ExecutionJourneyNode[], targetId: string): string[] {
   return []
 }
 
-export function buildExecutionJourney(
-  snapshot: QuoteSnapshot | undefined,
-  execution: ExecutionDto,
-  timeline: ExecutionTimelineState,
-): ExecutionJourneyModel {
+export function buildExecutionJourney(snapshot: QuoteSnapshot | undefined, execution: ExecutionDto): ExecutionJourneyModel {
   const sources = snapshot ? [sourceTree(snapshot)] : actualSourceTree(execution)
   const stepsByParentId = new Map<string, ExecutionDto['steps']>()
   execution.steps.forEach((step) => {
@@ -248,14 +238,10 @@ export function buildExecutionJourney(
     stepsByParentId.set(parentId, [...(stepsByParentId.get(parentId) ?? []), step])
   })
   const context: BuildContext = {
-    statusByStepId: new Map(timeline.steps.map((step) => [step.id, step.status])),
-    errorByStepId: new Map(timeline.steps.map((step) => [step.id, step.error?.code])),
     stepsByParentId,
     claimedStepIds: new Set<string>(),
     terminal: execution.status === 'COMPLETED'
-      || execution.status === 'FAILED'
-      || timeline.status === 'succeeded'
-      || timeline.status === 'failed',
+      || execution.status === 'FAILED',
   }
   const roots = sources.map((source) => buildNode(source, undefined, context))
   const nodes = flatten(roots)

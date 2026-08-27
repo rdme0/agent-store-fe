@@ -19,7 +19,7 @@ export function AgentsPage() {
   const agentsQuery = useInfiniteQuery({
     queryKey: ['marketplace-agents', displayMode, criteria],
     initialPageParam: undefined as string | undefined,
-    queryFn: ({ pageParam }) => listMarketplaceAgents({ ...criteria, cursor: pageParam, limit: PAGE_SIZE, view: displayMode }),
+    queryFn: ({ pageParam }) => listMarketplaceAgents({ ...criteria, cursor: pageParam, limit: PAGE_SIZE, usageType: displayMode === 'easy' ? 'user_facing' : undefined }),
     getNextPageParam: (page) => page.nextCursor ?? undefined,
     retry: false,
   })

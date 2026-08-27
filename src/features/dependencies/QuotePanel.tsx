@@ -90,18 +90,14 @@ function QuotePanelForIdentity({ mode = 'developer', code, version }: QuotePanel
       generation,
       input,
       lockToken,
-      snapshot,
     }: {
       generation: number
       input: Parameters<typeof createExecution>[0]
       lockToken: RequestLockToken
-      snapshot: QuoteSnapshot
-    }) => ({ execution: await createExecution(input), generation, lockToken, snapshot }),
-    onSuccess: ({ execution, generation, snapshot }) => {
+    }) => ({ execution: await createExecution(input), generation, lockToken }),
+    onSuccess: ({ execution, generation }) => {
       if (!mounted.current || generation !== quoteGeneration.current) return
-      navigate(`/runs/${execution.id}`, {
-        state: { quoteSnapshot: snapshot },
-      })
+      navigate(`/runs/${execution.id}`)
     },
     onError: (error, variables) => {
       if (!mounted.current || variables.generation !== quoteGeneration.current) return
@@ -158,7 +154,6 @@ function QuotePanelForIdentity({ mode = 'developer', code, version }: QuotePanel
     executionMutation.mutate({
       generation: quoteGeneration.current,
       lockToken,
-      snapshot: quote.snapshot,
       input: {
         quoteId: quote.id,
         maxBudgetAtomic: quote.maxCostAtomic,

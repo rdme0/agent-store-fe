@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { baseSepoliaExplorerUrl, paymentFailureMessage, paymentModeLabel } from './paymentPresentation'
+import { baseSepoliaExplorerUrl, paymentFailureMessage, paymentNetworkLabel } from './paymentPresentation'
 
 describe('payment presentation', () => {
   it('only links a complete transaction hash to the Base Sepolia explorer', () => {
@@ -9,9 +9,8 @@ describe('payment presentation', () => {
     expect(baseSepoliaExplorerUrl('0xabc')).toBeUndefined()
   })
 
-  it('uses distinct Korean labels for supported payment modes and failures', () => {
-    expect(paymentModeLabel('simulated')).toContain('simulated')
-    expect(paymentModeLabel('x402')).toContain('x402')
+  it('uses native x402 labels and safe failure guidance', () => {
+    expect(paymentNetworkLabel()).toContain('x402')
     expect(paymentFailureMessage('PRICE_MISMATCH')).toContain('quote')
     expect(paymentFailureMessage('INSUFFICIENT_FUNDS')).toContain('잔액')
     expect(paymentFailureMessage('FACILITATOR_ERROR')).toContain('facilitator')

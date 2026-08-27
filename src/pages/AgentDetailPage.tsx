@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useEffect, useRef, useState, type SyntheticEvent } from 'react'
+import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { disableAgentVersion, getAgentByCode, publishAgentVersion } from '../entities/agent/api'
 import { getActiveVersion, type AgentVersionModel } from '../entities/agent/model'
 import { DependencyEditor } from '../features/dependencies/DependencyEditor'
@@ -34,8 +34,8 @@ export function AgentDetailPage() {
     }
   }, [])
   const agentQuery = useQuery({
-    queryKey: ['agent', code, displayMode],
-    queryFn: () => getAgentByCode(code, displayMode),
+    queryKey: ['agent', code],
+    queryFn: () => getAgentByCode(code),
     enabled: Boolean(code),
   })
   const actionMutation = useMutation({
@@ -93,6 +93,9 @@ export function AgentDetailPage() {
   }
 
   const agent = agentQuery.data
+  if (displayMode === 'easy' && agent.usageType === 'internal_component') {
+    return <Navigate replace to="/" />
+  }
   const activeVersion = getActiveVersion(agent)
   if (displayMode === 'easy') {
     return (
@@ -226,49 +229,40 @@ interface VersionActionDialogProps {
 }
 
 function VersionActionDialog({ action, error, onCancel, onConfirm, pending }: VersionActionDialogProps) {
-  const dialogRef = useRef<HTMLElement>(null)
+  const dialogRef = useRef<HTMLDialogElement>(null)
   const title = action.kind === 'publish' ? 'Version을 공개할까요?' : 'Version을 비활성화할까요?'
   const description = action.kind === 'publish'
     ? `v${action.semver}이 Marketplace에 표시되고 실행할 수 있게 됩니다.`
     : `v${action.semver}은 더 이상 새 실행에 사용되지 않습니다.`
 
-  function handleKeyDown(event: KeyboardEvent<HTMLElement>) {
-    if (event.key === 'Escape' && !pending) {
+  useEffect(() => {
+    const dialog = dialogRef.current
+    if (!dialog) return
+    if (!dialog.open) dialog.showModal()
+    return () => {
+      if (dialog.open) dialog.close()
+    }
+  }, [])
+
+  function handleCancel(event: SyntheticEvent<HTMLDialogElement>) {
+    if (pending) {
       event.preventDefault()
+    } else {
       onCancel()
-      return
-    }
-    if (event.key !== 'Tab') {
-      return
-    }
-    const focusable = dialogRef.current?.querySelectorAll<HTMLButtonElement>('button:not([disabled])')
-    if (!focusable || focusable.length === 0) {
-      return
-    }
-    const first = focusable[0]
-    const last = focusable[focusable.length - 1]
-    if (event.shiftKey && document.activeElement === first) {
-      event.preventDefault()
-      last.focus()
-    } else if (!event.shiftKey && document.activeElement === last) {
-      event.preventDefault()
-      first.focus()
     }
   }
 
   return (
-    <div aria-labelledby="version-action-title" aria-modal="true" className="confirmation-dialog__backdrop" role="presentation">
-      <section className="confirmation-dialog" onKeyDown={handleKeyDown} ref={dialogRef} role="dialog">
-        <h2 id="version-action-title">{title}</h2>
-        <p>{description}</p>
-        {error ? <p role="alert">{error}</p> : null}
-        <div className="confirmation-dialog__actions">
-          <button autoFocus className="button button--secondary" disabled={pending} onClick={onCancel} type="button">취소</button>
-          <button className={action.kind === 'disable' ? 'button button--danger' : 'button button--primary'} disabled={pending} onClick={onConfirm} type="button">
-            {pending ? '처리 중…' : action.kind === 'publish' ? '공개하기' : '비활성화'}
-          </button>
-        </div>
-      </section>
-    </div>
+    <dialog aria-labelledby="version-action-title" className="confirmation-dialog" onCancel={handleCancel} ref={dialogRef}>
+      <h2 id="version-action-title">{title}</h2>
+      <p>{description}</p>
+      {error ? <p role="alert">{error}</p> : null}
+      <div className="confirmation-dialog__actions">
+        <button autoFocus className="button button--secondary" disabled={pending} onClick={onCancel} type="button">취소</button>
+        <button className={action.kind === 'disable' ? 'button button--danger' : 'button button--primary'} disabled={pending} onClick={onConfirm} type="button">
+          {pending ? '처리 중…' : action.kind === 'publish' ? '공개하기' : '비활성화'}
+        </button>
+      </div>
+    </dialog>
   )
 }

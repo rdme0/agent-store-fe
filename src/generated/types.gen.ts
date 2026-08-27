@@ -32,27 +32,11 @@ export type CreateExternalInvocationIntentRequest = {
     agentCode?: string | null;
     functionCode?: string | null;
     contractVersion?: string | null;
-    selectionStrategy?: 'lowest_price' | 'latest_version' | 'highest_reliability' | 'fastest' | 'balanced';
+    selectionStrategy?: 'lowest_price' | 'latest_version' | 'highest_reliability' | 'fastest';
     versionConstraint?: string | null;
     maxTotalAtomic: string;
     question?: string | null;
     input?: null;
-};
-
-export type CommonResponseExternalInvocationIntentResponse = {
-    isSuccess: boolean;
-    message: string;
-    errorCode?: string | null;
-    result?: ExternalInvocationIntentResponse | null;
-};
-
-export type ExternalInvocationIntentResponse = {
-    id: string;
-    executeUrl: string;
-    providerCostAtomic: string;
-    platformFeeAtomic: string;
-    totalCostAtomic: string;
-    expiresAt: string;
 };
 
 export type CommonResponseExternalInvocationExecutionResponse = {
@@ -163,7 +147,7 @@ export type ExecutionStepResponse = {
 
 export type FunctionContractSnapshotDto = {
     id: string;
-    key: string;
+    code: string;
     contractVersion: string;
     inputSchema: JsonNode;
     outputSchema: JsonNode;
@@ -187,7 +171,6 @@ export type PaymentAttemptResponse = {
     id: string;
     status: 'REQUIRED' | 'AUTHORIZED' | 'SETTLED' | 'FAILED' | 'RECONCILIATION_REQUIRED';
     amountAtomic: string;
-    mode: 'simulated' | 'x402';
     transactionHash?: string | null;
     paymentIdentifier?: string | null;
     failureCode?: string | null;
@@ -207,7 +190,7 @@ export type ProviderCandidateSnapshotDto = {
 };
 
 export type ProviderSelectionSnapshotDto = {
-    strategy?: 'lowest_price' | 'latest_version' | 'highest_reliability' | 'fastest' | 'balanced';
+    strategy?: 'lowest_price' | 'latest_version' | 'highest_reliability' | 'fastest';
     providerScope?: 'pinned' | 'allowlist' | 'marketplace';
     functionContractId: string;
     functionCode: string;
@@ -215,8 +198,6 @@ export type ProviderSelectionSnapshotDto = {
     candidates: Array<ProviderCandidateSnapshotDto>;
     selectedVersionId?: string | null;
     selectedReason?: string | null;
-    explorationSelected: boolean;
-    selectionSeedDigest?: string | null;
 };
 
 export type QuoteSnapshotDto = {
@@ -347,14 +328,10 @@ export type CreateDependencyRequest = {
     targetAgentId?: string | null;
     functionContractId?: string | null;
     providerScope?: 'pinned' | 'allowlist' | 'marketplace';
-    selectionStrategy?: 'lowest_price' | 'latest_version' | 'highest_reliability' | 'fastest' | 'balanced';
+    selectionStrategy?: 'lowest_price' | 'latest_version' | 'highest_reliability' | 'fastest';
     allowedProviderAgentIds?: Array<string> | null;
     minReliabilityPercent?: number | null;
     maxP95LatencyMillis?: number | null;
-    explorationPercent?: number | null;
-    reliabilityWeight?: number | null;
-    priceWeight?: number | null;
-    speedWeight?: number | null;
     versionConstraint: string;
     required?: boolean;
     maxPriceAtomic: string;
@@ -377,13 +354,9 @@ export type DependencyResponse = {
     functionCode?: string | null;
     functionContractVersion?: string | null;
     providerScope?: 'pinned' | 'allowlist' | 'marketplace';
-    selectionStrategy?: 'lowest_price' | 'latest_version' | 'highest_reliability' | 'fastest' | 'balanced';
+    selectionStrategy?: 'lowest_price' | 'latest_version' | 'highest_reliability' | 'fastest';
     minReliabilityPercent?: number | null;
     maxP95LatencyMillis?: number | null;
-    explorationPercent?: number | null;
-    reliabilityWeight?: number | null;
-    priceWeight?: number | null;
-    speedWeight?: number | null;
     versionConstraint: string;
     required: boolean;
     maxPriceAtomic: string;
@@ -433,14 +406,10 @@ export type UpdateDependencyRequest = {
     maxPriceAtomic?: string | null;
     maxCalls?: number | null;
     providerScope?: 'pinned' | 'allowlist' | 'marketplace';
-    selectionStrategy?: 'lowest_price' | 'latest_version' | 'highest_reliability' | 'fastest' | 'balanced';
+    selectionStrategy?: 'lowest_price' | 'latest_version' | 'highest_reliability' | 'fastest';
     allowedProviderAgentIds?: Array<string> | null;
     minReliabilityPercent?: number | null;
     maxP95LatencyMillis?: number | null;
-    explorationPercent?: number | null;
-    reliabilityWeight?: number | null;
-    priceWeight?: number | null;
-    speedWeight?: number | null;
 };
 
 export type CommonResponseExternalInvocationStatusResponse = {
@@ -533,8 +502,7 @@ export type RevenueEntryResponse = {
     paymentAttemptId: string;
     type: 'DIRECT' | 'DEPENDENCY';
     amountAtomic: string;
-    paymentMode: 'simulated' | 'x402';
-    transactionHash?: string | null;
+    transactionHash: string;
     paymentIdentifier?: string | null;
     createdAt: string;
 };
@@ -686,80 +654,18 @@ export type PutApiAgentVersionsByIdManifestResponses = {
 
 export type PutApiAgentVersionsByIdManifestResponse = PutApiAgentVersionsByIdManifestResponses[keyof PutApiAgentVersionsByIdManifestResponses];
 
-export type PostV1InvocationIntentsData = {
+export type PostV1InvocationsData = {
     body: CreateExternalInvocationIntentRequest;
-    headers?: {
-        'Idempotency-Key'?: string;
+    headers: {
+        'Idempotency-Key': string;
+        'PAYMENT-SIGNATURE'?: string;
     };
     path?: never;
     query?: never;
-    url: '/v1/invocation-intents';
+    url: '/v1/invocations';
 };
 
-export type PostV1InvocationIntentsErrors = {
-    /**
-     * Bad request
-     */
-    400: CommonResponse;
-    /**
-     * Unauthorized
-     */
-    401: CommonResponse;
-    /**
-     * Forbidden
-     */
-    403: CommonResponse;
-    /**
-     * Not found
-     */
-    404: CommonResponse;
-    /**
-     * Conflict
-     */
-    409: CommonResponse;
-    /**
-     * Validation error
-     */
-    422: CommonResponse;
-    /**
-     * Internal server error
-     */
-    500: CommonResponse;
-    /**
-     * Upstream failure
-     */
-    502: CommonResponse;
-    /**
-     * Service unavailable
-     */
-    503: CommonResponse;
-};
-
-export type PostV1InvocationIntentsError = PostV1InvocationIntentsErrors[keyof PostV1InvocationIntentsErrors];
-
-export type PostV1InvocationIntentsResponses = {
-    /**
-     * Created
-     */
-    201: CommonResponseExternalInvocationIntentResponse;
-};
-
-export type PostV1InvocationIntentsResponse = PostV1InvocationIntentsResponses[keyof PostV1InvocationIntentsResponses];
-
-export type PostV1InvocationIntentsByIdExecuteData = {
-    body?: never;
-    headers?: {
-        'X-AgentStore-Invocation-Receipt'?: string;
-        'PAYMENT-SIGNATURE'?: string;
-    };
-    path: {
-        id: string;
-    };
-    query?: never;
-    url: '/v1/invocation-intents/{id}/execute';
-};
-
-export type PostV1InvocationIntentsByIdExecuteErrors = {
+export type PostV1InvocationsErrors = {
     /**
      * Bad request
      */
@@ -802,16 +708,16 @@ export type PostV1InvocationIntentsByIdExecuteErrors = {
     503: CommonResponse;
 };
 
-export type PostV1InvocationIntentsByIdExecuteError = PostV1InvocationIntentsByIdExecuteErrors[keyof PostV1InvocationIntentsByIdExecuteErrors];
+export type PostV1InvocationsError = PostV1InvocationsErrors[keyof PostV1InvocationsErrors];
 
-export type PostV1InvocationIntentsByIdExecuteResponses = {
+export type PostV1InvocationsResponses = {
     /**
-     * Payment was settled and the asynchronous execution was created
+     * Accepted
      */
     202: CommonResponseExternalInvocationExecutionResponse;
 };
 
-export type PostV1InvocationIntentsByIdExecuteResponse = PostV1InvocationIntentsByIdExecuteResponses[keyof PostV1InvocationIntentsByIdExecuteResponses];
+export type PostV1InvocationsResponse = PostV1InvocationsResponses[keyof PostV1InvocationsResponses];
 
 export type GetApiFunctionContractsData = {
     body?: never;
@@ -1004,7 +910,7 @@ export type GetApiAgentsData = {
          * 정렬 기준
          */
         sort?: 'newest' | 'name_asc';
-        view?: string;
+        usageType?: string;
     };
     url: '/api/agents';
 };
@@ -1822,7 +1728,7 @@ export type PatchApiAgentVersionsByIdDependenciesByDependencyIdResponses = {
 
 export type PatchApiAgentVersionsByIdDependenciesByDependencyIdResponse = PatchApiAgentVersionsByIdDependenciesByDependencyIdResponses[keyof PatchApiAgentVersionsByIdDependenciesByDependencyIdResponses];
 
-export type GetV1InvocationIntentsByIdData = {
+export type GetV1InvocationsByIdData = {
     body?: never;
     headers?: {
         'X-AgentStore-Invocation-Receipt'?: string;
@@ -1831,10 +1737,10 @@ export type GetV1InvocationIntentsByIdData = {
         id: string;
     };
     query?: never;
-    url: '/v1/invocation-intents/{id}';
+    url: '/v1/invocations/{id}';
 };
 
-export type GetV1InvocationIntentsByIdErrors = {
+export type GetV1InvocationsByIdErrors = {
     /**
      * Bad request
      */
@@ -1873,18 +1779,18 @@ export type GetV1InvocationIntentsByIdErrors = {
     503: CommonResponse;
 };
 
-export type GetV1InvocationIntentsByIdError = GetV1InvocationIntentsByIdErrors[keyof GetV1InvocationIntentsByIdErrors];
+export type GetV1InvocationsByIdError = GetV1InvocationsByIdErrors[keyof GetV1InvocationsByIdErrors];
 
-export type GetV1InvocationIntentsByIdResponses = {
+export type GetV1InvocationsByIdResponses = {
     /**
      * OK
      */
     200: CommonResponseExternalInvocationStatusResponse;
 };
 
-export type GetV1InvocationIntentsByIdResponse = GetV1InvocationIntentsByIdResponses[keyof GetV1InvocationIntentsByIdResponses];
+export type GetV1InvocationsByIdResponse = GetV1InvocationsByIdResponses[keyof GetV1InvocationsByIdResponses];
 
-export type GetV1InvocationIntentsByIdEventsData = {
+export type GetV1InvocationsByIdEventsData = {
     body?: never;
     headers?: {
         'X-AgentStore-Invocation-Receipt'?: string;
@@ -1894,10 +1800,10 @@ export type GetV1InvocationIntentsByIdEventsData = {
         id: string;
     };
     query?: never;
-    url: '/v1/invocation-intents/{id}/events';
+    url: '/v1/invocations/{id}/events';
 };
 
-export type GetV1InvocationIntentsByIdEventsErrors = {
+export type GetV1InvocationsByIdEventsErrors = {
     /**
      * Bad request
      */
@@ -1936,16 +1842,16 @@ export type GetV1InvocationIntentsByIdEventsErrors = {
     503: CommonResponse;
 };
 
-export type GetV1InvocationIntentsByIdEventsError = GetV1InvocationIntentsByIdEventsErrors[keyof GetV1InvocationIntentsByIdEventsErrors];
+export type GetV1InvocationsByIdEventsError = GetV1InvocationsByIdEventsErrors[keyof GetV1InvocationsByIdEventsErrors];
 
-export type GetV1InvocationIntentsByIdEventsResponses = {
+export type GetV1InvocationsByIdEventsResponses = {
     /**
      * Server-sent event stream
      */
     200: string;
 };
 
-export type GetV1InvocationIntentsByIdEventsResponse = GetV1InvocationIntentsByIdEventsResponses[keyof GetV1InvocationIntentsByIdEventsResponses];
+export type GetV1InvocationsByIdEventsResponse = GetV1InvocationsByIdEventsResponses[keyof GetV1InvocationsByIdEventsResponses];
 
 export type GetHealthData = {
     body?: never;
@@ -2268,9 +2174,7 @@ export type GetApiAgentsByCodeData = {
     path: {
         code: string;
     };
-    query?: {
-        view?: string;
-    };
+    query?: never;
     url: '/api/agents/{code}';
 };
 

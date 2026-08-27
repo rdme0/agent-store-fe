@@ -1078,75 +1078,23 @@ a {
   font-weight: 750;
 }
 
-.dependency-graph__canvas {
-  position: relative;
-  overflow-x: auto;
-  min-height: 150px;
+.dependency-graph__flow {
+  height: 360px;
   margin: 1.25rem 0;
-  padding: 0.25rem;
-  background: #f8fbfb;
+  overflow: hidden;
   border: 1px solid var(--line);
   border-radius: 0.7rem;
+  background: #f8fbfb;
 }
 
-.dependency-graph__svg {
-  display: block;
-  min-width: 700px;
-}
-
-.dependency-graph__edge {
-  stroke: var(--graph-line);
-  stroke-width: 2;
-}
-
-.dependency-graph__edge--cycle {
-  stroke: #bd675d;
-  stroke-width: 3;
-}
-
-.dependency-graph__dot {
-  fill: var(--graph-line);
-}
-
-.dependency-graph__dot--cycle {
-  fill: #bd675d;
-}
-
-.dependency-graph__visual-nodes {
-  position: absolute;
-  inset: 0;
-  min-width: 700px;
-  pointer-events: none;
-}
-
-.dependency-graph__visual-node {
-  position: absolute;
-  top: var(--dependency-node-y);
-  left: var(--dependency-node-x);
-  display: grid;
-  width: 190px;
-  min-height: 56px;
-  padding: 0.8rem;
-  place-items: center;
+.dependency-graph__flow .react-flow__node {
+  padding: 0.7rem;
   color: var(--ink);
+  border-color: var(--graph-line);
+  border-radius: 0.6rem;
   font-size: 0.82rem;
   font-weight: 700;
   text-align: center;
-  background: var(--surface);
-  border: 1px solid var(--graph-line);
-  border-radius: 0.6rem;
-  box-shadow: 0 4px 12px rgb(27 58 64 / 7%);
-}
-
-.dependency-graph__visual-node--cycle {
-  color: #8e3830;
-  border-color: #bd675d;
-  box-shadow: 0 0 0 2px #f8d9d5;
-}
-
-.dependency-graph__visual-node--disabled {
-  color: var(--muted);
-  background: #f1f3f3;
 }
 
 .dependency-graph__fallback h3 {
@@ -1418,9 +1366,9 @@ select:focus-visible {
 .button--danger { color: #c23b32; border-color: #f0c2bf; background: #fff; }.button--danger:hover { background: #fff5f5; }
 .back-link, .text-link { color: var(--accent-strong); font-weight: 650; }.back-link:hover, .text-link:hover, .agent-card h2 a:hover { color: #1039b5; }
 
-.state-card, .agent-card, .version-row, .dependency-editor, .dependency-graph, .quote-panel, .execution-page__output, .execution-timeline { box-shadow: none; border-color: var(--line); border-radius: 12px; }
+.state-card, .agent-card, .version-row, .dependency-editor, .dependency-graph, .quote-panel, .execution-page__output { box-shadow: none; border-color: var(--line); border-radius: 12px; }
 .state-card { padding: 20px; background: var(--surface); }.state-card--error { border-color: #f0c2bf; background: #fffafa; }
-.status-badge, .execution-timeline__status { border-radius: 6px; letter-spacing: 0; }
+.status-badge { border-radius: 6px; letter-spacing: 0; }
 .status-badge--active { color: #177344; background: #e9f8ef; }.status-badge--draft { color: #8a5900; background: #fff7db; }.status-badge--disabled { color: #5f6b76; background: #eef1f4; }
 
 .agent-grid { gap: 16px; }.agent-card { min-height: 232px; padding: 20px; }.agent-card h2 { margin-top: 20px; font-size: 20px; }.agent-card__description { margin: 14px 0; }.agent-card__meta { font-variant-numeric: tabular-nums; }.agent-card__version, .agent-card__code, .agent-card__meta, .version-row__meta, .version-row__endpoint { font-size: 13px; }
@@ -1430,9 +1378,9 @@ select:focus-visible {
 
 .execution-page__costs, .developer-dashboard__summary { gap: 12px; }.execution-page__costs > div, .developer-dashboard__summary > div { padding: 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }.execution-page__costs dd, .developer-dashboard__summary dd { font-variant-numeric: tabular-nums; }
 .execution-page__question { border-left-color: var(--accent); background: #f2f5ff; }.execution-page__output pre { border-radius: 8px; background: #171b22; color: #f5f7fa; }
-.execution-timeline { padding: 20px; }.execution-timeline__summary > div, .dependency-graph__summary > div { border-radius: 8px; background: var(--surface-muted); }.execution-timeline__step--running .execution-timeline__marker, .execution-timeline__step--payment-required .execution-timeline__marker { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }.execution-timeline__step--succeeded .execution-timeline__marker, .execution-timeline__step--completed .execution-timeline__marker, .execution-timeline__step--payment-settled .execution-timeline__marker { background: var(--accent); border-color: var(--accent); }
+.dependency-graph__summary > div { border-radius: 8px; background: var(--surface-muted); }
 
-.dependency-graph { padding: 20px; }.dependency-graph__canvas { background: #f8faff; border-radius: 8px; }.dependency-graph__visual-node { border-color: #aebeea; border-radius: 8px; box-shadow: none; }.dependency-graph__edge { stroke: #9aaad3; }.dependency-graph__dot { fill: var(--accent); }
+.dependency-graph { padding: 20px; }.dependency-graph__flow { background: #f8faff; border-radius: 8px; }.dependency-graph__flow .react-flow__node { border-color: #aebeea; border-radius: 8px; box-shadow: none; }
 .settings-list { border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }.settings-list div { padding: 16px; }
 
 @media (max-width: 700px) {
@@ -1444,7 +1392,7 @@ select:focus-visible {
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
 .marketplace-page__heading, .agent-detail-page__summary, .developer-dashboard__header { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; margin-bottom: 28px; }.marketplace-page h1, .agent-detail-page h1, .developer-dashboard h1 { margin: 0 0 10px; font-size: clamp(30px, 4vw, 42px); letter-spacing: -0.045em; }.marketplace-page__description, .developer-dashboard__description { max-width: 620px; margin: 0; color: var(--muted); line-height: 1.6; }
 .marketplace-toolbar { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: end; gap: 10px; margin-bottom: 24px; }.marketplace-toolbar__search input, .marketplace-toolbar__sort select { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid #cbd2da; border-radius: 8px; background: #fff; }.marketplace-toolbar__sort { display: grid; gap: 6px; color: var(--muted); font-size: 12px; font-weight: 650; }.marketplace-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }.marketplace-agent-card { position: relative; display: flex; min-height: 250px; flex-direction: column; padding: 20px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }.marketplace-agent-card:hover { border-color: #aebeea; }.marketplace-agent-card__surface-link { position: absolute; inset: 0; border-radius: inherit; }.marketplace-agent-card__header, .marketplace-agent-card__description, .marketplace-agent-card__meta, .marketplace-agent-card__actions { position: relative; z-index: 1; }.marketplace-agent-card__header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }.marketplace-agent-card h2 { margin: 0; font-size: 20px; letter-spacing: -0.025em; }.marketplace-agent-card h2 a { text-decoration: none; }.marketplace-agent-card__developer { margin: 5px 0 0; color: var(--muted); font-size: 13px; }.marketplace-agent-card__description { min-height: 48px; margin: 18px 0; color: var(--muted); font-size: 14px; line-height: 1.55; }.marketplace-agent-card__meta { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: auto 0 0; padding-top: 14px; border-top: 1px solid var(--line); }.marketplace-agent-card__meta div { min-width: 0; }.marketplace-agent-card__meta dt { color: var(--muted); font-size: 11px; }.marketplace-agent-card__meta dd { overflow: hidden; margin: 4px 0 0; font-size: 13px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; font-variant-numeric: tabular-nums; }.marketplace-agent-card__actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 18px; }.marketplace-page__more { display: flex; justify-content: center; margin-top: 24px; }.marketplace-error-banner { margin-bottom: 20px; padding: 16px; border: 1px solid #f0c2bf; border-radius: 10px; background: #fffafa; }.marketplace-error-banner p { margin: 6px 0 12px; color: #8d332c; }.marketplace-agent-card--skeleton { min-height: 250px; gap: 16px; pointer-events: none; }.marketplace-agent-card--skeleton span { display: block; height: 16px; border-radius: 5px; background: #eef1f4; }.marketplace-agent-card--skeleton span:nth-child(2) { width: 58%; }.marketplace-agent-card--skeleton span:nth-child(3) { width: 90%; height: 54px; }.marketplace-agent-card--skeleton span:nth-child(4) { width: 72%; margin-top: auto; }
-.agent-detail-page { max-width: 1200px; }.agent-detail-page__summary { padding-bottom: 28px; border-bottom: 1px solid var(--line); }.agent-detail-page__identity { margin: 0 0 16px; color: var(--muted); font-size: 14px; }.agent-detail-page__pricing { display: grid; width: min(100%, 300px); gap: 7px; padding: 20px; border: 1px solid #cad7ff; border-radius: 12px; background: #f4f7ff; }.agent-detail-page__pricing > span, .agent-detail-page__pricing small { color: var(--muted); font-size: 13px; }.agent-detail-page__pricing strong { color: var(--ink); font-size: 24px; font-variant-numeric: tabular-nums; }.agent-detail-page__pricing .button { margin-top: 8px; }.agent-detail-page__notice { padding: 12px 14px; color: #177344; border: 1px solid #bce7c9; border-radius: 8px; background: #effaf2; }.confirmation-dialog__backdrop { position: fixed; z-index: 50; inset: 0; display: grid; padding: 24px; place-items: center; background: rgb(25 31 40 / 48%); }.confirmation-dialog { width: min(100%, 400px); padding: 24px; border-radius: 12px; background: #fff; box-shadow: var(--shadow); }.confirmation-dialog h2 { margin: 0; font-size: 20px; }.confirmation-dialog p { margin: 10px 0 0; color: var(--muted); line-height: 1.55; }.confirmation-dialog__actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 24px; }
+.agent-detail-page { max-width: 1200px; }.agent-detail-page__summary { padding-bottom: 28px; border-bottom: 1px solid var(--line); }.agent-detail-page__identity { margin: 0 0 16px; color: var(--muted); font-size: 14px; }.agent-detail-page__pricing { display: grid; width: min(100%, 300px); gap: 7px; padding: 20px; border: 1px solid #cad7ff; border-radius: 12px; background: #f4f7ff; }.agent-detail-page__pricing > span, .agent-detail-page__pricing small { color: var(--muted); font-size: 13px; }.agent-detail-page__pricing strong { color: var(--ink); font-size: 24px; font-variant-numeric: tabular-nums; }.agent-detail-page__pricing .button { margin-top: 8px; }.agent-detail-page__notice { padding: 12px 14px; color: #177344; border: 1px solid #bce7c9; border-radius: 8px; background: #effaf2; }.confirmation-dialog { width: min(100% - 48px, 400px); padding: 24px; border: 0; border-radius: 12px; background: #fff; box-shadow: var(--shadow); }.confirmation-dialog::backdrop { background: rgb(25 31 40 / 48%); }.confirmation-dialog h2 { margin: 0; font-size: 20px; }.confirmation-dialog p { margin: 10px 0 0; color: var(--muted); line-height: 1.55; }.confirmation-dialog__actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 24px; }
 
 .marketplace-agent-card {
   overflow: hidden;

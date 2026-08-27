@@ -2,7 +2,6 @@ import { AlertTriangle, Check, Circle, Clock, LoaderCircle, Minus } from 'lucide
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { QuoteSnapshot } from '../../entities/dependency/model'
 import type { ExecutionDto } from '../../entities/execution/api'
-import type { ExecutionTimelineState } from './model'
 import {
   buildExecutionJourney,
   journeyStatusLabel,
@@ -12,9 +11,8 @@ import {
 
 interface ExecutionJourneyProps {
   execution: ExecutionDto
-  mode: 'easy' | 'developer'
-  snapshot?: QuoteSnapshot
-  timeline: ExecutionTimelineState
+  displayMode: 'easy' | 'developer'
+  quoteSnapshot?: QuoteSnapshot
 }
 
 function useReducedMotion(): boolean {
@@ -106,10 +104,10 @@ function JourneyCard({
   )
 }
 
-export function ExecutionJourney({ execution, mode, snapshot, timeline }: ExecutionJourneyProps) {
+export function ExecutionJourney({ displayMode, execution, quoteSnapshot }: ExecutionJourneyProps) {
   const model = useMemo(
-    () => buildExecutionJourney(snapshot, execution, timeline),
-    [execution, snapshot, timeline],
+    () => buildExecutionJourney(quoteSnapshot, execution),
+    [execution, quoteSnapshot],
   )
   const reducedMotion = useReducedMotion()
   const [visible, setVisible] = useState(() => document.visibilityState !== 'hidden')
@@ -186,7 +184,7 @@ export function ExecutionJourney({ execution, mode, snapshot, timeline }: Execut
             <JourneyCard
               key={root.id}
               activePathIds={activePathIds}
-              mode={mode}
+              mode={displayMode}
               node={root}
             />
           ))}

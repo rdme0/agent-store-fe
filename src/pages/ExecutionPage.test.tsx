@@ -73,7 +73,7 @@ describe('ExecutionPage', () => {
       steps: [{
         id: 'root-step', agentVersionId: 'root-version', status: 'COMPLETED', costAtomic: '1000000',
         output: { answer: '분산 투자가 필요합니다.' }, payments: [{
-          id: 'payment-id', status: 'SETTLED', amountAtomic: '1000000', mode: 'x402',
+          id: 'payment-id', status: 'SETTLED', amountAtomic: '1000000',
           transactionHash: `0x${'a'.repeat(64)}`, paymentIdentifier: 'receipt-id',
         }], createdAt: '2026-08-17T00:00:00Z', updatedAt: '2026-08-17T00:00:02Z',
       }], createdAt: '2026-08-17T00:00:00Z', updatedAt: '2026-08-17T00:00:02Z',
@@ -82,12 +82,10 @@ describe('ExecutionPage', () => {
 
     expect(await screen.findByRole('heading', { name: '실행 상세' })).toBeInTheDocument()
     expect(screen.getByText('시장 위험은?')).toBeInTheDocument()
-    expect(screen.getByRole('listitem', { name: 'investment: 완료' })).toBeInTheDocument()
+    expect(screen.getByRole('article', { name: '분석 단계: 확인 완료' })).toBeInTheDocument()
     expect(screen.getByText(/분산 투자가 필요합니다/)).toBeInTheDocument()
     expect(screen.getAllByText('1 USDC').length).toBeGreaterThan(0)
     expect(screen.getAllByText('3 USDC').length).toBeGreaterThanOrEqual(2)
-    expect(screen.getByText('x402 실제 결제 (Base Sepolia)')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /Base Sepolia/ })).toHaveAttribute('href', `https://sepolia.basescan.org/tx/${'0x'}${'a'.repeat(64)}`)
   })
 
   it('renders an API error with a retry action', async () => {
@@ -146,7 +144,7 @@ describe('ExecutionPage', () => {
     renderPage()
 
     expect(await screen.findByText('노드 2개 · 연결 1개')).toBeInTheDocument()
-    expect(screen.getByRole('list', { name: 'investment · COMPLETED 의존성' })).toHaveTextContent('runtime call')
+    expect(screen.getByRole('list', { name: '분석 단계 · COMPLETED 의존성' })).toHaveTextContent('runtime call')
   })
 
   it('restores the quoted graph and provider selection proof from the execution response', async () => {
@@ -166,7 +164,6 @@ describe('ExecutionPage', () => {
           selection: {
             strategy: 'lowest_price', providerScope: 'marketplace', functionContractId: 'function-contract-id', functionCode: 'news-analysis',
             functionContractVersion: '1.0.0', selectedVersionId: 'news-version', selectedReason: 'selected_by_lowest_price',
-            explorationSelected: false,
             candidates: [{ agentId: 'news-agent', agentCode: 'news-fast', versionId: 'news-version', semver: '1.0.0', priceAtomic: '500', status: 'selected' }],
           },
           resolved: {
@@ -202,7 +199,7 @@ describe('ExecutionPage', () => {
       steps: [{
         id: 'root-step', agentVersionId: 'root-version', status: 'COMPLETED', costAtomic: '1000',
         responseFormat: 'MARKDOWN', output: '# 쉬운 답변', payments: [{
-          id: 'payment-id', status: 'SETTLED', amountAtomic: '1000', mode: 'x402', transactionHash,
+          id: 'payment-id', status: 'SETTLED', amountAtomic: '1000', transactionHash,
         }], createdAt: '', updatedAt: '',
       }],
       quoteSnapshot: {
@@ -231,7 +228,7 @@ describe('ExecutionPage', () => {
       steps: [{
         id: 'root-step', agentVersionId: 'root-version', status: 'FAILED', costAtomic: '1000',
         responseFormat: 'MARKDOWN', payments: [{
-          id: 'payment-id', status: 'RECONCILIATION_REQUIRED', amountAtomic: '1000', mode: 'x402',
+          id: 'payment-id', status: 'RECONCILIATION_REQUIRED', amountAtomic: '1000',
         }], createdAt: '', updatedAt: '',
       }],
       quoteSnapshot: {

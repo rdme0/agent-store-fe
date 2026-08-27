@@ -12,7 +12,7 @@ import { DeveloperDashboardPage } from './DeveloperDashboardPage'
 const getRevenueMock = vi.mocked(getDeveloperRevenue)
 const firstPage = {
   developerId: 'developer-id', totalRevenueAtomic: '3000000', directRevenueAtomic: '1000000', dependencyRevenueAtomic: '2000000', directCount: 1, dependencyCount: 2,
-  entries: [{ id: 'entry-1', executionStepId: 'step-1', paymentAttemptId: 'payment-1', type: 'DIRECT' as const, amountAtomic: '1000000', paymentMode: 'x402' as const, transactionHash: `0x${'a'.repeat(64)}`, paymentIdentifier: 'safe-payment-id', createdAt: '2026-08-18T00:00:00Z' }],
+  entries: [{ id: 'entry-1', executionStepId: 'step-1', paymentAttemptId: 'payment-1', type: 'DIRECT' as const, amountAtomic: '1000000', transactionHash: `0x${'a'.repeat(64)}`, paymentIdentifier: 'safe-payment-id', createdAt: '2026-08-18T00:00:00Z' }],
   nextCursor: 'cursor-2',
 }
 
@@ -28,7 +28,7 @@ afterEach(() => {
 
 describe('DeveloperDashboardPage', () => {
   it('renders totals, payment entries, and loads the next cursor page', async () => {
-    getRevenueMock.mockResolvedValueOnce(firstPage).mockResolvedValueOnce({ ...firstPage, entries: [{ ...firstPage.entries[0], id: 'entry-2', type: 'DEPENDENCY' as const, paymentMode: 'simulated' as const, transactionHash: undefined }], nextCursor: undefined })
+    getRevenueMock.mockResolvedValueOnce(firstPage).mockResolvedValueOnce({ ...firstPage, entries: [{ ...firstPage.entries[0], id: 'entry-2', type: 'DEPENDENCY' as const, transactionHash: `0x${'b'.repeat(64)}` }], nextCursor: undefined })
     renderPage()
     expect(await screen.findByText('3 USDC')).toBeInTheDocument()
     expect(screen.getAllByText('직접 호출')).not.toHaveLength(0)

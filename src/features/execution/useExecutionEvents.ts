@@ -1,22 +1,25 @@
-import { useEffect, useReducer, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { streamExecutionEvents } from '../../entities/execution/api'
-import { applyExecutionEvents, executionTimelineReducer } from './reducer'
-import type { ExecutionEvent, ExecutionTimelineState } from './model'
-import { isTerminalExecutionEvent, toTimelineEvent, type StepLabelResolver } from './eventAdapter'
 import type { ExecutionStreamEvent } from '../../entities/execution/api'
 
 interface UseExecutionEventsOptions {
   executionId: string
-  initialEvents: readonly ExecutionEvent[]
-  labelForVersion?: StepLabelResolver
-  onEvent?: () => void
-  onSessionEnd?: () => void
+  refetch: () => Promise<unknown>
+  terminal: boolean
 }
+
+export type ExecutionConnectionStatus = 'idle' | 'connecting' | 'connected' | 'reconnecting' | 'closed' | 'error'
 
 const reconnectDelayMs = 1_000
 
+function isTerminalExecutionEvent(type: string | undefined): boolean {
+  return type === 'EXECUTION_COMPLETED'
+    || type === 'EXECUTION_FAILED'
+    || type === 'EXECUTION_RECONCILIATION_REQUIRED'
+}
+
 export interface ExecutionStreamLoopOptions {
-  onConnection: (status: 'connecting' | 'connected' | 'reconnecting' | 'closed' | 'error', error?: unknown) => void
+  onConnection: (status: Exclude<ExecutionConnectionStatus, 'idle'>, error?: unknown) => void
   onEvent: (event: ExecutionStreamEvent) => void
   onSessionEnd?: () => void
   signal: AbortSignal
@@ -77,59 +80,57 @@ export async function runExecutionStreamLoop(
   }
 }
 
-export function useExecutionEvents({
-  executionId,
-  initialEvents,
-  labelForVersion,
-  onEvent,
-  onSessionEnd,
-}: UseExecutionEventsOptions): ExecutionTimelineState {
-  const timelineExecutionId = useRef(executionId)
+/**
+ * SSE is only an invalidation signal. ExecutionDto (including quoteSnapshot) remains
+ * the single authoritative execution projection; event payloads never become UI state.
+ */
+export function useExecutionEvents({ executionId, refetch, terminal }: UseExecutionEventsOptions): ExecutionConnectionStatus {
   const streamGeneration = useRef(0)
-  const [timeline, dispatch] = useReducer(
-    executionTimelineReducer,
-    undefined,
-    () => applyExecutionEvents(initialEvents),
-  )
-  useEffect(() => {
-    if (timelineExecutionId.current !== executionId) {
-      timelineExecutionId.current = executionId
-      dispatch({ type: 'reset', state: applyExecutionEvents(initialEvents) })
-      return
-    }
-
-    dispatch({ type: 'snapshot', events: initialEvents })
-  }, [executionId, initialEvents])
+  const [connection, setConnection] = useState<ExecutionConnectionStatus>('idle')
 
   useEffect(() => {
     const generation = ++streamGeneration.current
+    if (terminal) return
+
     const controller = new AbortController()
+    let refreshInFlight = false
+    let refreshQueued = false
+    const seenEventIds = new Set<string>()
+
+    async function refreshCurrentExecution() {
+      if (refreshInFlight) {
+        refreshQueued = true
+        return
+      }
+      refreshInFlight = true
+      try {
+        do {
+          refreshQueued = false
+          await refetch()
+        } while (!controller.signal.aborted && streamGeneration.current === generation && refreshQueued)
+      } finally {
+        refreshInFlight = false
+      }
+    }
+
     void runExecutionStreamLoop(executionId, {
       signal: controller.signal,
-      onSessionEnd,
       onEvent: (event) => {
         if (streamGeneration.current !== generation) return
-        dispatch({ type: 'event', event: toTimelineEvent(event, labelForVersion) })
-        onEvent?.()
+        if (event.id && seenEventIds.has(event.id)) return
+        if (event.id) seenEventIds.add(event.id)
+        void refreshCurrentExecution()
       },
-      onConnection: (status, error) => {
+      onConnection: (status) => {
         if (streamGeneration.current !== generation) return
-        dispatch({
-          type: 'connection',
-          status,
-          error: status === 'error'
-            ? { code: 'SSE_CONNECTION_LOST', message: '실시간 연결이 끊겼습니다. 다시 연결합니다.', retryable: true }
-            : error instanceof Error
-              ? { message: error.message }
-              : undefined,
-        })
+        setConnection(status)
       },
     })
     return () => {
       streamGeneration.current += 1
       controller.abort()
     }
-  }, [executionId, labelForVersion, onEvent, onSessionEnd])
+  }, [executionId, refetch, terminal])
 
-  return timeline
+  return terminal ? 'closed' : connection
 }

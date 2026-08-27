@@ -29,5 +29,5 @@ export function DisplayModeProvider({ children }: { children: ReactNode }) {
 // eslint-disable-next-line react-refresh/only-export-components
 export function useDisplayMode(): DisplayModeContextValue {
   const value = useContext(DisplayModeContext)
-  return value ?? { displayMode: 'developer', setDisplayMode: () => undefined }
+  return value ?? { displayMode: 'easy', setDisplayMode: () => undefined }
 }
