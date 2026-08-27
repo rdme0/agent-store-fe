@@ -5,6 +5,15 @@ description: Maintain AgentStore React, Vite, and TypeScript frontend code. Use 
 
 # AgentStore FE Maintainer
 
+## Path and privacy hygiene
+
+Never write host-specific absolute filesystem paths to tracked source, documentation, examples,
+generated artifacts, or handoff files. This includes Windows drive paths and user directories.
+Use repository-relative paths such as `./` or
+`../`, or say `이 저장소 루트` when the exact checkout location is irrelevant. Network URLs,
+Docker-internal paths, and protocol/test fixture URIs are not filesystem paths and may remain when
+they are required by the documented behavior. Search the owned diff for host paths before handoff.
+
 ## Workflow
 
 1. Inspect the current app structure, nearby components, package scripts, and the current diff before editing.

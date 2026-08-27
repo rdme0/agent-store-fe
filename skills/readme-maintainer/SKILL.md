@@ -8,3 +8,7 @@ description: Keep the AgentStore frontend README accurate when FE scripts, envir
 Update the README only after inspecting the current package scripts and implemented source. Document prerequisites, install steps, development commands, API base URL configuration, generation commands, test commands, and the screens that actually exist.
 
 Do not document planned pages or unsupported production behavior as implemented. Keep secrets out of examples and use `.env.example` names. Run the documented commands that are available and report unavailable external dependencies.
+
+Keep tracked documentation portable and privacy-safe: never include a host-specific absolute
+filesystem path or a username/IDE checkout path. Use repository-relative paths or `이 저장소 루트`.
+Required network URLs, Docker-internal paths, and protocol/test fixture URIs may remain.

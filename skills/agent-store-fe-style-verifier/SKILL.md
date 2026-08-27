@@ -26,6 +26,10 @@ Require the original requirement, risk class and reason, changed invariants, dev
 - Controls have semantic elements, labels, keyboard behavior, and visible focus.
 - Money and payment values avoid floating-point arithmetic.
 - No unnecessary dependency, abstraction, or broad folder reorganization was introduced.
+- Tracked source, documentation, examples, generated artifacts, and handoff files contain no
+  host-specific absolute filesystem paths or username/IDE checkout paths; require repository-relative
+  paths or a repository-root description. Required network URLs, Docker-internal paths, and
+  protocol/test fixture URIs are not filesystem-path findings.
 - No catalog, generated contract, status, server fact, or async lifecycle is represented by multiple
   independently mutable models. Require one owner and selectors or generated projections instead of
   synchronized handwritten copies.
