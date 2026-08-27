@@ -23,9 +23,9 @@
 
 ## 저장소와 역할
 
-- 경로: `C:\work\project\agent-store-fe`
+- 경로: 이 저장소 루트
 - 스택: React 19, Vite, TypeScript, React Router, TanStack Query
-- API 계약 원본: `C:\work\project\agent-store-be\openapi\openapi.json`
+- API 계약 원본: `../agent-store-be/openapi/openapi.json`
 - 생성 client는 `src/generated/`이며 직접 수정하지 않는다. `npm run api:generate`만 사용한다.
 
 ## 현재 구현 상태
@@ -46,7 +46,7 @@
 
 ## 현재 상태와 다음 순서
 
-BE Flyway history checksum mismatch는 schema/data 변경 없이 Flyway `repair`로 해소됐고, Spring이 생성한 OpenAPI artifact에 `q`, `sort`, `dependencyCount`가 포함됨을 확인했다. `AGENTSTORE_OPENAPI=C:\work\project\agent-store-be\openapi\openapi.json npm run api:generate`로 client를 재생성했다.
+BE Flyway history checksum mismatch는 schema/data 변경 없이 Flyway `repair`로 해소됐고, Spring이 생성한 OpenAPI artifact에 `q`, `sort`, `dependencyCount`가 포함됨을 확인했다. `AGENTSTORE_OPENAPI=../agent-store-be/openapi/openapi.json npm run api:generate`로 client를 재생성했다.
 
 `listMarketplaceAgents()`는 생성된 query type을 직접 사용해 `cursor`, `limit`, `q`, `sort`를 요청하며, Marketplace 카드는 API `dependencyCount`를 `의존성 수`로 표시한다. 카드는 ACTIVE Version의 기본 호출 가격을 표시하며, 중복되는 목록 내 `실행 준비` 링크는 제공하지 않는다. 의존성을 포함한 Maximum Cost는 상세 화면의 Quote 발급 뒤에 확정된다. 이번 응답 형식 계약 변경에 맞춰 생성 client를 다시 만들고 폼 payload, 실행 결과 renderer, Markdown sanitization, 과거 데이터 JSON fallback을 반영했다. 2026-08-27 `npm ci`, lint, typecheck, 전체 test(26개 파일·96개), build를 다시 통과했다. npm audit의 기존 high 취약점 4건과 Vite chunk 경고는 기능 실패가 아니어서 별도 후속 작업으로 남긴다. BE V13 migration과 runtime output validator도 적용됐으며, fresh read-only verifier는 PASS로 확인됐다.
 

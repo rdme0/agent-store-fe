@@ -262,7 +262,7 @@ npm run api:generate
 기본 입력은 sibling BE의 `openapi/openapi.json`입니다. 다른 파일은 현재 shell에서 `AGENTSTORE_OPENAPI`로 지정할 수 있습니다.
 
 ```powershell
-$env:AGENTSTORE_OPENAPI = 'C:\path\to\openapi.json'
+$env:AGENTSTORE_OPENAPI = '.\path\to\openapi.json'
 npm run api:generate
 ```
 
