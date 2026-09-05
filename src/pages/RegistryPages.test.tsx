@@ -11,9 +11,11 @@ import {
   registerAgent,
 } from '../entities/agent/api'
 import type { AgentModel, AgentVersionModel } from '../entities/agent/model'
-import { listFunctionContracts } from '../entities/function-contract/api'
+import { createFunctionContract, listFunctionContracts, listFunctionProviders } from '../entities/function-contract/api'
+import type { FunctionContractResponse } from '../generated'
 import { AgentDetailPage } from './AgentDetailPage'
 import { AgentsPage } from './AgentsPage'
+import { FunctionContractsPage } from './FunctionContractsPage'
 import { NewAgentVersionPage } from './NewAgentVersionPage'
 import { RegisterAgentPage } from './RegisterAgentPage'
 import { DisplayModeProvider } from '../app/DisplayModeContext'
@@ -26,7 +28,7 @@ vi.mock('../entities/agent/api', () => ({
   publishAgentVersion: vi.fn(),
   registerAgent: vi.fn(),
 }))
-vi.mock('../entities/function-contract/api', () => ({ listFunctionContracts: vi.fn() }))
+vi.mock('../entities/function-contract/api', () => ({ createFunctionContract: vi.fn(), listFunctionContracts: vi.fn(), listFunctionProviders: vi.fn() }))
 vi.mock('../shared/config/env', () => ({
   API_BASE_URL: 'http://localhost:8080',
   DEMO_DEVELOPER_ID: '123e4567-e89b-12d3-a456-426614174000',
@@ -39,7 +41,9 @@ const createAgentVersionMock = vi.mocked(createAgentVersion)
 const disableAgentVersionMock = vi.mocked(disableAgentVersion)
 const publishAgentVersionMock = vi.mocked(publishAgentVersion)
 const registerAgentMock = vi.mocked(registerAgent)
+const createFunctionContractMock = vi.mocked(createFunctionContract)
 const listFunctionContractsMock = vi.mocked(listFunctionContracts)
+const listFunctionProvidersMock = vi.mocked(listFunctionProviders)
 
 const baseAgent: AgentModel = {
   id: 'agent-id',
@@ -67,6 +71,19 @@ const baseAgent: AgentModel = {
   }],
 }
 
+const baseFunctionContract: FunctionContractResponse = {
+  id: 'contract-id',
+  code: 'news-analysis',
+  contractVersion: '1.0.0',
+  name: '뉴스 분석',
+  description: '뉴스를 분석합니다.',
+  responseFormat: 'JSON',
+  inputSchema: { type: 'object', properties: { question: { type: 'string' } } },
+  outputSchema: { type: 'object', properties: { summary: { type: 'string' } } },
+  createdAt: '2026-01-01T00:00:00.000Z',
+  updatedAt: '2026-01-01T00:00:00.000Z',
+}
+
 function renderWithQuery(element: React.ReactElement) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   render(<QueryClientProvider client={queryClient}><DisplayModeProvider><MemoryRouter>{element}</MemoryRouter></DisplayModeProvider></QueryClientProvider>)
@@ -84,6 +101,7 @@ beforeEach(() => {
   vi.resetAllMocks()
   window.localStorage.setItem('agentstore.display-mode', 'developer')
   listFunctionContractsMock.mockResolvedValue([])
+  listFunctionProvidersMock.mockResolvedValue([])
 })
 
 afterEach(() => {
@@ -154,6 +172,44 @@ describe('Marketplace public states', () => {
 
     resolveNextPage?.({ items: [{ ...baseAgent, id: 'second-agent', code: 'second-agent', name: 'Second Agent' }], nextCursor: null })
     expect(await screen.findByRole('heading', { name: 'Second Agent' })).toBeInTheDocument()
+  })
+})
+
+describe('Function contract states', () => {
+  it('renders an empty state without an empty contract-list column', async () => {
+    renderWithQuery(<FunctionContractsPage />)
+
+    const emptyState = await screen.findByText('등록된 기능 계약이 없습니다.')
+    expect(emptyState).toHaveClass('function-contract-empty')
+    expect(document.querySelector('.function-contract-layout')).not.toBeInTheDocument()
+  })
+
+  it('uses the shared code view for registered input and output schemas', async () => {
+    listFunctionContractsMock.mockResolvedValue([baseFunctionContract])
+    renderWithQuery(<FunctionContractsPage />)
+
+    expect(await screen.findByRole('region', { name: '입력 계약 JSON' })).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: '출력 계약 JSON' })).toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: '복사' })).toHaveLength(2)
+  })
+
+  it('submits the latest values from formatted JSON editors', async () => {
+    createFunctionContractMock.mockResolvedValue(baseFunctionContract)
+    renderWithQuery(<FunctionContractsPage />)
+
+    await screen.findByText('등록된 기능 계약이 없습니다.')
+    fireEvent.change(screen.getByLabelText('기능 코드'), { target: { value: 'news-analysis' } })
+    fireEvent.change(screen.getByLabelText('계약 Version'), { target: { value: '1.0.0' } })
+    fireEvent.change(screen.getByLabelText('이름'), { target: { value: '뉴스 분석' } })
+    fireEvent.change(screen.getByLabelText('설명'), { target: { value: '뉴스를 분석합니다.' } })
+    fireEvent.click(screen.getAllByRole('button', { name: 'JSON 정렬' })[0])
+    fireEvent.click(screen.getAllByRole('button', { name: 'JSON 정렬' })[1])
+    fireEvent.click(screen.getByRole('button', { name: '계약 등록' }))
+
+    await waitFor(() => expect(createFunctionContractMock).toHaveBeenCalledWith(expect.objectContaining({
+      inputSchema: { type: 'object', properties: { input: { type: 'object' }, question: { type: 'string' } }, required: ['input'] },
+      outputSchema: { type: 'object' },
+    }), expect.anything()))
   })
 })
 

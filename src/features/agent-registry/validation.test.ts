@@ -16,9 +16,8 @@ describe('agent registry form validation', () => {
     expect(errors.priceAtomic).toContain('atomic string')
   })
 
-  it('rejects invalid code and developer identifiers', () => {
+  it('rejects invalid agent codes', () => {
     const errors = validateAgent({
-      developerId: 'demo',
       code: 'Demo Agent',
       name: 'Demo',
       description: 'Fixture',
@@ -31,7 +30,6 @@ describe('agent registry form validation', () => {
     })
 
     expect(errors.code).toBeDefined()
-    expect(errors.developerId).toContain('UUID')
   })
 
   it('converts human-readable USDC to atomic units without floating point arithmetic', () => {

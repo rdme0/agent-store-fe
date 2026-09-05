@@ -51,5 +51,14 @@ describe('ExecutionResult', () => {
     const { container } = render(<ExecutionResult output={{ arbitrary: { nested: true } }} />)
     expect(container.querySelector('.execution-result__json')).toHaveTextContent('arbitrary')
     expect(container.querySelector('.execution-result__json')).toHaveTextContent('nested')
+    expect(container.querySelector('.json-token--key')).toBeInTheDocument()
+    expect(container.querySelectorAll('.json-code-block__line')).toHaveLength(5)
+  })
+
+  it('formats a JSON string before displaying it as a code result', () => {
+    const { container } = render(<ExecutionResult output={'{"status":"ready"}'} responseFormat="JSON" />)
+
+    expect(container.querySelector('.execution-result__json')).toHaveTextContent('"status"')
+    expect(container.querySelectorAll('.json-code-block__line')).toHaveLength(3)
   })
 })

@@ -1,19 +1,14 @@
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { describe, expect, it, vi } from 'vitest'
-
-vi.mock('../shared/config/env', () => ({
-  API_BASE_URL: 'http://localhost:8080',
-  DEMO_DEVELOPER_ID: '',
-}))
+import { describe, expect, it } from 'vitest'
 
 import { SettingsPage } from './SettingsPage'
 
 describe('SettingsPage', () => {
-  it('explains how to enable the dashboard when the demo developer is not configured', () => {
+  it('describes the long-lived demo access requirement', () => {
     render(<MemoryRouter><SettingsPage /></MemoryRouter>)
 
-    expect(screen.getByText('데모 개발자 설정이 필요함')).toBeInTheDocument()
-    expect(screen.getByRole('status')).toHaveTextContent('데모 개발자 설정이 완료된 뒤')
+    expect(screen.getByText('데모 시작 뒤 365일 access로 연결')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Developer Dashboard 열기' })).toHaveAttribute('href', '/developer/revenue')
   })
 })
