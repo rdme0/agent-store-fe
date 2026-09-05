@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useState, type SyntheticEvent } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
-import { disableAgentVersion, getAgentByCode, publishAgentVersion } from '../entities/agent/api'
+import { disableAgentVersion, getAgentByCode, publishAgentVersion, verifyAgentVersion } from '../entities/agent/api'
 import { getActiveVersion, type AgentVersionModel } from '../entities/agent/model'
 import { DependencyEditor } from '../features/dependencies/DependencyEditor'
 import { QuotePanel } from '../features/dependencies/QuotePanel'
@@ -43,6 +43,9 @@ export function AgentDetailPage() {
       if (kind === 'publish') {
         return publishAgentVersion(versionId)
       }
+      if (kind === 'verify') {
+        return verifyAgentVersion(versionId)
+      }
       return disableAgentVersion(versionId)
     },
   })
@@ -61,11 +64,13 @@ export function AgentDetailPage() {
         queryClient.invalidateQueries({ queryKey: ['agent', ownerCode] }),
         queryClient.invalidateQueries({ queryKey: ['agents'] }),
         queryClient.invalidateQueries({ queryKey: ['marketplace-agents'] }),
+        queryClient.invalidateQueries({ queryKey: ['demo-developer-agents'] }),
+        queryClient.invalidateQueries({ queryKey: ['demo-developer-revenue'] }),
       ])
       if (mountedRef.current && codeRef.current === ownerCode) {
         setConfirmation(null)
         window.requestAnimationFrame(() => actionTriggerRef.current?.focus())
-        setActionNotice(currentAction.kind === 'publish' ? 'Version을 Marketplace에 공개했습니다.' : 'Version을 비활성화했습니다.')
+        setActionNotice(currentAction.kind === 'publish' ? 'Version을 Marketplace에 공개했습니다.' : currentAction.kind === 'verify' ? '실제 testnet 결제 검증 요청을 완료했습니다.' : 'Version을 비활성화했습니다.')
       }
     } finally {
       actionLockedRef.current = false
@@ -94,13 +99,13 @@ export function AgentDetailPage() {
 
   const agent = agentQuery.data
   if (displayMode === 'easy' && agent.usageType === 'internal_component') {
-    return <Navigate replace to="/" />
+    return <Navigate replace to="/marketplace" />
   }
   const activeVersion = getActiveVersion(agent)
   if (displayMode === 'easy') {
     return (
       <section className="agent-detail-page agent-detail-page--easy" aria-labelledby="agent-detail-title">
-        <Link className="back-link" to="/">← 다른 Agent 보기</Link>
+        <Link className="back-link" to="/marketplace">← 다른 Agent 보기</Link>
         <h1 id="agent-detail-title">{agent.name}</h1>
         <p className="detail-description">{agent.description}</p>
         {activeVersion ? <QuotePanel mode="easy" code={code} version={activeVersion} /> : <p className="state-card">지금은 이 분석을 준비 중이에요.</p>}
@@ -139,8 +144,9 @@ export function AgentDetailPage() {
           <VersionRow
             actionPending={actionMutation.isPending}
             key={version.id}
-            onDisable={(trigger) => requestVersionAction({ kind: 'disable', ownerCode: code, versionId: version.id, semver: version.semver }, trigger)}
-            onPublish={(trigger) => requestVersionAction({ kind: 'publish', ownerCode: code, versionId: version.id, semver: version.semver }, trigger)}
+            onDisable={(trigger) => requestVersionAction({ kind: 'disable', ownerCode: code, versionId: version.id, semver: version.semver, priceAtomic: version.priceAtomic, payTo: version.payTo }, trigger)}
+            onPublish={(trigger) => requestVersionAction({ kind: 'publish', ownerCode: code, versionId: version.id, semver: version.semver, priceAtomic: version.priceAtomic, payTo: version.payTo }, trigger)}
+            onVerify={(trigger) => requestVersionAction({ kind: 'verify', ownerCode: code, versionId: version.id, semver: version.semver, priceAtomic: version.priceAtomic, payTo: version.payTo }, trigger)}
             version={version}
           />
         ))}
@@ -180,17 +186,20 @@ interface VersionRowProps {
   actionPending: boolean
   onDisable: (trigger: HTMLButtonElement) => void
   onPublish: (trigger: HTMLButtonElement) => void
+  onVerify: (trigger: HTMLButtonElement) => void
   version: AgentVersionModel
 }
 
 interface VersionAction {
-  kind: 'publish' | 'disable'
+  kind: 'publish' | 'verify' | 'disable'
   ownerCode: string
   semver: string
   versionId: string
+  priceAtomic: string
+  payTo: string
 }
 
-function VersionRow({ actionPending, onDisable, onPublish, version }: VersionRowProps) {
+function VersionRow({ actionPending, onDisable, onPublish, onVerify, version }: VersionRowProps) {
   const statusClass = version.status.toLowerCase()
   return (
     <article className="version-row">
@@ -211,9 +220,12 @@ function VersionRow({ actionPending, onDisable, onPublish, version }: VersionRow
           </button>
         ) : null}
         {version.status === 'ACTIVE' ? (
-          <button className="button button--danger" disabled={actionPending} onClick={(event) => onDisable(event.currentTarget)} type="button">
-            {actionPending ? '처리 중…' : '비활성화'}
-          </button>
+          <>
+            {(version.readiness?.status === 'UNVERIFIED' || version.readiness?.status === 'UNAVAILABLE') ? <button className="button button--primary" disabled={actionPending} onClick={(event) => onVerify(event.currentTarget)} type="button">{actionPending ? '처리 중…' : '검증'}</button> : null}
+            <button className="button button--danger" disabled={actionPending} onClick={(event) => onDisable(event.currentTarget)} type="button">
+              {actionPending ? '처리 중…' : '비활성화'}
+            </button>
+          </>
         ) : null}
       </div>
     </article>
@@ -230,10 +242,12 @@ interface VersionActionDialogProps {
 
 function VersionActionDialog({ action, error, onCancel, onConfirm, pending }: VersionActionDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null)
-  const title = action.kind === 'publish' ? 'Version을 공개할까요?' : 'Version을 비활성화할까요?'
+  const title = action.kind === 'publish' ? 'Version을 공개할까요?' : action.kind === 'verify' ? '실제 testnet 결제를 진행할까요?' : 'Version을 비활성화할까요?'
   const description = action.kind === 'publish'
     ? `v${action.semver}이 Marketplace에 표시되고 실행할 수 있게 됩니다.`
-    : `v${action.semver}은 더 이상 새 실행에 사용되지 않습니다.`
+    : action.kind === 'verify'
+      ? `v${action.semver}에 Base Sepolia USDC 실제 x402 testnet 결제를 실행합니다. wallet 또는 facilitator 문제는 VERIFIED로 우회되지 않습니다.`
+      : `v${action.semver}은 더 이상 새 실행에 사용되지 않습니다.`
 
   useEffect(() => {
     const dialog = dialogRef.current
@@ -256,11 +270,12 @@ function VersionActionDialog({ action, error, onCancel, onConfirm, pending }: Ve
     <dialog aria-labelledby="version-action-title" className="confirmation-dialog" onCancel={handleCancel} ref={dialogRef}>
       <h2 id="version-action-title">{title}</h2>
       <p>{description}</p>
+      {action.kind === 'verify' ? <><p>Base Sepolia USDC atomic amount: <code>{action.priceAtomic}</code></p><p>payTo: <code>{action.payTo}</code></p></> : null}
       {error ? <p role="alert">{error}</p> : null}
       <div className="confirmation-dialog__actions">
         <button autoFocus className="button button--secondary" disabled={pending} onClick={onCancel} type="button">취소</button>
         <button className={action.kind === 'disable' ? 'button button--danger' : 'button button--primary'} disabled={pending} onClick={onConfirm} type="button">
-          {pending ? '처리 중…' : action.kind === 'publish' ? '공개하기' : '비활성화'}
+          {pending ? '처리 중…' : action.kind === 'publish' ? '공개하기' : action.kind === 'verify' ? '실제 결제 후 검증' : '비활성화'}
         </button>
       </div>
     </dialog>

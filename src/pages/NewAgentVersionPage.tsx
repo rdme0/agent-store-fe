@@ -33,13 +33,13 @@ export function NewAgentVersionPage() {
         <p>{error instanceof Error ? error.message : 'Agent 또는 기능 계약을 불러오지 못했습니다.'}</p>
         <div className="error-page__actions">
           <button className="button button--secondary" onClick={() => { void agentQuery.refetch(); void functionContractsQuery.refetch() }} type="button">다시 시도</button>
-          <Link className="text-link" to="/agents">Marketplace로 이동</Link>
+          <Link className="text-link" to="/marketplace">Marketplace로 이동</Link>
         </div>
       </div>
     )
   }
   if (!agentQuery.data) {
-    return <div className="state-card state-card--error" role="alert"><p>Version을 추가할 Agent를 찾지 못했습니다.</p><Link className="button button--secondary" to="/agents">Marketplace로 이동</Link></div>
+    return <div className="state-card state-card--error" role="alert"><p>Version을 추가할 Agent를 찾지 못했습니다.</p><Link className="button button--secondary" to="/marketplace">Marketplace로 이동</Link></div>
   }
 
   return (

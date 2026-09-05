@@ -132,6 +132,7 @@ function ExecutionPageContent({ displayMode, execution, refetch }: ExecutionPage
 
   if (displayMode === 'easy') {
     const amountWon = execution.actualCostKrwEstimate?.amountWon
+    const focusMode = !reconciliationRequired && execution.status !== 'COMPLETED' && execution.status !== 'FAILED'
     const title = reconciliationRequired
       ? '결제를 확인하고 있어요'
       : execution.status === 'COMPLETED'
@@ -140,10 +141,13 @@ function ExecutionPageContent({ displayMode, execution, refetch }: ExecutionPage
           ? '분석을 마치지 못했어요'
           : '분석하고 있어요'
     return (
-      <section className="registry-page execution-page execution-page--easy" aria-labelledby="execution-title">
-        <Link className="back-link" to="/">← 다른 Agent 보기</Link>
-        <p className="section-label">분석 결과</p>
-        <h1 id="execution-title">{title}</h1>
+      <section className={`registry-page execution-page execution-page--easy${focusMode ? ' execution-page--focus' : ''}`} aria-labelledby="execution-title">
+        <Link className="back-link" to="/marketplace">← 다른 Agent 보기</Link>
+        <div className="execution-page__hero">
+          <p className="section-label">{focusMode ? '분석 진행 중' : '분석 결과'}</p>
+          <h1 id="execution-title">{title}</h1>
+          {focusMode ? <p>필요한 자료를 확인한 뒤, 한 번에 읽기 쉬운 답변으로 정리하고 있어요.</p> : null}
+        </div>
         {execution.question ? <p className="execution-page__question"><strong>질문</strong>{execution.question}</p> : null}
         {reconciliationRequired ? (
           <p className="state-card state-card--warning" role="status">

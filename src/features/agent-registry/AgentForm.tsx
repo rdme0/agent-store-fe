@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactElement, type ReactNode } from 'react'
-import { DEMO_DEVELOPER_ID } from '../../shared/config/env'
 import type { RegisterAgentInput } from '../../entities/agent/api'
 import { RESPONSE_FORMAT_OPTIONS, type AgentResponseFormat } from '../../entities/agent/model'
 import type { FunctionContractResponse } from '../../generated'
@@ -51,8 +50,7 @@ export function AgentForm({ functionContracts = [], isSubmitting, onSubmit, serv
     event.preventDefault()
     if (submittingRef.current || isSubmitting) return
     const priceAtomic = usdcToAtomic(values.priceUsdc)
-    const nextErrors = validateAgent({ ...values, developerId: DEMO_DEVELOPER_ID, priceAtomic: priceAtomic ?? '' })
-    delete nextErrors.developerId
+    const nextErrors = validateAgent({ ...values, priceAtomic: priceAtomic ?? '' })
     delete nextErrors.priceAtomic
     const priceError = validateUsdcAmount(values.priceUsdc)
     if (priceError) nextErrors.priceUsdc = priceError
@@ -64,7 +62,7 @@ export function AgentForm({ functionContracts = [], isSubmitting, onSubmit, serv
 
     submittingRef.current = true
     try {
-      await onSubmit({ developerId: DEMO_DEVELOPER_ID, code: values.code, name: values.name, description: values.description, semver: values.semver, endpoint: values.endpoint, priceAtomic: priceAtomic!, network: values.network, asset: values.asset, payTo: values.payTo, responseFormat: selectedFunctionContract?.responseFormat ?? values.responseFormat ?? 'JSON', functionContractId: functionContractId || undefined, usageType })
+      await onSubmit({ code: values.code, name: values.name, description: values.description, semver: values.semver, endpoint: values.endpoint, priceAtomic: priceAtomic!, network: values.network, asset: values.asset, payTo: values.payTo, responseFormat: selectedFunctionContract?.responseFormat ?? values.responseFormat ?? 'JSON', functionContractId: functionContractId || undefined, usageType })
     } finally {
       if (mountedRef.current) {
         submittingRef.current = false

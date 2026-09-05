@@ -1,14 +1,14 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { importAgentManifest, validateAgentManifest } from '../entities/agent-manifest/api'
 import type { AgentManifestValidationResponse } from '../generated'
-import { DEMO_DEVELOPER_ID } from '../shared/config/env'
+import { getDemoDeveloper } from '../entities/developer/api'
 
-function initialContent(): string {
+function initialContent(developerId = ''): string {
   return `apiVersion: agentstore/v1
 agent:
-  developerId: ${DEMO_DEVELOPER_ID}
+  developerId: ${developerId}
   code: example-agent
   name: 예시 Agent
   description: 기능 계약에 맞는 결과를 제공합니다.
@@ -34,12 +34,14 @@ function errorMessage(error: unknown): string {
 export function AgentManifestPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const [content, setContent] = useState(initialContent)
+  const [content, setContent] = useState('')
   const [validation, setValidation] = useState<AgentManifestValidationResponse>()
   const [error, setError] = useState<string>()
   const requestGeneration = useRef(0)
   const requestLocked = useRef(false)
   const mounted = useRef(true)
+  const developer = useQuery({ queryKey: ['demo-developer'], queryFn: getDemoDeveloper, retry: false })
+  const manifestContent = content || initialContent(developer.data?.id)
   const validateMutation = useMutation({
     mutationFn: async ({ content: source, generation }: { content: string; generation: number }) => ({
       generation,
@@ -98,7 +100,7 @@ export function AgentManifestPage() {
   }
 
   function validate() {
-    if (requestLocked.current || !content.trim()) {
+    if (requestLocked.current || !manifestContent.trim()) {
       return
     }
     requestLocked.current = true
@@ -106,16 +108,16 @@ export function AgentManifestPage() {
     requestGeneration.current = generation
     setError(undefined)
     setValidation(undefined)
-    validateMutation.mutate({ content, generation })
+    validateMutation.mutate({ content: manifestContent, generation })
   }
 
   function importManifest() {
-    if (requestLocked.current || !validation || !content.trim()) {
+    if (requestLocked.current || !validation || !manifestContent.trim()) {
       return
     }
     requestLocked.current = true
     setError(undefined)
-    importMutation.mutate(content)
+    importMutation.mutate(manifestContent)
   }
 
   const isSubmitting = validateMutation.isPending || importMutation.isPending
@@ -127,14 +129,15 @@ export function AgentManifestPage() {
       <div className="state-card">
         <p><strong>먼저 검증하고 등록하세요.</strong> 검증된 내용이 바뀌면 다시 검증해야 합니다.</p>
       </div>
+      {developer.isError ? <p className="form-error form-error--summary" role="alert">데모 개발자 세션을 확인하지 못했습니다.</p> : null}
       <label className="form-field" htmlFor="agent-manifest-content">
         <span>YAML 매니페스트</span>
-        <textarea id="agent-manifest-content" onChange={(event) => changeContent(event.target.value)} rows={28} spellCheck={false} value={content} />
+        <textarea id="agent-manifest-content" onChange={(event) => changeContent(event.target.value)} rows={28} spellCheck={false} value={manifestContent} />
       </label>
       {validation ? <section className="state-card" aria-live="polite"><strong>검증 완료</strong><p>Agent 코드: {validation.agentCode}</p><p>기능 코드: {validation.functionCode}</p><p>선언 해시: <code>{validation.sha256}</code></p></section> : null}
       {error ? <p className="form-error form-error--summary" role="alert">{error}</p> : null}
       <div className="form-actions">
-        <button className="button button--secondary" disabled={isSubmitting || !content.trim()} onClick={validate} type="button">{validateMutation.isPending ? '검증 중…' : '선언 검증'}</button>
+        <button className="button button--secondary" disabled={isSubmitting || !manifestContent.trim()} onClick={validate} type="button">{validateMutation.isPending ? '검증 중…' : '선언 검증'}</button>
         <button className="button button--primary" disabled={isSubmitting || !validation} onClick={importManifest} type="button">{importMutation.isPending ? '등록 중…' : 'DRAFT Agent 등록'}</button>
       </div>
     </section>

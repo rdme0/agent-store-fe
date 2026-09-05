@@ -4,6 +4,7 @@ import {
   patchApiAgentsById,
   postApiAgentVersionsByIdDisable,
   postApiAgentVersionsByIdPublish,
+  postApiAgentVersionsByIdVerify,
   postApiAgents,
   postApiAgentsByIdVersions,
   type AgentListResponse,
@@ -26,7 +27,9 @@ async function withApiError<T>(operation: () => Promise<T>): Promise<T> {
   }
 }
 
-export type RegisterAgentInput = Omit<PostApiAgentsData['body'], 'responseFormat' | 'usageType'> & {
+export type RegisterAgentInput = Omit<PostApiAgentsData['body'], 'developerId' | 'responseFormat' | 'usageType'> & {
+  /** @deprecated Server-derived demo Bearer principal; never serialized. */
+  developerId?: string
   responseFormat?: import('./model').AgentResponseFormat
   usageType?: 'user_facing' | 'internal_component'
 }
@@ -95,10 +98,21 @@ export function registerAgent(input: RegisterAgentInput): Promise<AgentModel> {
   return withApiError(async () => {
     const response = await postApiAgents({
       client: agentStoreClient,
-      body: { ...input, responseFormat: input.responseFormat ?? 'JSON', usageType: input.usageType ?? 'internal_component' },
+      body: { code: input.code, name: input.name, description: input.description, semver: input.semver, endpoint: input.endpoint, priceAtomic: input.priceAtomic, network: input.network, asset: input.asset, payTo: input.payTo, responseFormat: input.responseFormat ?? 'JSON', functionContractId: input.functionContractId, verificationInput: input.verificationInput, usageType: input.usageType ?? 'internal_component' },
       throwOnError: true,
     })
     return toAgentModel(unwrapCommonResponse<AgentResponse>(response.data))
+  })
+}
+
+export function verifyAgentVersion(versionId: string): Promise<AgentVersionModel> {
+  return withApiError(async () => {
+    const response = await postApiAgentVersionsByIdVerify({
+      client: agentStoreClient,
+      path: { id: versionId },
+      throwOnError: true,
+    })
+    return toVersionModel(unwrapCommonResponse<AgentVersionResponse>(response.data))
   })
 }
 

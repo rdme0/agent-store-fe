@@ -1,5 +1,5 @@
 import { Menu, X } from 'lucide-react'
-import { useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
+import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 import {
   createBrowserRouter,
   isRouteErrorResponse,
@@ -8,9 +8,11 @@ import {
   Outlet,
   type RouteObject,
   RouterProvider,
+  useLocation,
+  useNavigate,
   useRouteError,
 } from 'react-router-dom'
-import { ConnectionStatus } from '../features/system/ConnectionStatus'
+import { BrandMark } from '../shared/ui/BrandMark'
 import { AgentDetailPage } from '../pages/AgentDetailPage'
 import { AgentManifestPage } from '../pages/AgentManifestPage'
 import { AgentsPage } from '../pages/AgentsPage'
@@ -21,26 +23,60 @@ import { NewAgentVersionPage } from '../pages/NewAgentVersionPage'
 import { NotFoundPage } from '../pages/NotFoundPage'
 import { RegisterAgentPage } from '../pages/RegisterAgentPage'
 import { SettingsPage } from '../pages/SettingsPage'
+import { LandingPage } from '../pages/LandingPage'
 import { ErrorBoundary } from './ErrorBoundary'
 import { useDisplayMode } from './DisplayModeContext'
+import { currentDemoAccess } from '../shared/auth/demoAccess'
 
 const navigationItems = [
-  { label: 'Marketplace', to: '/', end: true },
+  { label: 'Marketplace', to: '/marketplace', end: true },
   { label: 'Agent 등록', to: '/agents/new', end: false },
   { label: '기능 계약', to: '/function-contracts', end: true },
   { label: '매니페스트 등록', to: '/agent-manifests/new', end: true },
   { label: '개발자 대시보드', to: '/developer/revenue', end: true },
 ]
+const drawerFocusableSelector = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+
+function isDeveloperOnlyPath(pathname: string): boolean {
+  return pathname === '/agents/new'
+    || pathname === '/agent-manifests/new'
+    || pathname === '/function-contracts'
+    || pathname === '/developer/revenue'
+    || pathname === '/settings'
+    || /^\/agents\/[^/]+\/versions\/new$/.test(pathname)
+}
 
 function AppShell() {
   const { displayMode, setDisplayMode } = useDisplayMode()
+  const location = useLocation()
+  const navigate = useNavigate()
   const [isMenuOpen, setMenuOpen] = useState(false)
   const menuId = useId()
   const menuButtonRef = useRef<HTMLButtonElement>(null)
   const drawerRef = useRef<HTMLElement>(null)
-  const visibleNavigationItems = displayMode === 'developer'
+  const hasDemoAccess = Boolean(currentDemoAccess())
+  const isDeveloperMode = hasDemoAccess && displayMode === 'developer'
+  const isLandingPage = location.pathname === '/'
+  const showsDeveloperChrome = isDeveloperMode && !isLandingPage
+  const visibleNavigationItems = showsDeveloperChrome
     ? navigationItems
-    : navigationItems.filter((item) => item.to === '/')
+    : [{ label: 'Marketplace', to: '/marketplace', end: true }]
+
+  useEffect(() => {
+    const endDemo = () => {
+      setDisplayMode('easy')
+      navigate('/', { replace: true })
+    }
+    window.addEventListener('agentstore-demo-access-ended', endDemo)
+    return () => window.removeEventListener('agentstore-demo-access-ended', endDemo)
+  }, [navigate, setDisplayMode])
+
+  function changeDisplayMode(mode: 'easy' | 'developer') {
+    if (mode === 'easy' && isDeveloperOnlyPath(location.pathname)) {
+      navigate('/marketplace', { replace: true })
+    }
+    setDisplayMode(mode)
+  }
 
   function closeMenu(restoreFocus: boolean) {
     setMenuOpen(false)
@@ -52,7 +88,7 @@ function AppShell() {
   function openMenu() {
     setMenuOpen(true)
     window.requestAnimationFrame(() => {
-      drawerRef.current?.querySelector<HTMLAnchorElement>('a')?.focus()
+      drawerRef.current?.querySelector<HTMLElement>(drawerFocusableSelector)?.focus()
     })
   }
 
@@ -65,12 +101,12 @@ function AppShell() {
     if (event.key !== 'Tab') {
       return
     }
-    const links = drawerRef.current?.querySelectorAll<HTMLAnchorElement>('a')
-    if (!links || links.length === 0) {
+    const focusableElements = drawerRef.current?.querySelectorAll<HTMLElement>(drawerFocusableSelector)
+    if (!focusableElements || focusableElements.length === 0) {
       return
     }
-    const first = links[0]
-    const last = links[links.length - 1]
+    const first = focusableElements[0]
+    const last = focusableElements[focusableElements.length - 1]
     if (event.shiftKey && document.activeElement === first) {
       event.preventDefault()
       last.focus()
@@ -81,30 +117,32 @@ function AppShell() {
   }
 
   return (
-    <div className="app-shell">
+    <div className={showsDeveloperChrome ? 'app-shell app-shell--developer' : 'app-shell'}>
       <a className="skip-link" href="#main-content">본문으로 건너뛰기</a>
       <header className="app-header">
         <div className="app-header__inner">
           <NavLink className="brand" to="/" end>
-            <span className="brand__mark" aria-hidden="true">A</span>
-            <span>AgentStore</span>
+            <BrandMark compact />
+            <span className="brand__word">AgentStore</span>
+            {showsDeveloperChrome ? <span className="brand__mode">Developer</span> : null}
           </NavLink>
-          <nav aria-label="주요 탐색" className="app-navigation">
-            {visibleNavigationItems.map((item) => (
-              <NavLink
-                className={({ isActive }) => isActive ? 'app-navigation__link app-navigation__link--active' : 'app-navigation__link'}
-                end={item.end}
-                key={item.to}
-                onClick={() => closeMenu(false)}
-                to={item.to}
-              >
-                {item.label}
-              </NavLink>
-            ))}
+          {!showsDeveloperChrome ? (
+            <nav aria-label="주요 탐색" className="app-navigation">
+              {visibleNavigationItems.map((item) => (
+                <NavLink
+                  className={({ isActive }) => isActive ? 'app-navigation__link app-navigation__link--active' : 'app-navigation__link'}
+                  end={item.end}
+                  key={item.to}
+                  onClick={() => closeMenu(false)}
+                  to={item.to}
+                >
+                  {item.label}
+                </NavLink>
+              ))}
           </nav>
+          ) : null}
           <div className="app-header__actions">
-            <DisplayModeToggle displayMode={displayMode} onChange={setDisplayMode} />
-            <ConnectionStatus />
+            {hasDemoAccess && !isLandingPage ? <DisplayModeToggle displayMode={displayMode} onChange={changeDisplayMode} /> : null}
             <button
               aria-controls={menuId}
               aria-expanded={isMenuOpen}
@@ -122,7 +160,7 @@ function AppShell() {
           <div className="mobile-drawer-layer">
             <button aria-label="메뉴 닫기" className="mobile-drawer-layer__backdrop" onClick={() => closeMenu(true)} type="button" />
             <nav aria-label="모바일 주요 탐색" aria-modal="true" className="mobile-navigation" id={menuId} onKeyDown={handleDrawerKeyDown} ref={drawerRef} role="dialog">
-              <DisplayModeToggle displayMode={displayMode} onChange={setDisplayMode} />
+              {hasDemoAccess && !isLandingPage ? <DisplayModeToggle displayMode={displayMode} onChange={(mode) => { changeDisplayMode(mode); closeMenu(true) }} /> : null}
               {visibleNavigationItems.map((item) => (
                 <NavLink
                   className={({ isActive }) => isActive ? 'mobile-navigation__link mobile-navigation__link--active' : 'mobile-navigation__link'}
@@ -134,12 +172,34 @@ function AppShell() {
                   {item.label}
                 </NavLink>
               ))}
-              {displayMode === 'developer' ? <NavLink className="mobile-navigation__link" onClick={() => closeMenu(false)} to="/settings">연결 정보</NavLink> : null}
+              {showsDeveloperChrome ? <NavLink className="mobile-navigation__link" onClick={() => closeMenu(false)} to="/settings">연결 정보</NavLink> : null}
             </nav>
           </div>
         ) : null}
       </header>
-      <main className="app-main" id="main-content"><Outlet /></main>
+      {showsDeveloperChrome ? (
+        <div className="developer-layout">
+          <aside aria-label="개발자 탐색" className="developer-sidebar">
+            <p>개발자 도구</p>
+            <nav>
+              {navigationItems.map((item) => (
+                <NavLink
+                  className={({ isActive }) => isActive ? 'developer-sidebar__link developer-sidebar__link--active' : 'developer-sidebar__link'}
+                  end={item.end}
+                  key={item.to}
+                  to={item.to}
+                >
+                  {item.label}
+                </NavLink>
+              ))}
+              <NavLink className={({ isActive }) => isActive ? 'developer-sidebar__link developer-sidebar__link--active' : 'developer-sidebar__link'} to="/settings">
+                연결 정보
+              </NavLink>
+            </nav>
+          </aside>
+          <main className="app-main" id="main-content"><Outlet /></main>
+        </div>
+      ) : <main className="app-main" id="main-content"><Outlet /></main>}
     </div>
   )
 }
@@ -148,7 +208,7 @@ function DisplayModeToggle({ displayMode, onChange }: { displayMode: 'easy' | 'd
   return (
     <div aria-label="화면 모드" className="display-mode-toggle" role="group">
       <button aria-pressed={displayMode === 'easy'} className={displayMode === 'easy' ? 'display-mode-toggle__button display-mode-toggle__button--active' : 'display-mode-toggle__button'} onClick={() => onChange('easy')} type="button">쉬운 사용</button>
-      <button aria-pressed={displayMode === 'developer'} className={displayMode === 'developer' ? 'display-mode-toggle__button display-mode-toggle__button--active' : 'display-mode-toggle__button'} onClick={() => onChange('developer')} type="button">개발자</button>
+      <button aria-pressed={displayMode === 'developer'} className={displayMode === 'developer' ? 'display-mode-toggle__button display-mode-toggle__button--active' : 'display-mode-toggle__button'} onClick={() => onChange('developer')} type="button">개발자 모드</button>
     </div>
   )
 }
@@ -162,14 +222,26 @@ function RouteErrorPage() {
       <p className="section-label">AgentStore</p>
       <h1>{title}</h1>
       <p>요청한 화면을 불러오는 중 문제가 발생했습니다.</p>
-      <a className="button button--primary" href="/">Marketplace로 돌아가기</a>
+      <a className="button button--primary" href="/marketplace">Marketplace로 돌아가기</a>
     </main>
   )
 }
 
 function DeveloperRoute({ children }: { children: ReactNode }) {
-  const { displayMode } = useDisplayMode()
-  return displayMode === 'developer' ? children : <Navigate replace to="/" />
+  const { displayMode, setDisplayMode } = useDisplayMode()
+  const access = currentDemoAccess()
+
+  useEffect(() => {
+    if (access && displayMode !== 'developer') setDisplayMode('developer')
+  }, [access, displayMode, setDisplayMode])
+
+  if (!access) return <Navigate replace to="/?developer=1" />
+  if (displayMode !== 'developer') return null
+  return children
+}
+
+function DemoAccessRoute({ children }: { children: ReactNode }) {
+  return currentDemoAccess() ? children : <Navigate replace to="/?demo=1" />
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -179,8 +251,9 @@ export const routes: RouteObject[] = [
     element: <AppShell />,
     errorElement: <RouteErrorPage />,
     children: [
-      { index: true, element: <AgentsPage /> },
-      { path: 'agents', element: <Navigate replace to="/" /> },
+      { index: true, element: <LandingPage /> },
+      { path: 'marketplace', element: <DemoAccessRoute><AgentsPage /></DemoAccessRoute> },
+      { path: 'agents', element: <Navigate replace to="/marketplace" /> },
       { path: 'agents/new', element: <DeveloperRoute><RegisterAgentPage /></DeveloperRoute> },
       { path: 'agent-manifests/new', element: <DeveloperRoute><AgentManifestPage /></DeveloperRoute> },
       { path: 'agents/:code/versions/new', element: <DeveloperRoute><NewAgentVersionPage /></DeveloperRoute> },

@@ -6,6 +6,8 @@ import {
   listFunctionProviders,
 } from '../entities/function-contract/api'
 import type { FunctionContractResponse } from '../generated'
+import { JsonCodeBlock } from '../shared/ui/JsonCodeBlock'
+import { JsonEditor } from '../shared/ui/JsonEditor'
 
 const inputSchemaExample = `{
   "type": "object",
@@ -36,8 +38,8 @@ function FunctionContractDetail({ contract }: { contract: FunctionContractRespon
       </div>
       <p>{contract.description}</p>
       <div className="function-contract-schema-grid">
-        <div><h3>입력 계약</h3><pre>{JSON.stringify(contract.inputSchema, null, 2)}</pre></div>
-        <div><h3>출력 계약</h3><pre>{JSON.stringify(contract.outputSchema, null, 2)}</pre></div>
+        <div><h3>입력 계약</h3><JsonCodeBlock label="입력 계약 JSON" value={contract.inputSchema} /></div>
+        <div><h3>출력 계약</h3><JsonCodeBlock label="출력 계약 JSON" value={contract.outputSchema} /></div>
       </div>
       <h3>ACTIVE 공급자</h3>
       {providers.isPending ? <p role="status">공급자를 불러오는 중…</p> : null}
@@ -105,12 +107,14 @@ export function FunctionContractsPage() {
       <p className="eyebrow">Function contracts</p>
       <h1 id="function-contracts-title">기능 계약</h1>
       <p className="page-placeholder__description">공급자가 같은 기능을 제공할 때 지켜야 할 입력·출력 약속입니다. 코드는 URL이 아니라 Marketplace에서 기능을 찾는 이름입니다.</p>
-      <div className="function-contract-layout">
-        <aside className="function-contract-list" aria-label="기능 계약 목록">
-          {contracts.data?.map((contract) => <button className={selected?.id === contract.id ? 'function-contract-list__item function-contract-list__item--active' : 'function-contract-list__item'} key={contract.id} onClick={() => setSelectedId(contract.id)} type="button"><strong>{contract.name}</strong><span>{contract.code} · v{contract.contractVersion}</span></button>)}
-        </aside>
-        {selected ? <FunctionContractDetail contract={selected} /> : <p className="state-card">등록된 기능 계약이 없습니다.</p>}
-      </div>
+      {selected ? (
+        <div className="function-contract-layout">
+          <aside className="function-contract-list" aria-label="기능 계약 목록">
+            {contracts.data?.map((contract) => <button className={selected.id === contract.id ? 'function-contract-list__item function-contract-list__item--active' : 'function-contract-list__item'} key={contract.id} onClick={() => setSelectedId(contract.id)} type="button"><strong>{contract.name}</strong><span>{contract.code} · v{contract.contractVersion}</span></button>)}
+          </aside>
+          <FunctionContractDetail contract={selected} />
+        </div>
+      ) : <p className="state-card function-contract-empty">등록된 기능 계약이 없습니다.</p>}
       <form className="registry-form function-contract-form" onSubmit={submit}>
         <fieldset disabled={mutation.isPending}>
           <legend>새 기능 계약</legend>
@@ -122,8 +126,8 @@ export function FunctionContractsPage() {
           </div>
           <label className="form-field">설명<textarea name="description" required rows={3} /></label>
           <div className="function-contract-schema-grid">
-            <label className="form-field">입력 계약 Schema<textarea name="inputSchema" defaultValue={inputSchemaExample} required rows={12} spellCheck={false} /></label>
-            <label className="form-field">출력 계약 Schema<textarea name="outputSchema" defaultValue={outputSchemaExample} required rows={12} spellCheck={false} /></label>
+            <JsonEditor defaultValue={inputSchemaExample} id="input-schema" label="입력 계약 Schema" name="inputSchema" required rows={12} />
+            <JsonEditor defaultValue={outputSchemaExample} id="output-schema" label="출력 계약 Schema" name="outputSchema" required rows={12} />
           </div>
         </fieldset>
         {formError || mutation.error ? <p className="form-error" role="alert">{formError ?? (mutation.error instanceof Error ? mutation.error.message : '기능 계약 생성에 실패했습니다.')}</p> : null}

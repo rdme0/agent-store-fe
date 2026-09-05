@@ -33,7 +33,7 @@ export function RegisterAgentPage() {
 
   return (
     <section className="registry-page registry-page--narrow" aria-labelledby="register-agent-title">
-      <Link className="back-link" to="/">← Marketplace</Link>
+      <Link className="back-link" to="/marketplace">← Marketplace</Link>
       <p className="eyebrow">Agent 등록</p>
       <h1 id="register-agent-title">새 Agent 등록</h1>
       <p className="page-placeholder__description">등록 직후에는 DRAFT Version으로 저장됩니다. 준비가 끝나면 Agent 상세에서 Publish할 수 있습니다.</p>

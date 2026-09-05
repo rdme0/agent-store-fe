@@ -1,4 +1,4 @@
-import { AlertTriangle, Check, Circle, Clock, LoaderCircle, Minus } from 'lucide-react'
+import { Activity, AlertTriangle, Check, Circle, Clock, Minus } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { QuoteSnapshot } from '../../entities/dependency/model'
 import type { ExecutionDto } from '../../entities/execution/api'
@@ -35,8 +35,8 @@ function useReducedMotion(): boolean {
   return reducedMotion
 }
 
-function StatusIcon({ loading, status }: { loading: boolean; status: ExecutionJourneyStatus }) {
-  if (loading) return <LoaderCircle aria-hidden="true" className="execution-journey__spinner" />
+function StatusIcon({ status }: { status: ExecutionJourneyStatus }) {
+  if (status === 'active') return <Activity aria-hidden="true" />
   if (status === 'completed') return <Check aria-hidden="true" />
   if (status === 'failed' || status === 'reconciliation') return <AlertTriangle aria-hidden="true" />
   if (status === 'preparing') return <Clock aria-hidden="true" />
@@ -62,7 +62,7 @@ function JourneyCard({
   return (
     <li className={`execution-journey__item execution-journey__item--${node.status}${loading ? ' execution-journey__item--loading' : ''}`}>
       <article className="execution-journey__card" aria-label={`${node.agentName}: ${statusLabel}`}>
-        <div className="execution-journey__status-icon"><StatusIcon loading={loading} status={node.status} /></div>
+        <div className="execution-journey__status-icon"><StatusIcon status={node.status} /></div>
         <div className="execution-journey__content">
           <div className="execution-journey__heading">
             <h3>{node.agentName}</h3>

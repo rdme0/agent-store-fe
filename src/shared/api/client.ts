@@ -1,4 +1,5 @@
 import { API_BASE_URL } from '../config/env'
+import { clearDemoAccess, currentDemoAccess } from '../auth/demoAccess'
 
 export class ApiRequestError extends Error {
   readonly status: number
@@ -83,19 +84,21 @@ function resolveUrl(path: string): string {
  * Endpoint contracts belong in the generated client once OpenAPI is available.
  */
 export async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const access = currentDemoAccess()
   const response = await fetch(resolveUrl(path), {
     ...init,
     headers: {
       Accept: 'application/json',
+      ...(access ? { Authorization: `Bearer ${access.accessToken}` } : {}),
       ...init?.headers,
     },
   })
 
   if (!response.ok) {
-    throw new ApiRequestError(
-      `API request failed with status ${response.status}`,
-      response.status,
-    )
+    if (response.status === 401) clearDemoAccess()
+    const traceId = response.headers.get('X-Trace-Id') ?? undefined
+    const body = await response.json().catch(() => undefined) as CommonResponseErrorBody | undefined
+    throw new ApiRequestError(typeof body?.message === 'string' ? body.message : `API request failed with status ${response.status}`, response.status, { errorCode: typeof body?.errorCode === 'string' ? body.errorCode : undefined, traceId })
   }
 
   if (response.status === 204) {

@@ -2,6 +2,7 @@ import ReactMarkdown from 'react-markdown'
 import rehypeSanitize from 'rehype-sanitize'
 import remarkGfm from 'remark-gfm'
 import type { AgentResponseFormat } from '../../entities/agent/model'
+import { JsonCodeBlock } from '../../shared/ui/JsonCodeBlock'
 
 interface ExecutionResultProps {
   output: unknown
@@ -71,13 +72,7 @@ function StructuredResult({ output }: { output: StructuredOutput }) {
 }
 
 function JsonResult({ output }: { output: unknown }) {
-  return <pre className="execution-result__json">{formatJson(output)}</pre>
-}
-
-function formatJson(output: unknown): string {
-  if (typeof output === 'string') return output
-  const serialized = JSON.stringify(output, null, 2)
-  return serialized ?? String(output)
+  return <JsonCodeBlock className="execution-result__json" label="JSON 결과" value={output} />
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

@@ -38,7 +38,7 @@ export class ErrorBoundary extends Component<
             <button type="button" onClick={this.handleReload}>
               새로고침
             </button>
-            <a href="/">Marketplace로 돌아가기</a>
+            <a href="/marketplace">Marketplace로 돌아가기</a>
           </div>
         </main>
       )
