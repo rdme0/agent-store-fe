@@ -1,5 +1,5 @@
 import { Menu, X } from 'lucide-react'
-import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
+import { lazy, Suspense, useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 import {
   createBrowserRouter,
   isRouteErrorResponse,
@@ -13,20 +13,21 @@ import {
   useRouteError,
 } from 'react-router-dom'
 import { BrandMark } from '../shared/ui/BrandMark'
-import { AgentDetailPage } from '../pages/AgentDetailPage'
-import { AgentManifestPage } from '../pages/AgentManifestPage'
 import { AgentsPage } from '../pages/AgentsPage'
-import { FunctionContractsPage } from '../pages/FunctionContractsPage'
-import { DeveloperDashboardPage } from '../pages/DeveloperDashboardPage'
-import { ExecutionPage } from '../pages/ExecutionPage'
-import { NewAgentVersionPage } from '../pages/NewAgentVersionPage'
 import { NotFoundPage } from '../pages/NotFoundPage'
-import { RegisterAgentPage } from '../pages/RegisterAgentPage'
-import { SettingsPage } from '../pages/SettingsPage'
 import { LandingPage } from '../pages/LandingPage'
 import { ErrorBoundary } from './ErrorBoundary'
 import { useDisplayMode } from './DisplayModeContext'
-import { currentDemoAccess } from '../shared/auth/demoAccess'
+import { clearDemoAccess, currentDemoAccess, formatDemoAccessRemaining } from '../shared/auth/demoAccess'
+
+const AgentDetailPage = lazy(() => import('../pages/AgentDetailPage').then((module) => ({ default: module.AgentDetailPage })))
+const AgentManifestPage = lazy(() => import('../pages/AgentManifestPage').then((module) => ({ default: module.AgentManifestPage })))
+const FunctionContractsPage = lazy(() => import('../pages/FunctionContractsPage').then((module) => ({ default: module.FunctionContractsPage })))
+const DeveloperDashboardPage = lazy(() => import('../pages/DeveloperDashboardPage').then((module) => ({ default: module.DeveloperDashboardPage })))
+const ExecutionPage = lazy(() => import('../pages/ExecutionPage').then((module) => ({ default: module.ExecutionPage })))
+const NewAgentVersionPage = lazy(() => import('../pages/NewAgentVersionPage').then((module) => ({ default: module.NewAgentVersionPage })))
+const RegisterAgentPage = lazy(() => import('../pages/RegisterAgentPage').then((module) => ({ default: module.RegisterAgentPage })))
+const SettingsPage = lazy(() => import('../pages/SettingsPage').then((module) => ({ default: module.SettingsPage })))
 
 const navigationItems = [
   { label: 'Marketplace', to: '/marketplace', end: true },
@@ -54,7 +55,8 @@ function AppShell() {
   const menuId = useId()
   const menuButtonRef = useRef<HTMLButtonElement>(null)
   const drawerRef = useRef<HTMLElement>(null)
-  const hasDemoAccess = Boolean(currentDemoAccess())
+  const access = currentDemoAccess()
+  const hasDemoAccess = Boolean(access)
   const isDeveloperMode = hasDemoAccess && displayMode === 'developer'
   const isLandingPage = location.pathname === '/'
   const showsDeveloperChrome = isDeveloperMode && !isLandingPage
@@ -63,17 +65,21 @@ function AppShell() {
     : [{ label: 'Marketplace', to: '/marketplace', end: true }]
 
   useEffect(() => {
-    const endDemo = () => {
+    const endDemo = (event: Event) => {
       setDisplayMode('easy')
-      navigate('/', { replace: true })
+      const reason = (event as CustomEvent<string>).detail ?? 'ended'
+      const returnTo = `${location.pathname}${location.search}${location.hash}`
+      navigate(reason === 'ended' ? '/' : `/?reason=${reason}&returnTo=${encodeURIComponent(returnTo)}${isDeveloperOnlyPath(location.pathname) ? '&developer=1' : ''}`, { replace: true })
     }
     window.addEventListener('agentstore-demo-access-ended', endDemo)
     return () => window.removeEventListener('agentstore-demo-access-ended', endDemo)
-  }, [navigate, setDisplayMode])
+  }, [navigate, setDisplayMode, location])
 
   function changeDisplayMode(mode: 'easy' | 'developer') {
     if (mode === 'easy' && isDeveloperOnlyPath(location.pathname)) {
+      setDisplayMode('easy')
       navigate('/marketplace', { replace: true })
+      return
     }
     setDisplayMode(mode)
   }
@@ -143,6 +149,8 @@ function AppShell() {
           ) : null}
           <div className="app-header__actions">
             {hasDemoAccess && !isLandingPage ? <DisplayModeToggle displayMode={displayMode} onChange={changeDisplayMode} /> : null}
+            {hasDemoAccess && !isLandingPage && access ? <DemoAccessStatus access={access} /> : null}
+            {hasDemoAccess && !isLandingPage ? <button className="app-header__exit" onClick={() => clearDemoAccess()} type="button">데모 종료</button> : null}
             <button
               aria-controls={menuId}
               aria-expanded={isMenuOpen}
@@ -161,6 +169,7 @@ function AppShell() {
             <button aria-label="메뉴 닫기" className="mobile-drawer-layer__backdrop" onClick={() => closeMenu(true)} type="button" />
             <nav aria-label="모바일 주요 탐색" aria-modal="true" className="mobile-navigation" id={menuId} onKeyDown={handleDrawerKeyDown} ref={drawerRef} role="dialog">
               {hasDemoAccess && !isLandingPage ? <DisplayModeToggle displayMode={displayMode} onChange={(mode) => { changeDisplayMode(mode); closeMenu(true) }} /> : null}
+              {hasDemoAccess && !isLandingPage && access ? <DemoAccessStatus access={access} /> : null}
               {visibleNavigationItems.map((item) => (
                 <NavLink
                   className={({ isActive }) => isActive ? 'mobile-navigation__link mobile-navigation__link--active' : 'mobile-navigation__link'}
@@ -173,6 +182,7 @@ function AppShell() {
                 </NavLink>
               ))}
               {showsDeveloperChrome ? <NavLink className="mobile-navigation__link" onClick={() => closeMenu(false)} to="/settings">연결 정보</NavLink> : null}
+              {hasDemoAccess && !isLandingPage ? <button className="mobile-navigation__exit" onClick={() => { closeMenu(false); clearDemoAccess() }} type="button">데모 종료</button> : null}
             </nav>
           </div>
         ) : null}
@@ -197,9 +207,9 @@ function AppShell() {
               </NavLink>
             </nav>
           </aside>
-          <main className="app-main" id="main-content"><Outlet /></main>
+          <main className="app-main" id="main-content"><Suspense fallback={<p className="state-card" role="status">화면을 준비하는 중이에요.</p>}><Outlet /></Suspense></main>
         </div>
-      ) : <main className="app-main" id="main-content"><Outlet /></main>}
+      ) : <main className="app-main" id="main-content"><Suspense fallback={<p className="state-card" role="status">화면을 준비하는 중이에요.</p>}><Outlet /></Suspense></main>}
     </div>
   )
 }
@@ -211,6 +221,17 @@ function DisplayModeToggle({ displayMode, onChange }: { displayMode: 'easy' | 'd
       <button aria-pressed={displayMode === 'developer'} className={displayMode === 'developer' ? 'display-mode-toggle__button display-mode-toggle__button--active' : 'display-mode-toggle__button'} onClick={() => onChange('developer')} type="button">개발자 모드</button>
     </div>
   )
+}
+
+function DemoAccessStatus({ access }: { access: NonNullable<ReturnType<typeof currentDemoAccess>> }) {
+  const [now, setNow] = useState(() => Date.now())
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 60_000)
+    return () => window.clearInterval(timer)
+  }, [])
+
+  return <span aria-label="데모 이용 기간" className="demo-access-status" role="status">데모 · {formatDemoAccessRemaining(access, now)}</span>
 }
 
 function RouteErrorPage() {
@@ -229,19 +250,19 @@ function RouteErrorPage() {
 
 function DeveloperRoute({ children }: { children: ReactNode }) {
   const { displayMode, setDisplayMode } = useDisplayMode()
+  const location = useLocation()
   const access = currentDemoAccess()
+  useEffect(() => { if (access && displayMode !== 'developer') setDisplayMode('developer') }, [access, displayMode, setDisplayMode])
 
-  useEffect(() => {
-    if (access && displayMode !== 'developer') setDisplayMode('developer')
-  }, [access, displayMode, setDisplayMode])
-
-  if (!access) return <Navigate replace to="/?developer=1" />
-  if (displayMode !== 'developer') return null
+  if (!access) return <Navigate replace to={`/?developer=1&returnTo=${encodeURIComponent(location.pathname + location.search + location.hash)}`} />
   return children
 }
 
 function DemoAccessRoute({ children }: { children: ReactNode }) {
-  return currentDemoAccess() ? children : <Navigate replace to="/?demo=1" />
+  const location = useLocation()
+  if (currentDemoAccess()) return children
+  const returnTo = `${location.pathname}${location.search}${location.hash}`
+  return <Navigate replace to={`/?demo=1&returnTo=${encodeURIComponent(returnTo)}`} />
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -252,14 +273,14 @@ export const routes: RouteObject[] = [
     errorElement: <RouteErrorPage />,
     children: [
       { index: true, element: <LandingPage /> },
-      { path: 'marketplace', element: <DemoAccessRoute><AgentsPage /></DemoAccessRoute> },
+      { path: 'marketplace', element: <AgentsPage /> },
       { path: 'agents', element: <Navigate replace to="/marketplace" /> },
       { path: 'agents/new', element: <DeveloperRoute><RegisterAgentPage /></DeveloperRoute> },
       { path: 'agent-manifests/new', element: <DeveloperRoute><AgentManifestPage /></DeveloperRoute> },
       { path: 'agents/:code/versions/new', element: <DeveloperRoute><NewAgentVersionPage /></DeveloperRoute> },
       { path: 'agents/:code', element: <AgentDetailPage /> },
       { path: 'function-contracts', element: <DeveloperRoute><FunctionContractsPage /></DeveloperRoute> },
-      { path: 'runs/:id', element: <ExecutionPage /> },
+      { path: 'runs/:id', element: <DemoAccessRoute><ExecutionPage /></DemoAccessRoute> },
       { path: 'developer/revenue', element: <DeveloperRoute><DeveloperDashboardPage /></DeveloperRoute> },
       { path: 'settings', element: <DeveloperRoute><SettingsPage /></DeveloperRoute> },
       { path: '*', element: <NotFoundPage /> },

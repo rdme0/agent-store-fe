@@ -34,14 +34,14 @@ function errorMessage(error: unknown): string {
 export function AgentManifestPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const [content, setContent] = useState('')
+  const [content, setContent] = useState<string>()
   const [validation, setValidation] = useState<AgentManifestValidationResponse>()
   const [error, setError] = useState<string>()
   const requestGeneration = useRef(0)
   const requestLocked = useRef(false)
   const mounted = useRef(true)
   const developer = useQuery({ queryKey: ['demo-developer'], queryFn: getDemoDeveloper, retry: false })
-  const manifestContent = content || initialContent(developer.data?.id)
+  const manifestContent = content ?? initialContent(developer.data?.id)
   const validateMutation = useMutation({
     mutationFn: async ({ content: source, generation }: { content: string; generation: number }) => ({
       generation,
@@ -86,6 +86,7 @@ export function AgentManifestPage() {
   })
 
   useEffect(() => {
+    mounted.current = true
     return () => {
       mounted.current = false
       requestGeneration.current += 1
@@ -126,13 +127,14 @@ export function AgentManifestPage() {
       <p className="eyebrow">Agent manifest</p>
       <h1 id="agent-manifest-title">매니페스트로 Agent 등록</h1>
       <p className="page-placeholder__description">Agent의 기능 계약, 실행 주소, 결제 조건과 의존성을 하나의 YAML 선언으로 검토한 뒤 DRAFT로 등록합니다.</p>
+      <ol className="form-steps" aria-label="매니페스트 등록 단계"><li aria-current={!validation ? 'step' : undefined}>1. YAML 작성</li><li aria-current={validateMutation.isPending ? 'step' : undefined}>2. 서버 검증</li><li aria-current={validation ? 'step' : undefined}>3. 확인 후 등록</li></ol>
       <div className="state-card">
         <p><strong>먼저 검증하고 등록하세요.</strong> 검증된 내용이 바뀌면 다시 검증해야 합니다.</p>
       </div>
       {developer.isError ? <p className="form-error form-error--summary" role="alert">데모 개발자 세션을 확인하지 못했습니다.</p> : null}
       <label className="form-field" htmlFor="agent-manifest-content">
         <span>YAML 매니페스트</span>
-        <textarea id="agent-manifest-content" onChange={(event) => changeContent(event.target.value)} rows={28} spellCheck={false} value={manifestContent} />
+        <textarea disabled={importMutation.isPending} id="agent-manifest-content" onChange={(event) => changeContent(event.target.value)} rows={28} spellCheck={false} value={manifestContent} />
       </label>
       {validation ? <section className="state-card" aria-live="polite"><strong>검증 완료</strong><p>Agent 코드: {validation.agentCode}</p><p>기능 코드: {validation.functionCode}</p><p>선언 해시: <code>{validation.sha256}</code></p></section> : null}
       {error ? <p className="form-error form-error--summary" role="alert">{error}</p> : null}

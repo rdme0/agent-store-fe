@@ -30,7 +30,7 @@
 
 .app-header__inner {
   display: flex;
-  width: min(calc(100% - 3rem), 1240px);
+  width: min(calc(100% - 3rem), 1200px);
   min-height: 72px;
   align-items: center;
   gap: 2rem;
@@ -111,6 +111,7 @@
 .app-header__dashboard,
 .app-header__marketplace,
 .app-header__exit {
+  min-height: 44px;
   color: var(--muted);
   font-size: 0.82rem;
   font-weight: 720;
@@ -121,6 +122,13 @@
   padding: 0;
   background: transparent;
   cursor: pointer;
+}
+
+.demo-access-status {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .app-shell--developer .app-header__dashboard,
@@ -145,7 +153,7 @@
 }
 
 .display-mode-toggle__button {
-  min-height: 30px;
+  min-height: 44px;
   padding: 0.25rem 0.65rem;
   color: var(--muted);
   border-radius: 999px;
@@ -198,8 +206,8 @@
 
 .icon-button {
   display: inline-grid;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   place-items: center;
   color: var(--ink);
   border: 1px solid var(--line);
@@ -213,7 +221,7 @@
 }
 
 .app-main {
-  width: min(calc(100% - 3rem), 1240px);
+  width: min(calc(100% - 3rem), 1200px);
   min-height: calc(100vh - 72px);
   margin: 0 auto;
   padding: 3.5rem 0 5rem;
@@ -325,7 +333,9 @@
   .app-navigation,
   .connection-status,
   .developer-sidebar,
-  .app-header__actions > .display-mode-toggle {
+  .app-header__actions > .display-mode-toggle,
+  .app-header__actions > .demo-access-status,
+  .app-header__actions > .app-header__exit {
     display: none;
   }
 
@@ -383,6 +393,18 @@
   .mobile-navigation__link--active {
     color: var(--accent-strong);
     background: var(--accent-soft);
+  }
+
+  .mobile-navigation__exit {
+    margin-top: 0.65rem;
+    padding: 0.75rem 0.6rem;
+    color: var(--danger);
+    border-top: 1px solid var(--line);
+    background: transparent;
+    cursor: pointer;
+    font-size: 0.94rem;
+    font-weight: 720;
+    text-align: left;
   }
 
   .app-main,

@@ -15,15 +15,15 @@ export function HomePage() {
           <p>
             Agent 상세 화면에서 Quote와 dependency graph를 확인한 다음 질문을 입력하고 실행할 수 있습니다.
           </p>
-          <Link className="button button--primary" to="/agents">Marketplace 열기</Link>
+          <Link className="button button--primary" to="/marketplace">Marketplace 열기</Link>
         </div>
         <span className="welcome-card__icon" aria-hidden="true">
           ↗
         </span>
       </div>
       <div className="home-flow" aria-label="AgentStore 이용 흐름">
-        <Link to="/agents"><strong>1. Marketplace</strong><span>Agent와 가격 확인</span></Link>
-        <Link to="/runs"><strong>2. 실행 상태</strong><span>실시간 이벤트와 결과 확인</span></Link>
+        <Link to="/marketplace"><strong>1. Marketplace</strong><span>Agent와 가격 확인</span></Link>
+        <div><strong>2. 실행 상태</strong><span>Agent를 실행한 뒤 상세 화면에서 진행 상황 확인</span></div>
         <Link to="/developer/revenue"><strong>3. Developer Dashboard</strong><span>정산된 수익 확인</span></Link>
       </div>
     </section>

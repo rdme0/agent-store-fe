@@ -10,10 +10,14 @@ const initialValues: Omit<VersionFormValues, 'priceAtomic'> & { code: string; na
   code: '', name: '', description: '', semver: '1.0.0', endpoint: 'http://localhost:8090/agents/demo', priceUsdc: '0.01', network: 'eip155:84532', asset: 'USDC', payTo: '', responseFormat: 'JSON',
 }
 const fieldOrder = ['code', 'name', 'description', 'semver', 'endpoint', 'priceUsdc', 'payTo'] as const
+const steps = ['기본 정보', '실행·기능 계약', '결제 정보', '최종 확인']
+const stepFields = [fieldOrder.slice(0, 3), fieldOrder.slice(3, 5), fieldOrder.slice(5)]
 
 export function AgentForm({ functionContracts = [], isSubmitting, onSubmit, serverError }: AgentFormProps) {
   const [values, setValues] = useState(initialValues)
   const [errors, setErrors] = useState<FieldErrors>({})
+  const [step, setStep] = useState(0)
+  const [pending, setPending] = useState(false)
   const [usageType, setUsageType] = useState<'user_facing' | 'internal_component'>('internal_component')
   const [functionContractId, setFunctionContractId] = useState('')
   const selectedFunctionContract = functionContracts.find((contract) => contract.id === functionContractId)
@@ -38,12 +42,21 @@ export function AgentForm({ functionContracts = [], isSubmitting, onSubmit, serv
     })
   }
 
-  function focusFirstInvalid(nextErrors: FieldErrors) {
+  function focusFirstInvalid(nextErrors: FieldErrors, revealStep = false) {
     const firstInvalid = fieldOrder.find((field) => field in nextErrors)
     if (!firstInvalid) return
-    const field = inputRefs.current[firstInvalid]
-    field?.focus()
-    field?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    const fieldStep = stepFields.findIndex((fields) => fields.includes(firstInvalid))
+    const focus = () => {
+      const field = inputRefs.current[firstInvalid]
+      field?.focus()
+      field?.scrollIntoView?.({ block: 'center' })
+    }
+    if (revealStep && fieldStep >= 0 && fieldStep !== step) {
+      setStep(fieldStep)
+      window.requestAnimationFrame(focus)
+      return
+    }
+    focus()
   }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -54,26 +67,40 @@ export function AgentForm({ functionContracts = [], isSubmitting, onSubmit, serv
     delete nextErrors.priceAtomic
     const priceError = validateUsdcAmount(values.priceUsdc)
     if (priceError) nextErrors.priceUsdc = priceError
+    if (step < 3) {
+      const currentErrors = Object.fromEntries(Object.entries(nextErrors).filter(([key]) => stepFields[step].includes(key as (typeof fieldOrder)[number])))
+      setErrors(currentErrors)
+      if (Object.keys(currentErrors).length > 0) { focusFirstInvalid(currentErrors); return }
+      setStep(step + 1)
+      return
+    }
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length > 0) {
-      focusFirstInvalid(nextErrors)
+      focusFirstInvalid(nextErrors, true)
       return
     }
 
     submittingRef.current = true
+    setPending(true)
     try {
       await onSubmit({ code: values.code, name: values.name, description: values.description, semver: values.semver, endpoint: values.endpoint, priceAtomic: priceAtomic!, network: values.network, asset: values.asset, payTo: values.payTo, responseFormat: selectedFunctionContract?.responseFormat ?? values.responseFormat ?? 'JSON', functionContractId: functionContractId || undefined, usageType })
+    } catch {
+      // The page-level mutation owns the server error so it can remain visible
+      // beside the preserved form values instead of becoming an unhandled event.
     } finally {
       if (mountedRef.current) {
         submittingRef.current = false
+        setPending(false)
       }
     }
   }
 
   return (
     <form className="registry-form registry-form--grouped" onSubmit={(event) => void submit(event)} noValidate>
+      <ol className="form-steps" aria-label="Agent 등록 단계">{steps.map((label, index) => <li aria-current={step === index ? 'step' : undefined} key={label}>{index + 1}. {label}</li>)}</ol>
+      <p role="status">{step + 1} / 4 단계 · {steps[step]}</p>
       {Object.keys(errors).length > 0 ? <div className="form-error form-error--summary" role="alert"><strong>입력 내용을 확인하세요.</strong><p>필수 항목과 입력 형식을 다시 확인한 뒤 등록해 주세요.</p></div> : null}
-      <fieldset className="registry-form__section" disabled={isSubmitting}>
+      <fieldset className="registry-form__section" hidden={step !== 0} disabled={isSubmitting || pending}>
         <legend>기본 정보</legend><p className="registry-form__section-description">Marketplace에 표시될 Agent 정보를 입력해 주세요.</p>
         <div className="form-grid">
           <FormField error={errors.code} label="Agent 주소" required help="영문 소문자, 숫자, 하이픈만 사용합니다. 예: investment-agent"><input ref={(element) => { inputRefs.current.code = element ?? undefined }} aria-describedby={errors.code ? 'code-error' : undefined} aria-invalid={Boolean(errors.code)} id="code" onChange={(event) => update('code', event.target.value)} placeholder="investment-agent" value={values.code} /></FormField>
@@ -82,7 +109,7 @@ export function AgentForm({ functionContracts = [], isSubmitting, onSubmit, serv
         <FormField error={errors.description} label="설명" required help="어떤 요청을 처리하고 어떤 결과를 주는지 간단히 설명해 주세요."><textarea ref={(element) => { inputRefs.current.description = element ?? undefined }} aria-describedby={errors.description ? 'description-error' : undefined} aria-invalid={Boolean(errors.description)} id="description" onChange={(event) => update('description', event.target.value)} placeholder="시장·뉴스·위험 정보를 종합해 투자 관점을 정리합니다." rows={4} value={values.description} /></FormField>
         <div className="form-field"><label htmlFor="usageType">사용 대상</label><select id="usageType" onChange={(event) => setUsageType(event.target.value as 'user_facing' | 'internal_component')} value={usageType}><option value="internal_component">내부 구성요소</option><option value="user_facing">일반 사용자</option></select><p className="form-field__help">일반 사용자용 Agent는 JSON 응답 Version을 공개할 수 없습니다.</p></div>
       </fieldset>
-      <fieldset className="registry-form__section" disabled={isSubmitting}>
+      <fieldset className="registry-form__section" hidden={step !== 1} disabled={isSubmitting || pending}>
         <legend>실행 endpoint와 Version</legend><p className="registry-form__section-description">등록 후 이 Version은 DRAFT 상태로 저장됩니다.</p>
         <div className="form-grid">
           <FormField error={errors.semver} label="Version" required help="Semantic Version 형식입니다. 예: 1.0.0"><input ref={(element) => { inputRefs.current.semver = element ?? undefined }} aria-describedby={errors.semver ? 'semver-error' : undefined} aria-invalid={Boolean(errors.semver)} id="semver" onChange={(event) => update('semver', event.target.value)} value={values.semver} /></FormField>
@@ -91,7 +118,7 @@ export function AgentForm({ functionContracts = [], isSubmitting, onSubmit, serv
         <div className="form-field"><label htmlFor="functionContractId">기능 계약</label><select id="functionContractId" onChange={(event) => { const nextId = event.target.value; setFunctionContractId(nextId); const contract = functionContracts.find((item) => item.id === nextId); if (contract) update('responseFormat', contract.responseFormat) }} value={functionContractId}><option value="">특정 Agent 직접 호출</option>{functionContracts.map((contract) => <option key={contract.id} value={contract.id}>{contract.name} · {contract.code} v{contract.contractVersion}</option>)}</select><p className="form-field__help">선택하면 같은 기능을 제공하는 공급자로 Marketplace에서 선택될 수 있습니다.</p></div>
         <ResponseFormatField disabled={Boolean(selectedFunctionContract)} value={selectedFunctionContract?.responseFormat ?? values.responseFormat ?? 'JSON'} onChange={(value) => update('responseFormat', value)} />
       </fieldset>
-      <fieldset className="registry-form__section" disabled={isSubmitting}>
+      <fieldset className="registry-form__section" hidden={step !== 2} disabled={isSubmitting || pending}>
         <legend>가격과 결제 정보</legend><p className="registry-form__section-description">결제 network와 asset은 현재 테스트 환경의 Base Sepolia·USDC로 고정됩니다.</p>
         <div className="form-grid">
           <FormField error={errors.priceUsdc} inputId="priceUsdc" label="호출 가격" required help={`API 전송값: ${usdcToAtomic(values.priceUsdc) ?? '입력 형식 확인 필요'} atomic`}><div className="input-with-suffix"><input ref={(element) => { inputRefs.current.priceUsdc = element ?? undefined }} aria-describedby={errors.priceUsdc ? 'priceUsdc-error' : undefined} aria-invalid={Boolean(errors.priceUsdc)} id="priceUsdc" inputMode="decimal" onChange={(event) => update('priceUsdc', event.target.value)} value={values.priceUsdc} /><span aria-hidden="true">USDC</span></div></FormField>
@@ -100,8 +127,9 @@ export function AgentForm({ functionContracts = [], isSubmitting, onSubmit, serv
         </div>
         <FormField error={errors.payTo} label="수익 수령 지갑" required help="0x로 시작하는 EVM 지갑 주소입니다. 결제 수익이 이 주소로 정산됩니다."><input ref={(element) => { inputRefs.current.payTo = element ?? undefined }} aria-describedby={errors.payTo ? 'payTo-error' : undefined} aria-invalid={Boolean(errors.payTo)} id="payTo" onChange={(event) => update('payTo', event.target.value)} placeholder="0x0000000000000000000000000000000000000000" value={values.payTo} /></FormField>
       </fieldset>
+      {step === 3 ? <section className="form-review"><h2>등록 내용을 확인하세요</h2><dl><dt>Agent</dt><dd>{values.name} · {values.code}</dd><dt>설명</dt><dd>{values.description}</dd><dt>Version · 실행 주소</dt><dd>{values.semver} · {values.endpoint}</dd><dt>기능 계약</dt><dd>{selectedFunctionContract?.name ?? '직접 호출'}</dd><dt>호출 가격</dt><dd>{values.priceUsdc} USDC · Base Sepolia</dd><dt>수익 수령 지갑</dt><dd>{values.payTo}</dd></dl><p>등록하면 초안으로 저장됩니다. 준비가 끝나면 공개하여 Marketplace에 표시할 수 있습니다.</p></section> : null}
       {serverError ? <p className="form-error form-error--summary" role="alert">{serverError}</p> : null}
-      <button className="button button--primary" disabled={isSubmitting} type="submit">{isSubmitting ? '등록 중…' : 'Agent 등록'}</button>
+      <div className="form-actions">{step > 0 ? <button className="button button--secondary" type="button" disabled={isSubmitting || pending} onClick={() => { setErrors({}); setStep(step - 1) }}>이전</button> : null}<button className="button button--primary" disabled={isSubmitting || pending} type="submit">{isSubmitting || pending ? '등록 중…' : step === 3 ? 'Agent 등록' : '다음'}</button></div>
     </form>
   )
 }

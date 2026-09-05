@@ -92,6 +92,24 @@
 .confirmation-dialog__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.55rem; }
 
 .registry-form { gap: 1.25rem; }
+.registry-form [hidden] { display: none; }
+.registry-form--grouped, .function-contract-form { max-width: 760px; width: 100%; }
+.form-steps { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; padding: 0; margin: 0; list-style: none; color: var(--muted); }
+.form-steps [aria-current="step"] { color: var(--accent); font-weight: 800; }
+.form-review dl { display: grid; gap: 0.5rem; }
+.form-review dd { margin: 0 0 0.5rem; overflow-wrap: anywhere; white-space: pre-wrap; }
+.form-review dt { color: var(--muted); }
+.form-review pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+.dashboard-filters { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
+.dashboard-filters button { min-height: 44px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); padding: 0.6rem 0.8rem; color: var(--ink); font: inherit; cursor: pointer; }
+.dashboard-filters button[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+.developer-dashboard__summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin: 0; }
+.developer-dashboard__summary > div { padding: 1rem; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; }
+.developer-dashboard__summary dd { margin: 0.5rem 0; font-weight: 800; overflow-wrap: anywhere; }
+.developer-dashboard__entries-heading { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: space-between; }
+.developer-dashboard__table { width: 100%; border-collapse: collapse; background: var(--panel); }
+.developer-dashboard__table th, .developer-dashboard__table td { padding: 1rem; text-align: left; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
+.developer-dashboard .version-row__main { width: 100%; }
 .registry-form__section { margin: 0; padding: 1.25rem; border: 1px solid var(--line); border-radius: var(--radius-control); }
 .registry-form__section legend { padding: 0 0.35rem; font-weight: 850; }
 .registry-form__section-description { margin: 0 0 1rem; font-size: 0.9rem; }
@@ -134,6 +152,8 @@
 .settings-list dd { margin: 0; padding: 0.85rem 1rem; border-bottom: 1px solid var(--line); }
 .settings-list dt { color: var(--muted); background: var(--surface-muted); font-weight: 800; }
 .settings-list dd { overflow-wrap: anywhere; font-family: var(--font-mono); font-size: 0.85rem; }
+.connection-indicator { display: inline-block; width: 0.5rem; height: 0.5rem; margin-right: 0.4rem; border-radius: 50%; vertical-align: middle; }
+.connection-indicator--online { background: var(--success); }
 
 .quote-panel:not(.quote-panel--easy) { display: grid; gap: 1.2rem; }
 .quote-panel__summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.8rem; margin: 0; }
@@ -150,6 +170,12 @@
 .react-flow__node { font-family: var(--font-sans); }
 
 @media (max-width: 720px) {
+  .developer-dashboard__summary { grid-template-columns: 1fr; }
+  .developer-dashboard__table, .developer-dashboard__table tbody { display: block; }
+  .developer-dashboard__table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .developer-dashboard__table tr { display: grid; margin-bottom: 1rem; padding: 0.5rem; border: 1px solid var(--line); border-radius: 12px; }
+  .developer-dashboard__table td { display: grid; grid-template-columns: 5rem minmax(0, 1fr); gap: 0.5rem; padding: 0.75rem; border: 0; }
+  .developer-dashboard__table td::before { content: attr(data-label); color: var(--muted); font-weight: 600; }
   .agent-detail-page__summary,
   .function-contract-layout,
   .function-contract-schema-grid,

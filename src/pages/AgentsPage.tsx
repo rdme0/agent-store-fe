@@ -1,6 +1,6 @@
 import { useInfiniteQuery } from '@tanstack/react-query'
-import { type ChangeEvent, type FormEvent, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { type ChangeEvent, type FormEvent, useEffect, useRef, useState } from 'react'
+import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import { listMarketplaceAgents, type MarketplaceAgentSort } from '../entities/agent/api'
 import { getActiveVersion, type AgentModel } from '../entities/agent/model'
 import { useDisplayMode } from '../app/DisplayModeContext'
@@ -12,9 +12,24 @@ function getErrorMessage(error: unknown): string {
 }
 
 export function AgentsPage() {
-  const { displayMode } = useDisplayMode()
-  const [searchDraft, setSearchDraft] = useState('')
-  const [criteria, setCriteria] = useState<{ q?: string; sort: MarketplaceAgentSort }>({ sort: 'newest' })
+  const location = useLocation()
+  return <AgentsPageContent key={location.search} />
+}
+
+function AgentsPageContent() {
+  const { displayMode, setDisplayMode } = useDisplayMode()
+  const [params, setParams] = useSearchParams()
+  const location = useLocation()
+  const criteria = { q: params.get('q') || undefined, sort: (params.get('sort') === 'name_asc' ? 'name_asc' : 'newest') as MarketplaceAgentSort }
+  const [searchDraft, setSearchDraft] = useState(criteria.q ?? '')
+  const scrollKey = `marketplace-scroll:${location.search}:${displayMode}`
+  const restored = useRef(false)
+  function setCriteria(next: { q?: string; sort: MarketplaceAgentSort }) {
+    const query = new URLSearchParams()
+    if (next.q) query.set('q', next.q)
+    if (next.sort !== 'newest') query.set('sort', next.sort)
+    setParams(query)
+  }
   const loadMoreLockedRef = useRef(false)
   const agentsQuery = useInfiniteQuery({
     queryKey: ['marketplace-agents', displayMode, criteria],
@@ -22,20 +37,33 @@ export function AgentsPage() {
     queryFn: ({ pageParam }) => listMarketplaceAgents({ ...criteria, cursor: pageParam, limit: PAGE_SIZE, usageType: displayMode === 'easy' ? 'user_facing' : undefined }),
     getNextPageParam: (page) => page.nextCursor ?? undefined,
     retry: false,
+    staleTime: 60_000,
   })
   const agents = agentsQuery.data?.pages.flatMap((page) => page.items) ?? []
   const featuredAgent = displayMode === 'easy' ? agents[0] : undefined
   const listedAgents = featuredAgent ? agents.slice(1) : agents
+  useEffect(() => {
+    if (!agentsQuery.isSuccess || restored.current) return
+    restored.current = true
+    const offset = Number(sessionStorage.getItem(scrollKey) ?? 0)
+    if (offset > 0) window.scrollTo(0, offset)
+  }, [agentsQuery.isSuccess, scrollKey])
+  useEffect(() => {
+    const save = () => sessionStorage.setItem(scrollKey, String(window.scrollY))
+    window.addEventListener('scroll', save, { passive: true })
+    return () => window.removeEventListener('scroll', save)
+  }, [scrollKey])
 
   function submitSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const q = searchDraft.trim()
-    setCriteria((current) => ({ ...current, q: q || undefined }))
+    setCriteria({ ...criteria, q: q || undefined })
   }
 
   function changeSort(event: ChangeEvent<HTMLSelectElement>) {
     const sort = event.target.value as MarketplaceAgentSort
-    setCriteria((current) => ({ ...current, sort }))
+    const q = searchDraft.trim()
+    setCriteria({ q: q || undefined, sort })
   }
 
   async function loadMore() {
@@ -78,7 +106,8 @@ export function AgentsPage() {
           />
         </label>
         <button className="button button--secondary" type="submit">검색</button>
-        {displayMode === 'developer' ? (
+        {criteria.q ? <button aria-label="검색어 지우기" className="button button--quiet" onClick={() => { setSearchDraft(''); setCriteria({ ...criteria, q: undefined }) }} type="button">초기화</button> : null}
+        {
           <label className="marketplace-toolbar__sort" htmlFor="agent-sort">
             <span>정렬</span>
             <select id="agent-sort" onChange={changeSort} value={criteria.sort}>
@@ -86,7 +115,7 @@ export function AgentsPage() {
               <option value="name_asc">이름순</option>
             </select>
           </label>
-        ) : null}
+        }
       </form>
 
       {agentsQuery.isPending ? <div className="marketplace-grid marketplace-grid--skeleton" role="status" aria-label="Agent 목록을 불러오는 중"><AgentSkeleton featured={displayMode === 'easy'} /><AgentSkeleton /><AgentSkeleton /><AgentSkeleton /></div> : null}
@@ -98,14 +127,20 @@ export function AgentsPage() {
         </div>
       ) : null}
       {agentsQuery.isSuccess && agents.length === 0 ? (
-        <div className="state-card">
-          <h2>등록된 Agent가 없습니다.</h2>
-          <p>{displayMode === 'easy' ? '지금 이용할 수 있는 분석 Agent가 없습니다.' : '첫 번째 Agent를 등록하고 공개할 Version을 준비해 보세요.'}</p>
-          {displayMode === 'developer' ? <Link className="button button--secondary" to="/agents/new">Agent 등록하기</Link> : null}
+        <div className="state-card marketplace-empty-state">
+          <p className="section-label">공개 목록</p>
+          <h2>{criteria.q ? '검색 결과가 없습니다.' : '공개 조건을 충족한 Agent가 없습니다.'}</h2>
+          <p>{criteria.q ? '다른 검색어를 입력하거나 검색어를 초기화해 보세요.' : displayMode === 'easy' ? '공개된 Agent가 준비되면 이곳에서 바로 사용할 수 있어요.' : 'Agent를 등록하고 Version을 공개하면 Marketplace에 표시됩니다.'}</p>
+          <div className="marketplace-empty-state__actions">
+            {criteria.q ? <button className="button button--secondary" onClick={() => { setSearchDraft(''); setCriteria({ ...criteria, q: undefined }) }} type="button">검색어 초기화</button> : null}
+            <button className="button button--secondary" disabled={agentsQuery.isFetching} onClick={() => void agentsQuery.refetch()} type="button">다시 불러오기</button>
+            {displayMode === 'developer' ? <Link className="button button--secondary" to="/agents/new">Agent 등록하기</Link> : <Link className="button button--secondary" onClick={() => setDisplayMode('developer')} to="/developer/revenue">개발자 화면에서 확인</Link>}
+          </div>
         </div>
       ) : null}
       {agentsQuery.isSuccess && agents.length > 0 ? (
         <>
+          <p aria-live="polite" className="marketplace-page__result-count">{criteria.q ? `‘${criteria.q}’ 검색 · ` : ''}{agents.length}개 표시 · {criteria.sort === 'newest' ? '최신 등록순' : '이름순'}</p>
           {featuredAgent ? <AgentCard agent={featuredAgent} featured key={featuredAgent.id} mode={displayMode} /> : null}
           {displayMode === 'easy' && listedAgents.length > 0 ? (
             <section aria-labelledby="more-agents-title" className="marketplace-page__catalog">
@@ -141,13 +176,14 @@ export function AgentsPage() {
 }
 
 function AgentCard({ agent, featured = false, mode }: { agent: AgentModel; featured?: boolean; mode: 'easy' | 'developer' }) {
+  const location = useLocation()
   const activeVersion = getActiveVersion(agent)
   const analysisSummary = agent.dependencyCount > 0
     ? `${agent.dependencyCount}가지 전문 분석을 함께 확인해요.`
     : '질문을 바탕으로 필요한 내용을 정리해요.'
   return (
     <article className={featured ? 'marketplace-agent-card marketplace-agent-card--featured' : 'marketplace-agent-card'}>
-      <Link aria-label={`${agent.name} 상세 및 실행`} className="marketplace-agent-card__link" to={`/agents/${agent.code}`}>
+      <Link aria-label={`${agent.name} 상세 및 실행`} className="marketplace-agent-card__link" state={{ marketplace: location.pathname + location.search }} to={`/agents/${agent.code}`}>
         <div className="marketplace-agent-card__header">
           <div>
             {featured && mode === 'easy' ? <p className="marketplace-agent-card__eyebrow">바로 시작하기</p> : null}
@@ -160,7 +196,9 @@ function AgentCard({ agent, featured = false, mode }: { agent: AgentModel; featu
         {mode === 'easy' ? (
           <div className="marketplace-agent-card__easy-summary">
             <p>{analysisSummary}</p>
-            <strong>한 번 분석할 때 {activeVersion?.priceLabel ?? '가격 미정'}부터</strong>
+            <p>결제 방식 · Base Sepolia USDC (x402)</p>
+            <strong>기본 호출 비용 · {activeVersion?.priceLabel ?? '가격 미정'}</strong>
+            <p>다른 Agent의 호출 비용을 포함한 최대 비용은 상세에서 확인해요.</p>
           </div>
         ) : (
           <dl className="marketplace-agent-card__meta">
@@ -169,7 +207,7 @@ function AgentCard({ agent, featured = false, mode }: { agent: AgentModel; featu
             <div><dt>의존성 수</dt><dd>{agent.dependencyCount}개</dd></div>
           </dl>
         )}
-        <span className="marketplace-agent-card__cta">{mode === 'easy' ? '분석해 보기' : '상세 및 실행'} <span aria-hidden="true">→</span></span>
+        <span className="marketplace-agent-card__cta">{mode === 'easy' ? '자세히 보기' : '상세 및 실행'} <span aria-hidden="true">→</span></span>
       </Link>
     </article>
   )

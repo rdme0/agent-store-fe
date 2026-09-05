@@ -74,6 +74,26 @@
   font-size: 1.15rem;
 }
 
+.execution-page__journey-details {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.execution-page__journey-details > summary {
+  width: fit-content;
+  color: var(--accent-strong);
+  cursor: pointer;
+  font-size: 0.86rem;
+  font-weight: 760;
+}
+
+.execution-page__status-action {
+  margin-left: 0.35rem;
+  padding: 0.2rem 0.35rem;
+  font-size: 0.82rem;
+  vertical-align: baseline;
+}
+
 .execution-result__text,
 .execution-result__markdown,
 .execution-result__structured {

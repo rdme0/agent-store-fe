@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useRef, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import {
   createFunctionContract,
   listFunctionContracts,
@@ -57,11 +57,15 @@ export function FunctionContractsPage() {
   const contracts = useQuery({ queryKey: ['function-contracts'], queryFn: listFunctionContracts })
   const [selectedId, setSelectedId] = useState<string>()
   const [formError, setFormError] = useState<string>()
+  const [step, setStep] = useState(0)
+  const [review, setReview] = useState<Record<string, string>>({})
+  const mounted = useRef(true)
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false } }, [])
   const submitLocked = useRef(false)
   const mutation = useMutation({
     mutationFn: createFunctionContract,
     onSuccess: async (created) => {
-      setSelectedId(created.id)
+      if (mounted.current) setSelectedId(created.id)
       await queryClient.invalidateQueries({ queryKey: ['function-contracts'] })
     },
     onSettled: () => {
@@ -74,12 +78,23 @@ export function FunctionContractsPage() {
     if (submitLocked.current) {
       return
     }
-    submitLocked.current = true
     const data = new FormData(event.currentTarget)
+    const form = event.currentTarget
+    const fields = step === 0 ? ['code', 'contractVersion', 'name', 'description'] : ['inputSchema', 'outputSchema']
+    for (const name of fields) {
+      const input = form.elements.namedItem(name) as HTMLInputElement | HTMLTextAreaElement
+      if (!input.checkValidity()) { input.reportValidity(); return }
+    }
     try {
       const inputSchema = JSON.parse(String(data.get('inputSchema')))
       const outputSchema = JSON.parse(String(data.get('outputSchema')))
       setFormError(undefined)
+      if (step < 2) {
+        setReview(Object.fromEntries(Array.from(data.entries()).map(([key, value]) => [key, String(value)])))
+        setStep(step + 1)
+        return
+      }
+      submitLocked.current = true
       mutation.mutate({
         code: String(data.get('code')).trim(),
         contractVersion: String(data.get('contractVersion')).trim(),
@@ -92,6 +107,9 @@ export function FunctionContractsPage() {
     } catch {
       submitLocked.current = false
       setFormError('입출력 계약 JSON 문법을 확인하세요.')
+      for (const name of ['inputSchema', 'outputSchema']) {
+        try { JSON.parse(String(data.get(name))) } catch { (form.elements.namedItem(name) as HTMLTextAreaElement).focus(); break }
+      }
     }
   }
 
@@ -115,8 +133,10 @@ export function FunctionContractsPage() {
           <FunctionContractDetail contract={selected} />
         </div>
       ) : <p className="state-card function-contract-empty">등록된 기능 계약이 없습니다.</p>}
-      <form className="registry-form function-contract-form" onSubmit={submit}>
-        <fieldset disabled={mutation.isPending}>
+      <form className="registry-form function-contract-form" onSubmit={submit} noValidate>
+        <ol className="form-steps" aria-label="기능 계약 등록 단계">{['기본 정보', '입출력 Schema', '최종 확인'].map((label, index) => <li key={label} aria-current={step === index ? 'step' : undefined}>{index + 1}. {label}</li>)}</ol>
+        <p role="status">{step + 1} / 3 단계</p>
+        <fieldset disabled={mutation.isPending} hidden={step !== 0}>
           <legend>새 기능 계약</legend>
           <div className="form-grid">
             <label className="form-field">기능 코드<input name="code" pattern="[a-z0-9]+(-[a-z0-9]+)*" placeholder="stock-news-analysis" required /></label>
@@ -125,13 +145,16 @@ export function FunctionContractsPage() {
             <label className="form-field">응답 형식<select name="responseFormat" defaultValue="JSON"><option>TEXT</option><option>MARKDOWN</option><option>STRUCTURED</option><option>JSON</option></select></label>
           </div>
           <label className="form-field">설명<textarea name="description" required rows={3} /></label>
+        </fieldset>
+        <fieldset disabled={mutation.isPending} hidden={step !== 1}><legend>입출력 Schema</legend><p>JSON 문법은 여기에서 확인합니다. 계약 유효성은 등록 시 서버가 검증합니다.</p>
           <div className="function-contract-schema-grid">
             <JsonEditor defaultValue={inputSchemaExample} id="input-schema" label="입력 계약 Schema" name="inputSchema" required rows={12} />
             <JsonEditor defaultValue={outputSchemaExample} id="output-schema" label="출력 계약 Schema" name="outputSchema" required rows={12} />
           </div>
         </fieldset>
+        {step === 2 ? <section className="form-review"><h2>기능 계약 등록 확인</h2><dl><dt>이름 · 코드</dt><dd>{review.name} · {review.code}</dd><dt>Version · 응답 형식</dt><dd>{review.contractVersion} · {review.responseFormat}</dd><dt>설명</dt><dd>{review.description}</dd></dl><details><summary>입출력 계약 확인</summary><pre>{review.inputSchema}</pre><pre>{review.outputSchema}</pre></details></section> : null}
         {formError || mutation.error ? <p className="form-error" role="alert">{formError ?? (mutation.error instanceof Error ? mutation.error.message : '기능 계약 생성에 실패했습니다.')}</p> : null}
-        <button className="button button--primary" disabled={mutation.isPending} type="submit">{mutation.isPending ? '등록 중…' : '계약 등록'}</button>
+        <div className="form-actions">{step > 0 ? <button className="button button--secondary" disabled={mutation.isPending} type="button" onClick={() => { setFormError(undefined); setStep(step - 1) }}>이전</button> : null}<button className="button button--primary" disabled={mutation.isPending} type="submit">{mutation.isPending ? '등록 중…' : step === 2 ? '계약 등록' : '다음'}</button></div>
       </form>
     </section>
   )

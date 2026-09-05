@@ -8,7 +8,7 @@ export function baseSepoliaExplorerUrl(transactionHash: string | undefined): str
   return `https://sepolia.basescan.org/tx/${transactionHash}`
 }
 
-export function paymentFailureMessage(code: string | undefined): string | undefined {
+export function paymentFailureMessage(code: string | null | undefined): string | undefined {
   switch (code) {
     case 'INSUFFICIENT_FUNDS': return '잔액이 부족하여 결제가 완료되지 않았습니다.'
     case 'FACILITATOR_ERROR': return 'x402 facilitator에서 결제 처리를 완료하지 못했습니다. 잠시 후 다시 확인해 주세요.'
@@ -24,6 +24,9 @@ export function paymentFailureMessage(code: string | undefined): string | undefi
     case 'PAYMENT_NOT_FOUND': return '결제 확인 결과가 없습니다. 다시 실행하기 전에 결제 상태를 확인해 주세요.'
     case 'AGENT_TIMEOUT': return 'Agent 응답 시간이 초과되었습니다. 실행 상태를 확인한 뒤 다시 시도해 주세요.'
     case 'EXECUTION_CALLBACK_TIMEOUT': return 'Agent callback 시간이 초과되어 실행이 종료되었습니다.'
+    case 'EXECUTION_502_001': return '전문 Agent 응답에 문제가 생겼습니다. 실행 상태를 확인해 주세요.'
+    case 'EXECUTION_502_002': return '전문 Agent가 약속한 결과 형식으로 응답하지 않았습니다.'
+    case 'EXECUTION_503_001': return '실행 복구를 확인하고 있습니다. 같은 요청을 다시 결제하지 마세요.'
     case 'BUDGET_EXCEEDED': return '승인한 Maximum Cost를 초과하므로 실행을 중단했습니다.'
     case 'BUDGET_MISMATCH':
     case 'EXECUTION_422_001': return '승인한 Quote의 Maximum Cost와 요청 금액이 일치하지 않습니다.'

@@ -1,11 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useState, type SyntheticEvent } from 'react'
-import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
-import { disableAgentVersion, getAgentByCode, publishAgentVersion, verifyAgentVersion } from '../entities/agent/api'
+import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
+import { disableAgentVersion, getAgentByCode, publishAgentVersion } from '../entities/agent/api'
 import { getActiveVersion, type AgentVersionModel } from '../entities/agent/model'
 import { DependencyEditor } from '../features/dependencies/DependencyEditor'
 import { QuotePanel } from '../features/dependencies/QuotePanel'
 import { useDisplayMode } from '../app/DisplayModeContext'
+import { versionStatusLabel } from '../shared/ui/statusLabels'
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : 'Agent 정보를 불러오지 못했습니다.'
@@ -16,6 +17,9 @@ export function AgentDetailPage() {
   const { code = '' } = useParams<{ code: string }>()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
+  const location = useLocation()
+  const origin = (location.state as { marketplace?: string } | null)?.marketplace
+  const backTo = origin?.startsWith('/marketplace') ? origin : '/marketplace'
   const mountedRef = useRef(true)
   const codeRef = useRef(code)
   const actionLockedRef = useRef(false)
@@ -43,9 +47,6 @@ export function AgentDetailPage() {
       if (kind === 'publish') {
         return publishAgentVersion(versionId)
       }
-      if (kind === 'verify') {
-        return verifyAgentVersion(versionId)
-      }
       return disableAgentVersion(versionId)
     },
   })
@@ -70,7 +71,7 @@ export function AgentDetailPage() {
       if (mountedRef.current && codeRef.current === ownerCode) {
         setConfirmation(null)
         window.requestAnimationFrame(() => actionTriggerRef.current?.focus())
-        setActionNotice(currentAction.kind === 'publish' ? 'Version을 Marketplace에 공개했습니다.' : currentAction.kind === 'verify' ? '실제 testnet 결제 검증 요청을 완료했습니다.' : 'Version을 비활성화했습니다.')
+        setActionNotice(currentAction.kind === 'publish' ? 'Version을 Marketplace에 공개했습니다.' : 'Version을 비활성화했습니다.')
       }
     } finally {
       actionLockedRef.current = false
@@ -102,13 +103,19 @@ export function AgentDetailPage() {
     return <Navigate replace to="/marketplace" />
   }
   const activeVersion = getActiveVersion(agent)
+  const readyVersion = activeVersion
   if (displayMode === 'easy') {
     return (
       <section className="agent-detail-page agent-detail-page--easy" aria-labelledby="agent-detail-title">
-        <Link className="back-link" to="/marketplace">← 다른 Agent 보기</Link>
+        <Link className="back-link" to={backTo}>← 다른 Agent 보기</Link>
         <h1 id="agent-detail-title">{agent.name}</h1>
         <p className="detail-description">{agent.description}</p>
-        {activeVersion ? <QuotePanel mode="easy" code={code} version={activeVersion} /> : <p className="state-card">지금은 이 분석을 준비 중이에요.</p>}
+        <ol aria-label="Agent 사용 순서" className="agent-detail-page__steps">
+          <li><span>1</span><div><strong>질문을 입력해요</strong><p>원하는 분석을 한 문장으로 적어 주세요.</p></div></li>
+          <li><span>2</span><div><strong>비용을 먼저 확인해요</strong><p>실행 전에 최대 비용과 결제 조건을 보여 드려요.</p></div></li>
+          <li><span>3</span><div><strong>답변을 받아요</strong><p>여러 전문 Agent의 결과를 하나의 답변으로 정리해요.</p></div></li>
+        </ol>
+        {readyVersion ? <QuotePanel mode="easy" code={code} version={readyVersion} /> : <EasyAvailabilityNotice hasDraft={agent.versions.some((version) => version.status === 'DRAFT')} />}
       </section>
     )
   }
@@ -117,7 +124,7 @@ export function AgentDetailPage() {
     <section className="agent-detail-page" aria-labelledby="agent-detail-title">
       <div className="agent-detail-page__summary">
         <div>
-          <Link className="back-link" to="/agents">← Marketplace</Link>
+          <Link className="back-link" to={backTo}>← Marketplace</Link>
           <h1 id="agent-detail-title">{agent.name}</h1>
           <p className="agent-detail-page__identity">{agent.developerName} · /{agent.code}</p>
           <p className="detail-description">{agent.description}</p>
@@ -126,7 +133,7 @@ export function AgentDetailPage() {
           <span>현재 호출 비용</span>
           <strong>{activeVersion?.priceLabel ?? '공개 Version 없음'}</strong>
           <small>{activeVersion ? `v${activeVersion.semver} · ${activeVersion.network}` : '실행하려면 Version을 공개하세요.'}</small>
-          {activeVersion ? <a className="button button--primary" href="#quote-panel">실행 준비</a> : null}
+          {readyVersion ? <a className="button button--primary" href="#quote-panel">실행 준비</a> : null}
         </aside>
       </div>
       <div aria-atomic="true" aria-live="polite" className="visually-hidden">{actionNotice}</div>
@@ -144,9 +151,8 @@ export function AgentDetailPage() {
           <VersionRow
             actionPending={actionMutation.isPending}
             key={version.id}
-            onDisable={(trigger) => requestVersionAction({ kind: 'disable', ownerCode: code, versionId: version.id, semver: version.semver, priceAtomic: version.priceAtomic, payTo: version.payTo }, trigger)}
-            onPublish={(trigger) => requestVersionAction({ kind: 'publish', ownerCode: code, versionId: version.id, semver: version.semver, priceAtomic: version.priceAtomic, payTo: version.payTo }, trigger)}
-            onVerify={(trigger) => requestVersionAction({ kind: 'verify', ownerCode: code, versionId: version.id, semver: version.semver, priceAtomic: version.priceAtomic, payTo: version.payTo }, trigger)}
+            onDisable={(trigger) => requestVersionAction({ kind: 'disable', ownerCode: code, versionId: version.id, semver: version.semver }, trigger)}
+            onPublish={(trigger) => requestVersionAction({ kind: 'publish', ownerCode: code, versionId: version.id, semver: version.semver }, trigger)}
             version={version}
           />
         ))}
@@ -154,16 +160,16 @@ export function AgentDetailPage() {
       {agent.versions.filter((version) => version.status === 'DRAFT').map((version) => (
         <DependencyEditor agent={agent} key={version.id} code={code} version={version} />
       ))}
-      {activeVersion ? (
+      {readyVersion ? (
         <div id="quote-panel">
           <QuotePanel
-            key={`${code}:${activeVersion.id}`}
+            key={`${code}:${readyVersion.id}`}
             code={code}
-            version={activeVersion}
+            version={readyVersion}
           />
         </div>
       ) : null}
-      <button className="text-link-button" onClick={() => navigate('/agents')} type="button">목록으로 돌아가기</button>
+      <button className="text-link-button" onClick={() => navigate('/marketplace')} type="button">목록으로 돌아가기</button>
       {confirmation?.ownerCode === code ? (
         <VersionActionDialog
           action={confirmation}
@@ -186,26 +192,23 @@ interface VersionRowProps {
   actionPending: boolean
   onDisable: (trigger: HTMLButtonElement) => void
   onPublish: (trigger: HTMLButtonElement) => void
-  onVerify: (trigger: HTMLButtonElement) => void
   version: AgentVersionModel
 }
 
 interface VersionAction {
-  kind: 'publish' | 'verify' | 'disable'
+  kind: 'publish' | 'disable'
   ownerCode: string
   semver: string
   versionId: string
-  priceAtomic: string
-  payTo: string
 }
 
-function VersionRow({ actionPending, onDisable, onPublish, onVerify, version }: VersionRowProps) {
+function VersionRow({ actionPending, onDisable, onPublish, version }: VersionRowProps) {
   const statusClass = version.status.toLowerCase()
   return (
     <article className="version-row">
       <div className="version-row__main">
         <div className="agent-card__topline">
-          <span className={`status-badge status-badge--${statusClass}`}>{version.status}</span>
+          <span className={`status-badge status-badge--${statusClass}`}>{versionStatusLabel(version.status)}</span>
           <strong>v{version.semver}</strong>
         </div>
         <p className="version-row__endpoint">{version.endpoint}</p>
@@ -221,7 +224,6 @@ function VersionRow({ actionPending, onDisable, onPublish, onVerify, version }: 
         ) : null}
         {version.status === 'ACTIVE' ? (
           <>
-            {(version.readiness?.status === 'UNVERIFIED' || version.readiness?.status === 'UNAVAILABLE') ? <button className="button button--primary" disabled={actionPending} onClick={(event) => onVerify(event.currentTarget)} type="button">{actionPending ? '처리 중…' : '검증'}</button> : null}
             <button className="button button--danger" disabled={actionPending} onClick={(event) => onDisable(event.currentTarget)} type="button">
               {actionPending ? '처리 중…' : '비활성화'}
             </button>
@@ -242,12 +244,10 @@ interface VersionActionDialogProps {
 
 function VersionActionDialog({ action, error, onCancel, onConfirm, pending }: VersionActionDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null)
-  const title = action.kind === 'publish' ? 'Version을 공개할까요?' : action.kind === 'verify' ? '실제 testnet 결제를 진행할까요?' : 'Version을 비활성화할까요?'
+  const title = action.kind === 'publish' ? 'Version을 공개할까요?' : 'Version을 비활성화할까요?'
   const description = action.kind === 'publish'
     ? `v${action.semver}이 Marketplace에 표시되고 실행할 수 있게 됩니다.`
-    : action.kind === 'verify'
-      ? `v${action.semver}에 Base Sepolia USDC 실제 x402 testnet 결제를 실행합니다. wallet 또는 facilitator 문제는 VERIFIED로 우회되지 않습니다.`
-      : `v${action.semver}은 더 이상 새 실행에 사용되지 않습니다.`
+    : `v${action.semver}은 더 이상 새 실행에 사용되지 않습니다.`
 
   useEffect(() => {
     const dialog = dialogRef.current
@@ -270,14 +270,19 @@ function VersionActionDialog({ action, error, onCancel, onConfirm, pending }: Ve
     <dialog aria-labelledby="version-action-title" className="confirmation-dialog" onCancel={handleCancel} ref={dialogRef}>
       <h2 id="version-action-title">{title}</h2>
       <p>{description}</p>
-      {action.kind === 'verify' ? <><p>Base Sepolia USDC atomic amount: <code>{action.priceAtomic}</code></p><p>payTo: <code>{action.payTo}</code></p></> : null}
       {error ? <p role="alert">{error}</p> : null}
       <div className="confirmation-dialog__actions">
         <button autoFocus className="button button--secondary" disabled={pending} onClick={onCancel} type="button">취소</button>
         <button className={action.kind === 'disable' ? 'button button--danger' : 'button button--primary'} disabled={pending} onClick={onConfirm} type="button">
-          {pending ? '처리 중…' : action.kind === 'publish' ? '공개하기' : action.kind === 'verify' ? '실제 결제 후 검증' : '비활성화'}
+          {pending ? '처리 중…' : action.kind === 'publish' ? '공개하기' : '비활성화'}
         </button>
       </div>
     </dialog>
   )
+}
+
+function EasyAvailabilityNotice({ hasDraft }: { hasDraft: boolean }) {
+  const { setDisplayMode } = useDisplayMode()
+  const title = hasDraft ? '이 분석은 아직 공개 준비 중이에요.' : '지금은 실행할 수 있는 Version이 없어요.'
+  return <div className="state-card state-card--warning" role="status"><h2>{title}</h2><p>개발자 모드에서 초안을 공개하면 Marketplace에서 바로 실행할 수 있어요.</p><Link className="button button--secondary" onClick={() => setDisplayMode('developer')} to="/developer/revenue">개발자 화면에서 공개하기</Link></div>
 }

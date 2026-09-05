@@ -20,6 +20,17 @@ function initialDisplayMode(): DisplayMode {
 
 export function DisplayModeProvider({ children }: { children: ReactNode }) {
   const [displayMode, setDisplayMode] = useState<DisplayMode>(initialDisplayMode)
+  const [accessRevision, setAccessRevision] = useState(0)
+
+  useEffect(() => {
+    const changed = () => setAccessRevision((value) => value + 1)
+    window.addEventListener('agentstore-demo-access-changed', changed)
+    window.addEventListener('storage', changed)
+    return () => {
+      window.removeEventListener('agentstore-demo-access-changed', changed)
+      window.removeEventListener('storage', changed)
+    }
+  }, [])
 
   useEffect(() => {
     window.localStorage.setItem(STORAGE_KEY, displayMode)
@@ -37,7 +48,7 @@ export function DisplayModeProvider({ children }: { children: ReactNode }) {
     }
     const expiresAt = Date.parse(access.expiresAt)
     const expire = () => {
-      clearDemoAccess()
+      clearDemoAccess('expired')
       setDisplayMode('easy')
     }
     if (!Number.isFinite(expiresAt) || expiresAt <= Date.now()) {
@@ -57,7 +68,7 @@ export function DisplayModeProvider({ children }: { children: ReactNode }) {
     return () => {
       if (timeout !== undefined) window.clearTimeout(timeout)
     }
-  }, [displayMode])
+  }, [displayMode, accessRevision])
 
   const guardedSetDisplayMode = (mode: DisplayMode) => setDisplayMode(mode === 'developer' && !currentDemoAccess() ? 'easy' : mode)
   return <DisplayModeContext.Provider value={{ displayMode, setDisplayMode: guardedSetDisplayMode }}>{children}</DisplayModeContext.Provider>

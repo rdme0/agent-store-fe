@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { AgentVersionModel } from '../../entities/agent/model'
 import { createAgentQuote } from '../../entities/dependency/api'
@@ -7,9 +7,14 @@ import { createExecution } from '../../entities/execution/api'
 import type { QuoteModel, QuoteSnapshot } from '../../entities/dependency/model'
 import { ApiRequestError } from '../../shared/api/client'
 import { paymentFailureMessage } from '../execution/paymentPresentation'
-import { DependencyGraphPanel, type DependencyEdgeViewModel, type DependencyNodeViewModel } from './DependencyGraph'
+import { type DependencyEdgeViewModel, type DependencyNodeViewModel } from './DependencyGraph'
 import { ProviderSelectionProof } from './ProviderSelectionProof'
 import type { DisplayMode } from '../../app/DisplayModeContext'
+import { ApiErrorDetails } from '../../shared/ui/ApiErrorDetails'
+import { requestDemoAccess } from '../../entities/developer/demoAccessApi'
+import { currentDemoAccess, storeDemoAccess } from '../../shared/auth/demoAccess'
+
+const DependencyGraphPanel = lazy(() => import('./DependencyGraph').then((module) => ({ default: module.DependencyGraphPanel })))
 
 interface QuotePanelProps {
   mode?: DisplayMode
@@ -67,6 +72,8 @@ function QuotePanelForIdentity({ mode = 'developer', code, version }: QuotePanel
   const [quote, setQuote] = useState<QuoteModel>()
   const [quoteExpired, setQuoteExpired] = useState(false)
   const [requestLocked, setRequestLocked] = useState(false)
+  const [showProof, setShowProof] = useState(false)
+  const requestController = useRef<AbortController | undefined>(undefined)
   const quoteGeneration = useRef(0)
   const requestLockOwner = useRef<RequestLockToken | undefined>(undefined)
   const mounted = useRef(true)
@@ -74,10 +81,22 @@ function QuotePanelForIdentity({ mode = 'developer', code, version }: QuotePanel
     mounted.current = true
     return () => {
       mounted.current = false
+      requestController.current?.abort()
       quoteGeneration.current += 1
       requestLockOwner.current = undefined
     }
   }, [])
+  useEffect(() => {
+    if (!quote) return
+    let timer: number
+    const checkExpiry = () => {
+      const remaining = Date.parse(quote.expiresAt) - Date.now()
+      if (!Number.isFinite(remaining) || remaining <= 0) { setQuoteExpired(true); setApproved(false); return }
+      timer = window.setTimeout(checkExpiry, Math.min(remaining, 2_147_483_647))
+    }
+    timer = window.setTimeout(checkExpiry, 0)
+    return () => window.clearTimeout(timer)
+  }, [quote])
   const acquireRequestLock = () => {
     if (requestLockOwner.current) return undefined
     const token = Symbol('quote-execution-request')
@@ -99,7 +118,11 @@ function QuotePanelForIdentity({ mode = 'developer', code, version }: QuotePanel
       generation: number
       input: Parameters<typeof createExecution>[0]
       lockToken: RequestLockToken
-    }) => ({ execution: await createExecution(input), generation, lockToken }),
+    }) => {
+      const controller = new AbortController()
+      requestController.current = controller
+      return { execution: await createExecution(input, controller.signal), generation, lockToken }
+    },
     onSuccess: ({ execution, generation }) => {
       if (!mounted.current || generation !== quoteGeneration.current) return
       navigate(`/runs/${execution.id}`)
@@ -114,11 +137,16 @@ function QuotePanelForIdentity({ mode = 'developer', code, version }: QuotePanel
     onSettled: (_data, _error, variables) => releaseRequestLock(variables.lockToken),
   })
   const quoteMutation = useMutation({
-    mutationFn: async ({ generation, lockToken }: QuoteRequest) => ({
-      generation,
-      lockToken,
-      quote: await createAgentQuote(code, { versionConstraint: `==${version.semver}` }),
-    }),
+    mutationFn: async ({ generation, lockToken }: QuoteRequest) => {
+      const controller = new AbortController()
+      requestController.current = controller
+      if (!currentDemoAccess()) {
+        const access = await requestDemoAccess(controller.signal)
+        if (!mounted.current || generation !== quoteGeneration.current || controller.signal.aborted) throw new DOMException('Request ended', 'AbortError')
+        storeDemoAccess(access)
+      }
+      return { generation, lockToken, quote: await createAgentQuote(code, { versionConstraint: `==${version.semver}` }, controller.signal) }
+    },
     onSuccess: ({ generation, lockToken, quote: nextQuote }) => {
       if (!mounted.current || generation !== quoteGeneration.current || requestLockOwner.current !== lockToken) return
       executionMutation.reset()
@@ -145,7 +173,8 @@ function QuotePanelForIdentity({ mode = 'developer', code, version }: QuotePanel
 
   function startExecution() {
     const trimmedQuestion = question.trim()
-    if (!quote || !trimmedQuestion || executionMutation.isPending || quoteMutation.isPending) return
+    if (!quote || !approved || !trimmedQuestion || executionMutation.isPending || quoteMutation.isPending) return
+    if (!currentDemoAccess()) { navigate(`/?reason=expired&returnTo=${encodeURIComponent(`/agents/${code}`)}`); return }
     if (quoteExpired || new Date(quote.expiresAt).getTime() <= Date.now()) {
       setQuoteExpired(true)
       return
@@ -180,13 +209,18 @@ function QuotePanelForIdentity({ mode = 'developer', code, version }: QuotePanel
         {quote ? (
           <div className="easy-cost-card">
             <strong>{amountWon ? `이 분석은 최대 약 ${amountWon}원 들 수 있어요.` : `이 분석은 최대 ${quote.maxCostLabel}까지 들 수 있어요.`}</strong>
-            <p>실제로 사용한 만큼만 결제돼요.</p>
+            <p>Base Sepolia 테스트넷 USDC (x402)를 사용해요. 승인 후 Agent가 실제로 호출될 때, 확인한 최대 비용 안에서 결제돼요.</p>
+            <p>실제로 호출한 단계의 비용만 정산돼요.</p>
             {amountWon ? <small>빗썸 USDC 시세 기준 · 참고용 예상 금액{quote.maxCostKrwEstimate?.stale ? ' (시세 갱신이 늦어졌어요)' : ''}</small> : null}
             {quoteExpired ? <p className="form-error form-error--summary" role="alert">비용 확인 시간이 지났어요. 비용을 다시 확인한 뒤 분석을 시작해 주세요.</p> : null}
+            <label className="checkbox-field" htmlFor={`execution-approval-${version.id}`}>
+              <input checked={approved} disabled={quoteExpired || requestLocked || executionMutation.isPending} id={`execution-approval-${version.id}`} onChange={(event) => setApproved(event.target.checked)} type="checkbox" />
+              <span>최대 비용을 확인했고, 이 금액까지 결제될 수 있음을 이해했어요.</span>
+            </label>
             <button className="button button--secondary" disabled={requestLocked || quoteMutation.isPending || executionMutation.isPending} onClick={requestQuote} type="button">
               {quoteMutation.isPending ? '비용을 다시 확인하는 중…' : '비용 다시 확인'}
             </button>
-            <button className="button button--primary" disabled={quoteExpired || !question.trim() || requestLocked || executionMutation.isPending || quoteMutation.isPending} onClick={startExecution} type="button">
+            <button className="button button--primary" disabled={quoteExpired || !approved || !question.trim() || requestLocked || executionMutation.isPending || quoteMutation.isPending} onClick={startExecution} type="button">
               {quoteMutation.isPending
                 ? '비용을 확인하는 중…'
                 : quoteExpired
@@ -200,6 +234,7 @@ function QuotePanelForIdentity({ mode = 'developer', code, version }: QuotePanel
         {quoteMutation.isError || executionMutation.isError ? (
           <div className="form-error form-error--summary" role="alert">
             <p>{errorMessage(quoteMutation.error ?? executionMutation.error)}</p>
+            <ApiErrorDetails error={quoteMutation.error ?? executionMutation.error} />
             {quoteMutation.isError ? <button className="button button--secondary" disabled={requestLocked || quoteMutation.isPending || executionMutation.isPending} onClick={requestQuote} type="button">비용 다시 확인</button> : null}
           </div>
         ) : null}
@@ -228,6 +263,7 @@ function QuotePanelForIdentity({ mode = 'developer', code, version }: QuotePanel
       {quoteMutation.isError ? (
         <div className="state-card state-card--error quote-panel__error" role="alert">
           <p>{errorMessage(quoteMutation.error)}</p>
+          <ApiErrorDetails error={quoteMutation.error} showErrorCode />
           <button
             className="button button--secondary"
             disabled={requestLocked || quoteMutation.isPending || executionMutation.isPending}
@@ -249,16 +285,18 @@ function QuotePanelForIdentity({ mode = 'developer', code, version }: QuotePanel
               <button className="button button--secondary" disabled={requestLocked || quoteMutation.isPending || executionMutation.isPending} onClick={requestQuote} type="button">새 Quote 발급</button>
             </div>
           ) : null}
-          {graph ? (
-            <DependencyGraphPanel
+          <details onToggle={(event) => setShowProof(event.currentTarget.open)}><summary>공급자와 거래 구조 자세히 보기</summary>
+          {showProof && graph ? (
+            <Suspense fallback={<p role="status">거래 구조를 불러오는 중…</p>}><DependencyGraphPanel
               costSummary={{ maxCost: quote.maxCostLabel }}
               edges={graph.edges}
               nodes={graph.nodes}
               optionalDependencyWarning={optionalWarning}
               title="Quoted dependency graph"
-            />
+            /></Suspense>
           ) : null}
-          <ProviderSelectionProof snapshot={quote.snapshot} />
+          {showProof ? <ProviderSelectionProof snapshot={quote.snapshot} /> : null}
+          </details>
           <form
             className="execution-approval"
             onSubmit={(event) => {
@@ -289,7 +327,7 @@ function QuotePanelForIdentity({ mode = 'developer', code, version }: QuotePanel
               <span>최대 {quote.maxCostLabel}까지 사용될 수 있음을 확인하고 실행을 승인합니다.</span>
             </label>
             {executionMutation.isError && !quoteExpired ? (
-              <p className="form-error form-error--summary" role="alert">{errorMessage(executionMutation.error)}</p>
+              <div className="form-error form-error--summary" role="alert"><p>{errorMessage(executionMutation.error)}</p><ApiErrorDetails error={executionMutation.error} showErrorCode /></div>
             ) : null}
             <button
               className="button button--primary"
