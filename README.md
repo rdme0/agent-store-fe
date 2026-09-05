@@ -19,14 +19,15 @@ flowchart LR
 
 | URL | 화면 | 중요한 동작 |
 |---|---|---|
-| `/` | Marketplace | 서버 검색·정렬, cursor pagination, ACTIVE Agent 카드 |
-| `/agents` | redirect | `/`로 이동 |
+| `/` | Landing | 원클릭 데모 시작과 Function Contract → Quote → x402 증명 |
+| `/marketplace` | Marketplace | 서버 검색·정렬, cursor pagination, ACTIVE Agent 카드 |
+| `/agents` | redirect | `/marketplace`로 이동 |
 | `/agents/new` | Agent 등록 | Agent와 최초 Version, 응답 형식 입력 |
 | `/agents/:code` | Agent Detail | Version publish/disable, dependency 관리, Quote/실행 |
 | `/agents/:code/versions/new` | Version 등록 | endpoint, 가격, network, asset, payTo, 응답 형식 입력 |
 | `/runs/:id` | Execution | 초기 snapshot + SSE 실행 여정, 결과와 결제 표시 |
-| `/developer/revenue` | 개발자 대시보드 | direct/dependency 수익과 거래 참조 |
-| `/settings` | 연결 정보 | 적용 중인 API URL과 developer ID 설정 상태 |
+| `/developer/revenue` | 개발자 대시보드 | owned Agent/readiness, 실제 testnet verify, 수익과 거래 참조 |
+| `/settings` | 연결 정보 | 적용 중인 API URL과 demo access 상태 |
 | 그 외 | 404 | Marketplace 복귀 링크 |
 
 ## 2. FE 구조
@@ -105,7 +106,9 @@ flowchart TD
 - Agent 등록은 code/name/description과 최초 Version 계약을 함께 전송합니다.
 - 새 Version은 semver, endpoint, atomic price, network, asset, payTo와 응답 형식을 입력합니다. 기본값은 `JSON`입니다.
 - 응답 형식은 `TEXT`, `MARKDOWN`, `STRUCTURED`, `JSON`이며, Version 상세에서 선택한 형식을 확인할 수 있습니다.
-- `DRAFT` Version을 publish하면 Marketplace/Quote 대상이 됩니다.
+- `DRAFT` Version publish는 x402 paid certification을 통과한 뒤 ACTIVE로 전환합니다.
+- ACTIVE `UNVERIFIED` 또는 `UNAVAILABLE` Version은 개발자 화면의 `검증`에서만 다시 결제할 수 있습니다. dialog는
+  Base Sepolia USDC atomic amount, payTo와 실제 testnet 결제 사실을 보여줍니다. `UNKNOWN`은 재결제하지 않습니다.
 - ACTIVE Version은 disable할 수 있습니다.
 - dependency는 대상 Agent, Python식 Version constraint(`==1.0.0`, `>=1.0.0,<2.0.0`, `*`), required 여부, 가격 상한,
   최대 호출 수를 가집니다.
@@ -193,13 +196,20 @@ SSE loop의 작은 규칙:
 
 ## 8. 수익 화면
 
-`VITE_DEMO_DEVELOPER_ID`가 설정되면 developer revenue API를 호출합니다.
+개발자 모드 진입 시 FE는 본문 없는 `POST /api/demo/access`를 한 번 호출하고, 서버가 발급한 365일 shared demo
+Bearer access token과 `expiresAt`을 browser localStorage에 보관합니다. 유효한 token만
+`/api/developer/me`, owned Agent, revenue API의 `Authorization` header로 보냅니다. 만료·401·데모 종료 시 token을
+지우고 랜딩의 데모 CTA로 돌아갑니다. `VITE_DEMO_DEVELOPER_ID`, cookie, CSRF header와 `credentials: include`는 사용하지 않습니다.
+
+데모 시작은 기본적으로 개발자 모드의 `/marketplace`를 엽니다. access가 있는 동안 header의 `쉬운 사용`/`개발자 모드`
+토글로 같은 Marketplace·Agent 상세·실행 화면의 표현을 전환할 수 있으며, 개발자 전용 화면에서 쉬운 사용을 선택하면
+Marketplace로 돌아갑니다.
 
 - direct revenue와 dependency revenue를 분리합니다.
 - atomic 합계는 서버 응답을 사용하고 화면 label은 `formatAtomicUsdc()`로 만듭니다.
 - 항목에는 발생 시각, payment mode, payment identifier, 검증된 Base Sepolia transaction link를 표시합니다.
 - 목록은 서버 cursor를 사용합니다.
-- ID가 없으면 임의 개발자를 추측하지 않고 설정 안내를 보여줍니다.
+- token이 없으면 개발자 route를 랜딩 CTA로 redirect합니다.
 
 ## 9. 접근성과 공통 UX
 
@@ -230,7 +240,6 @@ Vite가 출력한 주소로 접속합니다. 기본 port가 사용 중이면 `51
 
 ```dotenv
 VITE_API_BASE_URL=http://localhost:8080
-VITE_DEMO_DEVELOPER_ID=
 ```
 
 환경 변수를 바꾸면 Vite를 다시 시작합니다. `VITE_` 변수는 브라우저 bundle에 공개되므로 private key, wallet secret, bridge secret, signed payment payload를 절대 넣지 마세요.

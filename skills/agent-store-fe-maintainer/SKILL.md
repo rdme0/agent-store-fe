@@ -63,6 +63,16 @@ Apply these rules only when the classified risk is present.
   they remove custom lifecycle code. Do not add a dependency whose integration surface is larger than
   the small behavior it replaces.
 
+## Test doubles and symptom masking
+
+- Do not add a Vite/dev-server proxy, local-only authentication or CORS bypass, hidden retry/fallback,
+  generated-client bypass, or manual API/DB mutation merely to make a screen appear to work. Reproduce
+  the intended browser-to-API path and repair the owning contract or lifecycle.
+- New or modified tests must not use Mockito, MockK, Vitest/Jest mocks, spies, MSW, or mock framework
+  APIs. Use real values, a tracked PostgreSQL fixture, a local HTTP fixture, or a small explicit
+  deterministic fake whose behavior is visible in the test. Existing tests are not a mandate for a
+  broad rewrite, but a touched test must leave mock-framework use behind.
+
 ## Verification
 
 Run the narrowest relevant checks first, then the full available checks:
