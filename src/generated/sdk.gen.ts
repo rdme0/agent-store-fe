@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, ServerSentEventsResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { DeleteApiAgentsByIdData, DeleteApiAgentsByIdErrors, DeleteApiAgentsByIdResponses, DeleteApiAgentVersionsByIdDependenciesByDependencyIdData, DeleteApiAgentVersionsByIdDependenciesByDependencyIdErrors, DeleteApiAgentVersionsByIdDependenciesByDependencyIdResponses, GetApiAgentManifestsAgentVersionsById1Data, GetApiAgentManifestsAgentVersionsById1Errors, GetApiAgentManifestsAgentVersionsById1Responses, GetApiAgentManifestsAgentVersionsByIdData, GetApiAgentManifestsAgentVersionsByIdErrors, GetApiAgentManifestsAgentVersionsByIdResponses, GetApiAgentsByCodeData, GetApiAgentsByCodeErrors, GetApiAgentsByCodeResponses, GetApiAgentsData, GetApiAgentsErrors, GetApiAgentsResponses, GetApiAgentVersionsByIdDependenciesData, GetApiAgentVersionsByIdDependenciesErrors, GetApiAgentVersionsByIdDependenciesResponses, GetApiDevelopersByIdRevenueData, GetApiDevelopersByIdRevenueErrors, GetApiDevelopersByIdRevenueResponses, GetApiExecutionsByIdData, GetApiExecutionsByIdErrors, GetApiExecutionsByIdEventsData, GetApiExecutionsByIdEventsErrors, GetApiExecutionsByIdEventsResponse, GetApiExecutionsByIdEventsResponses, GetApiExecutionsByIdResponses, GetApiFunctionContractsByIdData, GetApiFunctionContractsByIdErrors, GetApiFunctionContractsByIdProvidersData, GetApiFunctionContractsByIdProvidersErrors, GetApiFunctionContractsByIdProvidersResponses, GetApiFunctionContractsByIdResponses, GetApiFunctionContractsData, GetApiFunctionContractsErrors, GetApiFunctionContractsResponses, GetHealthData, GetHealthResponses, GetV1InvocationsByIdData, GetV1InvocationsByIdErrors, GetV1InvocationsByIdEventsData, GetV1InvocationsByIdEventsErrors, GetV1InvocationsByIdEventsResponse, GetV1InvocationsByIdEventsResponses, GetV1InvocationsByIdResponses, PatchApiAgentsByIdData, PatchApiAgentsByIdErrors, PatchApiAgentsByIdResponses, PatchApiAgentVersionsByIdDependenciesByDependencyIdData, PatchApiAgentVersionsByIdDependenciesByDependencyIdErrors, PatchApiAgentVersionsByIdDependenciesByDependencyIdResponses, PostApiAgentManifestsData, PostApiAgentManifestsErrors, PostApiAgentManifestsResponses, PostApiAgentManifestsValidateData, PostApiAgentManifestsValidateErrors, PostApiAgentManifestsValidateResponses, PostApiAgentsByCodeQuotesData, PostApiAgentsByCodeQuotesErrors, PostApiAgentsByCodeQuotesResponses, PostApiAgentsByIdVersionsData, PostApiAgentsByIdVersionsErrors, PostApiAgentsByIdVersionsResponses, PostApiAgentsData, PostApiAgentsErrors, PostApiAgentsResponses, PostApiAgentVersionsByIdDependenciesData, PostApiAgentVersionsByIdDependenciesErrors, PostApiAgentVersionsByIdDependenciesResponses, PostApiAgentVersionsByIdDisableData, PostApiAgentVersionsByIdDisableErrors, PostApiAgentVersionsByIdDisableResponses, PostApiAgentVersionsByIdPublishData, PostApiAgentVersionsByIdPublishErrors, PostApiAgentVersionsByIdPublishResponses, PostApiExecutionsData, PostApiExecutionsErrors, PostApiExecutionsResponses, PostApiFunctionContractsData, PostApiFunctionContractsErrors, PostApiFunctionContractsResponses, PostV1InvocationsData, PostV1InvocationsErrors, PostV1InvocationsResponses, PutApiAgentVersionsByIdManifestData, PutApiAgentVersionsByIdManifestErrors, PutApiAgentVersionsByIdManifestResponses } from './types.gen';
+import type { DeleteApiAgentsByIdData, DeleteApiAgentsByIdErrors, DeleteApiAgentsByIdResponses, DeleteApiAgentVersionsByIdDependenciesByDependencyIdData, DeleteApiAgentVersionsByIdDependenciesByDependencyIdErrors, DeleteApiAgentVersionsByIdDependenciesByDependencyIdResponses, GetApiAgentManifestsAgentVersionsById1Data, GetApiAgentManifestsAgentVersionsById1Errors, GetApiAgentManifestsAgentVersionsById1Responses, GetApiAgentManifestsAgentVersionsByIdData, GetApiAgentManifestsAgentVersionsByIdErrors, GetApiAgentManifestsAgentVersionsByIdResponses, GetApiAgentsByCodeData, GetApiAgentsByCodeErrors, GetApiAgentsByCodeResponses, GetApiAgentsData, GetApiAgentsErrors, GetApiAgentsResponses, GetApiAgentVersionsByIdDependenciesData, GetApiAgentVersionsByIdDependenciesErrors, GetApiAgentVersionsByIdDependenciesResponses, GetApiAgentVersionsByIdReadinessData, GetApiAgentVersionsByIdReadinessErrors, GetApiAgentVersionsByIdReadinessResponses, GetApiDeveloperAgentsData, GetApiDeveloperAgentsErrors, GetApiDeveloperAgentsResponses, GetApiDeveloperMeData, GetApiDeveloperMeErrors, GetApiDeveloperMeResponses, GetApiDeveloperRevenueData, GetApiDeveloperRevenueErrors, GetApiDeveloperRevenueResponses, GetApiDevelopersByIdRevenueData, GetApiDevelopersByIdRevenueErrors, GetApiDevelopersByIdRevenueResponses, GetApiExecutionsByIdData, GetApiExecutionsByIdErrors, GetApiExecutionsByIdEventsData, GetApiExecutionsByIdEventsErrors, GetApiExecutionsByIdEventsResponse, GetApiExecutionsByIdEventsResponses, GetApiExecutionsByIdResponses, GetApiFunctionContractsByIdData, GetApiFunctionContractsByIdErrors, GetApiFunctionContractsByIdProvidersData, GetApiFunctionContractsByIdProvidersErrors, GetApiFunctionContractsByIdProvidersResponses, GetApiFunctionContractsByIdResponses, GetApiFunctionContractsData, GetApiFunctionContractsErrors, GetApiFunctionContractsResponses, GetHealthData, GetHealthResponses, GetV1InvocationsByIdData, GetV1InvocationsByIdErrors, GetV1InvocationsByIdEventsData, GetV1InvocationsByIdEventsErrors, GetV1InvocationsByIdEventsResponse, GetV1InvocationsByIdEventsResponses, GetV1InvocationsByIdResponses, PatchApiAgentsByIdData, PatchApiAgentsByIdErrors, PatchApiAgentsByIdResponses, PatchApiAgentVersionsByIdDependenciesByDependencyIdData, PatchApiAgentVersionsByIdDependenciesByDependencyIdErrors, PatchApiAgentVersionsByIdDependenciesByDependencyIdResponses, PostApiAgentManifestsData, PostApiAgentManifestsErrors, PostApiAgentManifestsResponses, PostApiAgentManifestsValidateData, PostApiAgentManifestsValidateErrors, PostApiAgentManifestsValidateResponses, PostApiAgentsByCodeQuotesData, PostApiAgentsByCodeQuotesErrors, PostApiAgentsByCodeQuotesResponses, PostApiAgentsByIdVersionsData, PostApiAgentsByIdVersionsErrors, PostApiAgentsByIdVersionsResponses, PostApiAgentsData, PostApiAgentsErrors, PostApiAgentsResponses, PostApiAgentVersionsByIdDependenciesData, PostApiAgentVersionsByIdDependenciesErrors, PostApiAgentVersionsByIdDependenciesResponses, PostApiAgentVersionsByIdDisableData, PostApiAgentVersionsByIdDisableErrors, PostApiAgentVersionsByIdDisableResponses, PostApiAgentVersionsByIdPublishData, PostApiAgentVersionsByIdPublishErrors, PostApiAgentVersionsByIdPublishResponses, PostApiAgentVersionsByIdVerificationInputBackfillData, PostApiAgentVersionsByIdVerificationInputBackfillErrors, PostApiAgentVersionsByIdVerificationInputBackfillResponses, PostApiAgentVersionsByIdVerifyData, PostApiAgentVersionsByIdVerifyErrors, PostApiAgentVersionsByIdVerifyResponses, PostApiDemoAccessData, PostApiDemoAccessErrors, PostApiDemoAccessResponses, PostApiExecutionsData, PostApiExecutionsErrors, PostApiExecutionsResponses, PostApiFunctionContractsData, PostApiFunctionContractsErrors, PostApiFunctionContractsResponses, PostV1InvocationsData, PostV1InvocationsErrors, PostV1InvocationsResponses, PutApiAgentVersionsByIdManifestData, PutApiAgentVersionsByIdManifestErrors, PutApiAgentVersionsByIdManifestResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -21,12 +21,17 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
 /**
  * Export agent manifest
  */
-export const getApiAgentManifestsAgentVersionsById = <ThrowOnError extends boolean = false>(options: Options<GetApiAgentManifestsAgentVersionsByIdData, ThrowOnError>): RequestResult<GetApiAgentManifestsAgentVersionsByIdResponses, GetApiAgentManifestsAgentVersionsByIdErrors, ThrowOnError> => (options.client ?? client).get<GetApiAgentManifestsAgentVersionsByIdResponses, GetApiAgentManifestsAgentVersionsByIdErrors, ThrowOnError>({ url: '/api/agent-versions/{id}/manifest', ...options });
+export const getApiAgentManifestsAgentVersionsById = <ThrowOnError extends boolean = false>(options: Options<GetApiAgentManifestsAgentVersionsByIdData, ThrowOnError>): RequestResult<GetApiAgentManifestsAgentVersionsByIdResponses, GetApiAgentManifestsAgentVersionsByIdErrors, ThrowOnError> => (options.client ?? client).get<GetApiAgentManifestsAgentVersionsByIdResponses, GetApiAgentManifestsAgentVersionsByIdErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/agent-versions/{id}/manifest',
+    ...options
+});
 
 /**
  * Replace draft agent manifest
  */
 export const putApiAgentVersionsByIdManifest = <ThrowOnError extends boolean = false>(options: Options<PutApiAgentVersionsByIdManifestData, ThrowOnError>): RequestResult<PutApiAgentVersionsByIdManifestResponses, PutApiAgentVersionsByIdManifestErrors, ThrowOnError> => (options.client ?? client).put<PutApiAgentVersionsByIdManifestResponses, PutApiAgentVersionsByIdManifestErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/agent-versions/{id}/manifest',
     ...options,
     headers: {
@@ -56,6 +61,7 @@ export const getApiFunctionContracts = <ThrowOnError extends boolean = false>(op
  * Create function contract
  */
 export const postApiFunctionContracts = <ThrowOnError extends boolean = false>(options: Options<PostApiFunctionContractsData, ThrowOnError>): RequestResult<PostApiFunctionContractsResponses, PostApiFunctionContractsErrors, ThrowOnError> => (options.client ?? client).post<PostApiFunctionContractsResponses, PostApiFunctionContractsErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/function-contracts',
     ...options,
     headers: {
@@ -77,6 +83,11 @@ export const postApiExecutions = <ThrowOnError extends boolean = false>(options:
 });
 
 /**
+ * Issue shared demo developer access token
+ */
+export const postApiDemoAccess = <ThrowOnError extends boolean = false>(options?: Options<PostApiDemoAccessData, ThrowOnError>): RequestResult<PostApiDemoAccessResponses, PostApiDemoAccessErrors, ThrowOnError> => (options?.client ?? client).post<PostApiDemoAccessResponses, PostApiDemoAccessErrors, ThrowOnError>({ url: '/api/demo/access', ...options });
+
+/**
  * List agents
  */
 export const getApiAgents = <ThrowOnError extends boolean = false>(options?: Options<GetApiAgentsData, ThrowOnError>): RequestResult<GetApiAgentsResponses, GetApiAgentsErrors, ThrowOnError> => (options?.client ?? client).get<GetApiAgentsResponses, GetApiAgentsErrors, ThrowOnError>({ url: '/api/agents', ...options });
@@ -85,6 +96,7 @@ export const getApiAgents = <ThrowOnError extends boolean = false>(options?: Opt
  * Create agent
  */
 export const postApiAgents = <ThrowOnError extends boolean = false>(options: Options<PostApiAgentsData, ThrowOnError>): RequestResult<PostApiAgentsResponses, PostApiAgentsErrors, ThrowOnError> => (options.client ?? client).post<PostApiAgentsResponses, PostApiAgentsErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/agents',
     ...options,
     headers: {
@@ -97,6 +109,7 @@ export const postApiAgents = <ThrowOnError extends boolean = false>(options: Opt
  * Create agent version
  */
 export const postApiAgentsByIdVersions = <ThrowOnError extends boolean = false>(options: Options<PostApiAgentsByIdVersionsData, ThrowOnError>): RequestResult<PostApiAgentsByIdVersionsResponses, PostApiAgentsByIdVersionsErrors, ThrowOnError> => (options.client ?? client).post<PostApiAgentsByIdVersionsResponses, PostApiAgentsByIdVersionsErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/agents/{id}/versions',
     ...options,
     headers: {
@@ -118,24 +131,59 @@ export const postApiAgentsByCodeQuotes = <ThrowOnError extends boolean = false>(
 });
 
 /**
+ * Verify active agent version
+ */
+export const postApiAgentVersionsByIdVerify = <ThrowOnError extends boolean = false>(options: Options<PostApiAgentVersionsByIdVerifyData, ThrowOnError>): RequestResult<PostApiAgentVersionsByIdVerifyResponses, PostApiAgentVersionsByIdVerifyErrors, ThrowOnError> => (options.client ?? client).post<PostApiAgentVersionsByIdVerifyResponses, PostApiAgentVersionsByIdVerifyErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/agent-versions/{id}/verify',
+    ...options
+});
+
+/**
+ * Backfill legacy verification input
+ */
+export const postApiAgentVersionsByIdVerificationInputBackfill = <ThrowOnError extends boolean = false>(options: Options<PostApiAgentVersionsByIdVerificationInputBackfillData, ThrowOnError>): RequestResult<PostApiAgentVersionsByIdVerificationInputBackfillResponses, PostApiAgentVersionsByIdVerificationInputBackfillErrors, ThrowOnError> => (options.client ?? client).post<PostApiAgentVersionsByIdVerificationInputBackfillResponses, PostApiAgentVersionsByIdVerificationInputBackfillErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/agent-versions/{id}/verification-input/backfill',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
  * Publish agent version
  */
-export const postApiAgentVersionsByIdPublish = <ThrowOnError extends boolean = false>(options: Options<PostApiAgentVersionsByIdPublishData, ThrowOnError>): RequestResult<PostApiAgentVersionsByIdPublishResponses, PostApiAgentVersionsByIdPublishErrors, ThrowOnError> => (options.client ?? client).post<PostApiAgentVersionsByIdPublishResponses, PostApiAgentVersionsByIdPublishErrors, ThrowOnError>({ url: '/api/agent-versions/{id}/publish', ...options });
+export const postApiAgentVersionsByIdPublish = <ThrowOnError extends boolean = false>(options: Options<PostApiAgentVersionsByIdPublishData, ThrowOnError>): RequestResult<PostApiAgentVersionsByIdPublishResponses, PostApiAgentVersionsByIdPublishErrors, ThrowOnError> => (options.client ?? client).post<PostApiAgentVersionsByIdPublishResponses, PostApiAgentVersionsByIdPublishErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/agent-versions/{id}/publish',
+    ...options
+});
 
 /**
  * Disable agent version
  */
-export const postApiAgentVersionsByIdDisable = <ThrowOnError extends boolean = false>(options: Options<PostApiAgentVersionsByIdDisableData, ThrowOnError>): RequestResult<PostApiAgentVersionsByIdDisableResponses, PostApiAgentVersionsByIdDisableErrors, ThrowOnError> => (options.client ?? client).post<PostApiAgentVersionsByIdDisableResponses, PostApiAgentVersionsByIdDisableErrors, ThrowOnError>({ url: '/api/agent-versions/{id}/disable', ...options });
+export const postApiAgentVersionsByIdDisable = <ThrowOnError extends boolean = false>(options: Options<PostApiAgentVersionsByIdDisableData, ThrowOnError>): RequestResult<PostApiAgentVersionsByIdDisableResponses, PostApiAgentVersionsByIdDisableErrors, ThrowOnError> => (options.client ?? client).post<PostApiAgentVersionsByIdDisableResponses, PostApiAgentVersionsByIdDisableErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/agent-versions/{id}/disable',
+    ...options
+});
 
 /**
  * List dependencies
  */
-export const getApiAgentVersionsByIdDependencies = <ThrowOnError extends boolean = false>(options: Options<GetApiAgentVersionsByIdDependenciesData, ThrowOnError>): RequestResult<GetApiAgentVersionsByIdDependenciesResponses, GetApiAgentVersionsByIdDependenciesErrors, ThrowOnError> => (options.client ?? client).get<GetApiAgentVersionsByIdDependenciesResponses, GetApiAgentVersionsByIdDependenciesErrors, ThrowOnError>({ url: '/api/agent-versions/{id}/dependencies', ...options });
+export const getApiAgentVersionsByIdDependencies = <ThrowOnError extends boolean = false>(options: Options<GetApiAgentVersionsByIdDependenciesData, ThrowOnError>): RequestResult<GetApiAgentVersionsByIdDependenciesResponses, GetApiAgentVersionsByIdDependenciesErrors, ThrowOnError> => (options.client ?? client).get<GetApiAgentVersionsByIdDependenciesResponses, GetApiAgentVersionsByIdDependenciesErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/agent-versions/{id}/dependencies',
+    ...options
+});
 
 /**
  * Create dependency
  */
 export const postApiAgentVersionsByIdDependencies = <ThrowOnError extends boolean = false>(options: Options<PostApiAgentVersionsByIdDependenciesData, ThrowOnError>): RequestResult<PostApiAgentVersionsByIdDependenciesResponses, PostApiAgentVersionsByIdDependenciesErrors, ThrowOnError> => (options.client ?? client).post<PostApiAgentVersionsByIdDependenciesResponses, PostApiAgentVersionsByIdDependenciesErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/agent-versions/{id}/dependencies',
     ...options,
     headers: {
@@ -148,6 +196,7 @@ export const postApiAgentVersionsByIdDependencies = <ThrowOnError extends boolea
  * Import agent manifest
  */
 export const postApiAgentManifests = <ThrowOnError extends boolean = false>(options: Options<PostApiAgentManifestsData, ThrowOnError>): RequestResult<PostApiAgentManifestsResponses, PostApiAgentManifestsErrors, ThrowOnError> => (options.client ?? client).post<PostApiAgentManifestsResponses, PostApiAgentManifestsErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/agent-manifests',
     ...options,
     headers: {
@@ -171,12 +220,17 @@ export const postApiAgentManifestsValidate = <ThrowOnError extends boolean = fal
 /**
  * Delete agent
  */
-export const deleteApiAgentsById = <ThrowOnError extends boolean = false>(options: Options<DeleteApiAgentsByIdData, ThrowOnError>): RequestResult<DeleteApiAgentsByIdResponses, DeleteApiAgentsByIdErrors, ThrowOnError> => (options.client ?? client).delete<DeleteApiAgentsByIdResponses, DeleteApiAgentsByIdErrors, ThrowOnError>({ url: '/api/agents/{id}', ...options });
+export const deleteApiAgentsById = <ThrowOnError extends boolean = false>(options: Options<DeleteApiAgentsByIdData, ThrowOnError>): RequestResult<DeleteApiAgentsByIdResponses, DeleteApiAgentsByIdErrors, ThrowOnError> => (options.client ?? client).delete<DeleteApiAgentsByIdResponses, DeleteApiAgentsByIdErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/agents/{id}',
+    ...options
+});
 
 /**
  * Update agent
  */
 export const patchApiAgentsById = <ThrowOnError extends boolean = false>(options: Options<PatchApiAgentsByIdData, ThrowOnError>): RequestResult<PatchApiAgentsByIdResponses, PatchApiAgentsByIdErrors, ThrowOnError> => (options.client ?? client).patch<PatchApiAgentsByIdResponses, PatchApiAgentsByIdErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/agents/{id}',
     ...options,
     headers: {
@@ -188,12 +242,17 @@ export const patchApiAgentsById = <ThrowOnError extends boolean = false>(options
 /**
  * Delete dependency
  */
-export const deleteApiAgentVersionsByIdDependenciesByDependencyId = <ThrowOnError extends boolean = false>(options: Options<DeleteApiAgentVersionsByIdDependenciesByDependencyIdData, ThrowOnError>): RequestResult<DeleteApiAgentVersionsByIdDependenciesByDependencyIdResponses, DeleteApiAgentVersionsByIdDependenciesByDependencyIdErrors, ThrowOnError> => (options.client ?? client).delete<DeleteApiAgentVersionsByIdDependenciesByDependencyIdResponses, DeleteApiAgentVersionsByIdDependenciesByDependencyIdErrors, ThrowOnError>({ url: '/api/agent-versions/{id}/dependencies/{dependencyId}', ...options });
+export const deleteApiAgentVersionsByIdDependenciesByDependencyId = <ThrowOnError extends boolean = false>(options: Options<DeleteApiAgentVersionsByIdDependenciesByDependencyIdData, ThrowOnError>): RequestResult<DeleteApiAgentVersionsByIdDependenciesByDependencyIdResponses, DeleteApiAgentVersionsByIdDependenciesByDependencyIdErrors, ThrowOnError> => (options.client ?? client).delete<DeleteApiAgentVersionsByIdDependenciesByDependencyIdResponses, DeleteApiAgentVersionsByIdDependenciesByDependencyIdErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/agent-versions/{id}/dependencies/{dependencyId}',
+    ...options
+});
 
 /**
  * Update dependency
  */
 export const patchApiAgentVersionsByIdDependenciesByDependencyId = <ThrowOnError extends boolean = false>(options: Options<PatchApiAgentVersionsByIdDependenciesByDependencyIdData, ThrowOnError>): RequestResult<PatchApiAgentVersionsByIdDependenciesByDependencyIdResponses, PatchApiAgentVersionsByIdDependenciesByDependencyIdErrors, ThrowOnError> => (options.client ?? client).patch<PatchApiAgentVersionsByIdDependenciesByDependencyIdResponses, PatchApiAgentVersionsByIdDependenciesByDependencyIdErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/agent-versions/{id}/dependencies/{dependencyId}',
     ...options,
     headers: {
@@ -240,7 +299,38 @@ export const getApiExecutionsByIdEvents = <ThrowOnError extends boolean = false>
 /**
  * Get developer revenue
  */
-export const getApiDevelopersByIdRevenue = <ThrowOnError extends boolean = false>(options: Options<GetApiDevelopersByIdRevenueData, ThrowOnError>): RequestResult<GetApiDevelopersByIdRevenueResponses, GetApiDevelopersByIdRevenueErrors, ThrowOnError> => (options.client ?? client).get<GetApiDevelopersByIdRevenueResponses, GetApiDevelopersByIdRevenueErrors, ThrowOnError>({ url: '/api/developers/{id}/revenue', ...options });
+export const getApiDevelopersByIdRevenue = <ThrowOnError extends boolean = false>(options: Options<GetApiDevelopersByIdRevenueData, ThrowOnError>): RequestResult<GetApiDevelopersByIdRevenueResponses, GetApiDevelopersByIdRevenueErrors, ThrowOnError> => (options.client ?? client).get<GetApiDevelopersByIdRevenueResponses, GetApiDevelopersByIdRevenueErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/developers/{id}/revenue',
+    ...options
+});
+
+/**
+ * Get shared demo developer revenue
+ */
+export const getApiDeveloperRevenue = <ThrowOnError extends boolean = false>(options?: Options<GetApiDeveloperRevenueData, ThrowOnError>): RequestResult<GetApiDeveloperRevenueResponses, GetApiDeveloperRevenueErrors, ThrowOnError> => (options?.client ?? client).get<GetApiDeveloperRevenueResponses, GetApiDeveloperRevenueErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/developer/revenue',
+    ...options
+});
+
+/**
+ * Get shared demo developer
+ */
+export const getApiDeveloperMe = <ThrowOnError extends boolean = false>(options?: Options<GetApiDeveloperMeData, ThrowOnError>): RequestResult<GetApiDeveloperMeResponses, GetApiDeveloperMeErrors, ThrowOnError> => (options?.client ?? client).get<GetApiDeveloperMeResponses, GetApiDeveloperMeErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/developer/me',
+    ...options
+});
+
+/**
+ * List shared demo developer agents
+ */
+export const getApiDeveloperAgents = <ThrowOnError extends boolean = false>(options?: Options<GetApiDeveloperAgentsData, ThrowOnError>): RequestResult<GetApiDeveloperAgentsResponses, GetApiDeveloperAgentsErrors, ThrowOnError> => (options?.client ?? client).get<GetApiDeveloperAgentsResponses, GetApiDeveloperAgentsErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/developer/agents',
+    ...options
+});
 
 /**
  * Get agent by code
@@ -248,6 +338,19 @@ export const getApiDevelopersByIdRevenue = <ThrowOnError extends boolean = false
 export const getApiAgentsByCode = <ThrowOnError extends boolean = false>(options: Options<GetApiAgentsByCodeData, ThrowOnError>): RequestResult<GetApiAgentsByCodeResponses, GetApiAgentsByCodeErrors, ThrowOnError> => (options.client ?? client).get<GetApiAgentsByCodeResponses, GetApiAgentsByCodeErrors, ThrowOnError>({ url: '/api/agents/{code}', ...options });
 
 /**
+ * Get provider readiness
+ */
+export const getApiAgentVersionsByIdReadiness = <ThrowOnError extends boolean = false>(options: Options<GetApiAgentVersionsByIdReadinessData, ThrowOnError>): RequestResult<GetApiAgentVersionsByIdReadinessResponses, GetApiAgentVersionsByIdReadinessErrors, ThrowOnError> => (options.client ?? client).get<GetApiAgentVersionsByIdReadinessResponses, GetApiAgentVersionsByIdReadinessErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/agent-versions/{id}/readiness',
+    ...options
+});
+
+/**
  * Export agent manifest
  */
-export const getApiAgentManifestsAgentVersionsById1 = <ThrowOnError extends boolean = false>(options: Options<GetApiAgentManifestsAgentVersionsById1Data, ThrowOnError>): RequestResult<GetApiAgentManifestsAgentVersionsById1Responses, GetApiAgentManifestsAgentVersionsById1Errors, ThrowOnError> => (options.client ?? client).get<GetApiAgentManifestsAgentVersionsById1Responses, GetApiAgentManifestsAgentVersionsById1Errors, ThrowOnError>({ url: '/api/agent-manifests/agent-versions/{id}', ...options });
+export const getApiAgentManifestsAgentVersionsById1 = <ThrowOnError extends boolean = false>(options: Options<GetApiAgentManifestsAgentVersionsById1Data, ThrowOnError>): RequestResult<GetApiAgentManifestsAgentVersionsById1Responses, GetApiAgentManifestsAgentVersionsById1Errors, ThrowOnError> => (options.client ?? client).get<GetApiAgentManifestsAgentVersionsById1Responses, GetApiAgentManifestsAgentVersionsById1Errors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/agent-manifests/agent-versions/{id}',
+    ...options
+});
