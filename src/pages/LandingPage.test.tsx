@@ -43,7 +43,7 @@ describe('LandingPage demo access', () => {
         isSuccess: true,
         message: 'success',
         errorCode: null,
-        result: { accessToken: 'landing-fixture-access', expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() },
+        result: { accessToken: 'landing-fixture-access', expiresAt: new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString() },
       })
     })
     await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
@@ -71,7 +71,16 @@ describe('LandingPage demo access', () => {
     release?.()
     await waitFor(() => expect(screen.getByText('Marketplace')).toBeInTheDocument())
     expect(router.state.location.pathname).toBe('/marketplace')
-    await waitFor(() => expect(window.localStorage.getItem('agentstore.display-mode')).toBe('developer'))
+    await waitFor(() => expect(window.localStorage.getItem('agentstore.display-mode')).toBe('easy'))
+  })
+
+  it('issues access with a single bodyless request', async () => {
+    renderLanding()
+
+    fireEvent.click(screen.getByRole('button', { name: /데모 시작/ }))
+
+    await waitFor(() => expect(requests).toBe(1))
+    await waitFor(() => expect(screen.getByText('Marketplace')).toBeInTheDocument())
   })
 
   it('shows the error and allows a failed access request to be retried', async () => {
@@ -87,7 +96,8 @@ describe('LandingPage demo access', () => {
     expect(requests).toBe(2)
   })
 
-  it('reuses a valid access record and restores developer mode without another request', async () => {
+  it('reuses a valid access record and preserves developer mode without another request', async () => {
+    window.localStorage.setItem('agentstore.display-mode', 'developer')
     window.localStorage.setItem('agentstore.demo-access', JSON.stringify({ accessToken: 'stored-access', expiresAt: new Date(Date.now() + 60_000).toISOString() }))
     const { router } = renderLanding()
 
@@ -97,6 +107,14 @@ describe('LandingPage demo access', () => {
     expect(router.state.location.pathname).toBe('/marketplace')
     expect(requests).toBe(0)
     await waitFor(() => expect(window.localStorage.getItem('agentstore.display-mode')).toBe('developer'))
+  })
+
+  it('returns to a guarded destination after access', async () => {
+    const { router } = renderLanding('/?demo=1&returnTo=%2Fruns%2Ffixture-run')
+
+    fireEvent.click(screen.getByRole('button', { name: /데모 시작/ }))
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/runs/fixture-run'))
   })
 
   it('aborts an in-flight access request when the landing page unmounts', async () => {
@@ -110,12 +128,13 @@ describe('LandingPage demo access', () => {
   })
 })
 
-function renderLanding() {
+function renderLanding(initialEntry = '/') {
   const router = createMemoryRouter([
     { path: '/', element: <LandingPage /> },
     { path: '/marketplace', element: <p>Marketplace</p> },
     { path: '/developer/revenue', element: <p>Dashboard</p> },
-  ], { initialEntries: ['/'] })
+    { path: '/runs/:id', element: <p>Execution</p> },
+  ], { initialEntries: [initialEntry] })
   const view = render(<DisplayModeProvider><RouterProvider router={router} /></DisplayModeProvider>)
   return { router, view }
 }

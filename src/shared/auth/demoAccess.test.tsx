@@ -1,11 +1,10 @@
 import { act, cleanup, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import { DisplayModeProvider, useDisplayMode } from '../../app/DisplayModeContext'
 import { clearDemoAccess, currentDemoAccess, storeDemoAccess } from './demoAccess'
 
 afterEach(() => {
   cleanup()
-  vi.useRealTimers()
   window.localStorage.clear()
 })
 
@@ -22,10 +21,10 @@ describe('demo access lifecycle', () => {
   })
 
   it('removes an expired record before it can be used', () => {
-    storeDemoAccess({
+    window.localStorage.setItem('agentstore.demo-access', JSON.stringify({
       accessToken: 'expired-token',
       expiresAt: new Date(Date.now() - 1).toISOString(),
-    })
+    }))
 
     expect(currentDemoAccess()).toBeUndefined()
     expect(window.localStorage.getItem('agentstore.demo-access')).toBeNull()
@@ -45,9 +44,7 @@ describe('demo access lifecycle', () => {
   })
 
   it('automatically leaves developer mode when the access expiry is reached', async () => {
-    vi.useFakeTimers()
-    const now = new Date('2026-09-05T00:00:00.000Z')
-    vi.setSystemTime(now)
+    const now = new Date()
     window.localStorage.setItem('agentstore.demo-access', JSON.stringify({ accessToken: 'short-lived', expiresAt: new Date(now.getTime() + 25).toISOString() }))
     window.localStorage.setItem('agentstore.display-mode', 'developer')
 
@@ -57,15 +54,13 @@ describe('demo access lifecycle', () => {
     render(<DisplayModeProvider><Probe /></DisplayModeProvider>)
 
     expect(screen.getByText('developer')).toBeInTheDocument()
-    await act(async () => { await vi.advanceTimersByTimeAsync(25) })
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 60)) })
     expect(screen.getByText('easy')).toBeInTheDocument()
     expect(window.localStorage.getItem('agentstore.demo-access')).toBeNull()
   })
 
   it('clears expired access while easy mode is selected', async () => {
-    vi.useFakeTimers()
-    const now = new Date('2026-09-05T00:00:00.000Z')
-    vi.setSystemTime(now)
+    const now = new Date()
     window.localStorage.setItem('agentstore.demo-access', JSON.stringify({ accessToken: 'short-lived-easy', expiresAt: new Date(now.getTime() + 25).toISOString() }))
     window.localStorage.setItem('agentstore.display-mode', 'easy')
 
@@ -75,7 +70,7 @@ describe('demo access lifecycle', () => {
     render(<DisplayModeProvider><Probe /></DisplayModeProvider>)
 
     expect(screen.getByText('easy')).toBeInTheDocument()
-    await act(async () => { await vi.advanceTimersByTimeAsync(25) })
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 60)) })
     expect(window.localStorage.getItem('agentstore.demo-access')).toBeNull()
   })
 })

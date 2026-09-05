@@ -36,7 +36,7 @@ describe('application routing', () => {
     expect(screen.getByRole('heading', { name: /AI 에이전트가 서로의 서비스를 고르고/ })).toBeInTheDocument()
 
     expect(screen.getByRole('button', { name: /데모 시작/ })).toBeInTheDocument()
-    expect(screen.getByText('클릭 한 번으로 AgentStore 데모를 시작합니다.')).toBeInTheDocument()
+    expect(screen.getByText('로그인 없이 시작하고, 6시간 동안 이용할 수 있어요.')).toBeInTheDocument()
     expect(screen.queryByRole('link', { name: '개발자 대시보드' })).not.toBeInTheDocument()
     expect(screen.queryByRole('group', { name: '화면 모드' })).not.toBeInTheDocument()
   })
@@ -50,10 +50,10 @@ describe('application routing', () => {
     expect(screen.queryByText('Developer', { exact: true })).not.toBeInTheDocument()
   })
 
-  it('requires demo access before opening Marketplace', async () => {
-    renderAt('/marketplace')
-
-    expect(await screen.findByRole('button', { name: /데모 시작/ })).toBeInTheDocument()
+  it('opens Marketplace without demo access', () => {
+    const router = renderAt('/marketplace')
+    expect(router.state.location.pathname).toBe('/marketplace')
+    expect(screen.getByRole('heading', { name: '필요한 분석을 골라보세요' })).toBeInTheDocument()
   })
 
   it('renders the not-found page for an unknown path', () => {
@@ -86,7 +86,7 @@ describe('application routing', () => {
     expect(screen.getByLabelText('개발자 탐색')).toBeInTheDocument()
     const modeToggle = screen.getByRole('group', { name: '화면 모드' })
     expect(within(modeToggle).getByRole('button', { name: '개발자 모드' })).toHaveAttribute('aria-pressed', 'true')
-    expect(screen.queryByRole('button', { name: '데모 종료' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '데모 종료' })).toBeInTheDocument()
     expect(screen.queryByText('연결됨')).not.toBeInTheDocument()
 
     fireEvent.click(within(modeToggle).getByRole('button', { name: '쉬운 사용' }))

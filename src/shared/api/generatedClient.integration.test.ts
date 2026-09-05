@@ -13,8 +13,13 @@ describe('generated client demo access transport', () => {
   let mode: 'success' | 'unauthorized' = 'success'
   let authorization = ''
   let demoRequestBody = 'not-called'
+  let deferredResponse: ServerResponse | undefined
+  let deferUnauthorized = false
 
   beforeEach(async () => {
+    mode = 'success'
+    deferUnauthorized = false
+    deferredResponse = undefined
     server = createServer(async (request: IncomingMessage, response: ServerResponse) => {
       if (request.method === 'POST' && request.url === '/api/demo/access') {
         demoRequestBody = await readBody(request)
@@ -23,11 +28,12 @@ describe('generated client demo access transport', () => {
           isSuccess: true,
           message: 'success',
           errorCode: null,
-          result: { accessToken: 'fixture-access-token', expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() },
+          result: { accessToken: 'fixture-access-token', expiresAt: new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString() },
         }))
         return
       }
       authorization = request.headers.authorization ?? ''
+      if (deferUnauthorized) { deferredResponse = response; return }
       if (mode === 'unauthorized') {
         response.writeHead(401, { 'Content-Type': 'application/json', 'X-Trace-Id': 'fixture-trace' })
         response.end(JSON.stringify({ isSuccess: false, message: 'unauthorized', errorCode: 'COMMON_401_002', result: null }))
@@ -53,8 +59,8 @@ describe('generated client demo access transport', () => {
     await new Promise<void>((resolve, reject) => server.close((error: Error | undefined) => error ? reject(error) : resolve()))
   })
 
-  it('stores a one-year access record and sends its Bearer token over real HTTP', async () => {
-    storeDemoAccess({ accessToken: 'fixture-access-token', expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() })
+  it('stores a six-hour access record and sends its Bearer token over real HTTP', async () => {
+    storeDemoAccess({ accessToken: 'fixture-access-token', expiresAt: new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString() })
 
     const result = await getApiDeveloperMe({ client: agentStoreClient, throwOnError: true })
 
@@ -70,7 +76,7 @@ describe('generated client demo access transport', () => {
     const access = await requestDemoAccess()
 
     expect(access.accessToken).toBe('fixture-access-token')
-    expect(Date.parse(access.expiresAt) - Date.now()).toBeGreaterThan(364 * 24 * 60 * 60 * 1000)
+    expect(Date.parse(access.expiresAt) - Date.now()).toBeGreaterThan(5 * 60 * 60 * 1000)
     expect(demoRequestBody).toBe('')
   })
 
@@ -82,6 +88,19 @@ describe('generated client demo access transport', () => {
 
     expect(authorization).toBe('Bearer expired-at-server')
     expect(currentDemoAccess()).toBeUndefined()
+  })
+
+  it('does not clear newly issued access when an old request returns 401 late', async () => {
+    deferUnauthorized = true
+    storeDemoAccess({ accessToken: 'old-access', expiresAt: new Date(Date.now() + 60_000).toISOString() })
+    const pending = getApiDeveloperMe({ client: agentStoreClient, throwOnError: true }).catch((error: unknown) => error)
+    for (let attempt = 0; !deferredResponse && attempt < 100; attempt++) await new Promise((resolve) => setTimeout(resolve, 5))
+    expect(deferredResponse).toBeDefined()
+    storeDemoAccess({ accessToken: 'replacement-access', expiresAt: new Date(Date.now() + 60_000).toISOString() })
+    deferredResponse!.writeHead(401, { 'Content-Type': 'application/json' })
+    deferredResponse!.end(JSON.stringify({ isSuccess: false, message: 'expired old access', result: null }))
+    await pending
+    expect(currentDemoAccess()?.accessToken).toBe('replacement-access')
   })
 })
 

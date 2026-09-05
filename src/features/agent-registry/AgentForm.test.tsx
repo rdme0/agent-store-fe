@@ -1,63 +1,61 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { afterEach, describe, expect, it } from 'vitest'
+import type { RegisterAgentInput } from '../../entities/agent/api'
 import { AgentForm } from './AgentForm'
 
-vi.mock('../../shared/config/env', () => ({ DEMO_DEVELOPER_ID: '123e4567-e89b-12d3-a456-426614174000' }))
-
-function fillValidForm() {
+function fillBasic() {
   fireEvent.change(screen.getByLabelText(/Agent 주소/), { target: { value: 'risk-agent' } })
   fireEvent.change(screen.getByLabelText(/Agent 이름/), { target: { value: 'Risk Agent' } })
   fireEvent.change(screen.getByLabelText(/^설명/), { target: { value: 'Fixture risk analysis' } })
+}
+function next() { fireEvent.click(screen.getByRole('button', { name: '다음' })) }
+function fillPayment() {
   fireEvent.change(screen.getByLabelText(/수익 수령 지갑/), { target: { value: '0x0000000000000000000000000000000000000001' } })
 }
+afterEach(cleanup)
 
 describe('AgentForm', () => {
-  it('hides the developer identifier and submits a decimal-safe atomic API payload', async () => {
-    const onSubmit = vi.fn().mockResolvedValue(undefined)
-    render(<AgentForm isSubmitting={false} onSubmit={onSubmit} />)
-    fillValidForm()
+  it('retains input across steps and submits decimal-safe data only after final confirmation', async () => {
+    const submitted: RegisterAgentInput[] = []
+    render(<AgentForm isSubmitting={false} onSubmit={async (input) => { submitted.push(input) }} />)
+    fillBasic(); next()
+    fireEvent.click(screen.getByRole('button', { name: '이전' }))
+    expect(screen.getByLabelText(/Agent 이름/)).toHaveValue('Risk Agent')
+    next(); next(); fillPayment()
     fireEvent.change(screen.getByLabelText(/호출 가격/), { target: { value: '1.234567' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Agent 등록' }))
-
+    next()
+    expect(submitted).toHaveLength(0)
+    expect(screen.getByRole('heading', { name: '등록 내용을 확인하세요' })).toBeInTheDocument()
     expect(screen.queryByLabelText(/Developer ID/)).not.toBeInTheDocument()
-    await vi.waitFor(() => expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ priceAtomic: '1234567', responseFormat: 'JSON', semver: '1.0.0' })))
+    fireEvent.click(screen.getByRole('button', { name: 'Agent 등록' }))
+    await waitFor(() => expect(submitted).toEqual([expect.objectContaining({ priceAtomic: '1234567', responseFormat: 'JSON', semver: '1.0.0' })]))
   })
-
   it('submits the selected response format', async () => {
-    const onSubmit = vi.fn().mockResolvedValue(undefined)
-    render(<AgentForm isSubmitting={false} onSubmit={onSubmit} />)
-    fillValidForm()
+    const submitted: RegisterAgentInput[] = []
+    render(<AgentForm isSubmitting={false} onSubmit={async (input) => { submitted.push(input) }} />)
+    fillBasic(); next()
     fireEvent.change(screen.getByLabelText(/응답 형식/), { target: { value: 'MARKDOWN' } })
+    next(); fillPayment(); next()
     fireEvent.click(screen.getByRole('button', { name: 'Agent 등록' }))
-
-    await vi.waitFor(() => expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ responseFormat: 'MARKDOWN' })))
+    await waitFor(() => expect(submitted[0]?.responseFormat).toBe('MARKDOWN'))
   })
-
-  it('shows an error summary and moves focus to the first invalid field', () => {
-    const scrollIntoView = vi.fn()
-    Element.prototype.scrollIntoView = scrollIntoView
-    render(<AgentForm isSubmitting={false} onSubmit={vi.fn().mockResolvedValue(undefined)} />)
-    fireEvent.click(screen.getByRole('button', { name: 'Agent 등록' }))
-
+  it('focuses the first invalid field before moving to the next step', () => {
+    const submitted: RegisterAgentInput[] = []
+    render(<AgentForm isSubmitting={false} onSubmit={async (input) => { submitted.push(input) }} />)
+    next()
     expect(screen.getByRole('alert')).toHaveTextContent('입력 내용을 확인하세요.')
     expect(screen.getByLabelText(/Agent 주소/)).toHaveFocus()
-    expect(scrollIntoView).toHaveBeenCalled()
+    expect(submitted).toHaveLength(0)
   })
-
-  it('blocks same-tick duplicate submits until the current request resolves', async () => {
+  it('blocks same-tick duplicate final submits until the request resolves', async () => {
+    const submitted: RegisterAgentInput[] = []
     let resolveRequest: (() => void) | undefined
-    const onSubmit = vi.fn(() => new Promise<void>((resolve) => { resolveRequest = resolve }))
-    render(<AgentForm isSubmitting={false} onSubmit={onSubmit} />)
-    fillValidForm()
+    render(<AgentForm isSubmitting={false} onSubmit={(input) => { submitted.push(input); return new Promise<void>((resolve) => { resolveRequest = resolve }) }} />)
+    fillBasic(); next(); next(); fillPayment(); next()
     const form = screen.getByRole('button', { name: 'Agent 등록' }).closest('form')!
-    fireEvent.submit(form)
-    fireEvent.submit(form)
-    expect(onSubmit).toHaveBeenCalledTimes(1)
-    resolveRequest?.()
-    await vi.waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1))
+    fireEvent.submit(form); fireEvent.submit(form)
+    expect(submitted).toHaveLength(1)
+    await act(async () => { resolveRequest?.() })
+    expect(submitted).toHaveLength(1)
   })
-})
-
-afterEach(() => {
-  cleanup()
 })

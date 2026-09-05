@@ -7,6 +7,7 @@ import type { AgentVersionModel } from '../../entities/agent/model'
 import type { QuoteResponse } from '../../generated'
 import { QuotePanel } from './QuotePanel'
 import { agentStoreClient } from '../../shared/api/generatedClient'
+import { storeDemoAccess } from '../../shared/auth/demoAccess'
 
 const version: AgentVersionModel = {
   id: 'version-id', agentId: 'investment-id', semver: '1.0.0', status: 'ACTIVE', endpoint: 'http://localhost:8090',
@@ -80,6 +81,7 @@ async function createQuoteFixture(): Promise<QuoteFixture> {
 }
 
 function renderPanel(baseUrl: string) {
+  storeDemoAccess({ accessToken: 'quote-fixture', expiresAt: new Date(Date.now() + 60_000).toISOString() })
   agentStoreClient.setConfig({ baseUrl, headers: { Accept: 'application/json' } })
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(<QueryClientProvider client={queryClient}><MemoryRouter><QuotePanel code="investment" version={version} /></MemoryRouter></QueryClientProvider>)
@@ -97,8 +99,9 @@ describe('QuotePanel', () => {
       renderPanel(fixture.baseUrl)
       fireEvent.click(screen.getByRole('button', { name: 'Quote 발급' }))
       expect((await screen.findAllByText('2.5 USDC')).length).toBeGreaterThan(0)
+      fireEvent.click(screen.getByText('공급자와 거래 구조 자세히 보기'))
+      expect(await screen.findByRole('heading', { name: 'Quoted dependency graph' })).toBeInTheDocument()
       expect(screen.getByRole('note')).toHaveTextContent('risk')
-      expect(screen.getByRole('heading', { name: 'Quoted dependency graph' })).toBeInTheDocument()
       expect(fixture.quoteCalls).toBe(1)
     } finally {
       await fixture.close()
