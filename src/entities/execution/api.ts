@@ -40,22 +40,24 @@ async function withApiError<T>(operation: () => Promise<T>): Promise<T> {
   }
 }
 
-export function createExecution(input: CreateExecutionInput): Promise<ExecutionDto> {
+export function createExecution(input: CreateExecutionInput, signal?: AbortSignal): Promise<ExecutionDto> {
   return withApiError(async () => {
     const response = await postApiExecutions({
       body: input,
       client: agentStoreClient,
+      signal,
       throwOnError: true,
     })
     return unwrapCommonResponse<ExecutionDto>(response.data)
   })
 }
 
-export function getExecution(id: string): Promise<ExecutionDto> {
+export function getExecution(id: string, signal?: AbortSignal): Promise<ExecutionDto> {
   return withApiError(async () => {
     const response = await getApiExecutionsById({
       client: agentStoreClient,
       path: { id },
+      signal,
       throwOnError: true,
     })
     return unwrapCommonResponse<ExecutionDto>(response.data)

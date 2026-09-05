@@ -95,7 +95,7 @@ export async function request<T>(path: string, init?: RequestInit): Promise<T> {
   })
 
   if (!response.ok) {
-    if (response.status === 401) clearDemoAccess()
+    if (response.status === 401 && access && currentDemoAccess()?.accessToken === access.accessToken) clearDemoAccess('unauthorized')
     const traceId = response.headers.get('X-Trace-Id') ?? undefined
     const body = await response.json().catch(() => undefined) as CommonResponseErrorBody | undefined
     throw new ApiRequestError(typeof body?.message === 'string' ? body.message : `API request failed with status ${response.status}`, response.status, { errorCode: typeof body?.errorCode === 'string' ? body.errorCode : undefined, traceId })

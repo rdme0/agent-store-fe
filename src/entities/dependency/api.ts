@@ -78,9 +78,10 @@ export function removeDependency(versionId: string, dependencyId: string): Promi
   })
 }
 
-export function createAgentQuote(code: string, input: CreateQuoteInput = {}): Promise<QuoteModel> {
+export function createAgentQuote(code: string, input: CreateQuoteInput = {}, signal?: AbortSignal): Promise<QuoteModel> {
   return withApiError(async () => {
     const response = await postApiAgentsByCodeQuotes({
+      signal,
       client: agentStoreClient,
       body: input,
       path: { code },

@@ -19,8 +19,9 @@ client.interceptors.request.use((request) => {
   return new Request(request, { headers })
 })
 
-client.interceptors.error.use((error, response) => {
-  if (response?.status === 401) clearDemoAccess()
+client.interceptors.error.use((error, response, request) => {
+  const access = currentDemoAccess()
+  if (response?.status === 401 && access && request?.headers.get('Authorization') === `Bearer ${access.accessToken}`) clearDemoAccess('unauthorized')
   return normalizeApiRequestError(error, response)
 })
 
