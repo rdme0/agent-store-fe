@@ -19,14 +19,14 @@ flowchart LR
 
 | URL | 화면 | 중요한 동작 |
 |---|---|---|
-| `/` | Landing | 원클릭 데모 시작과 Function Contract → Quote → x402 증명 |
+| `/` | Landing | 데모 시작 → 6시간 Bearer 발급 → Function Contract → Quote → x402 증명 |
 | `/marketplace` | Marketplace | 서버 검색·정렬, cursor pagination, ACTIVE Agent 카드 |
 | `/agents` | redirect | `/marketplace`로 이동 |
 | `/agents/new` | Agent 등록 | Agent와 최초 Version, 응답 형식 입력 |
 | `/agents/:code` | Agent Detail | Version publish/disable, dependency 관리, Quote/실행 |
 | `/agents/:code/versions/new` | Version 등록 | endpoint, 가격, network, asset, payTo, 응답 형식 입력 |
 | `/runs/:id` | Execution | 초기 snapshot + SSE 실행 여정, 결과와 결제 표시 |
-| `/developer/revenue` | 개발자 대시보드 | owned Agent/readiness, 실제 testnet verify, 수익과 거래 참조 |
+| `/developer/revenue` | 개발자 대시보드 | owned Agent 공개 상태, 수익과 거래 참조 |
 | `/settings` | 연결 정보 | 적용 중인 API URL과 demo access 상태 |
 | 그 외 | 404 | Marketplace 복귀 링크 |
 
@@ -52,6 +52,12 @@ flowchart TB
 - `src/generated`: OpenAPI에서 생성됩니다. **직접 수정하지 않습니다.**
 
 TanStack Query가 서버 상태와 mutation을 관리합니다. React local state는 질문, checkbox, dialog처럼 화면 안에서만 필요한 상태에 사용합니다.
+
+랜딩의 데모 시작은 bodyless `POST /api/demo/access`를 호출해 서버가 발급한 6시간 Bearer를
+`localStorage`의 `agentstore.demo-access`에만 보관합니다. API secret이나 사용자 계정은
+프론트에 넣지 않습니다. 만료·401·데모 종료가 되면 저장값을 지우고 원래 목적지를 포함한
+랜딩으로 돌아갑니다. 브라우저 E2E는 local HTTP fixture로 같은 access 교환과 Bearer 요청
+경로를 검증합니다.
 
 ## 3. API 데이터가 화면에 도착하는 과정
 
@@ -106,9 +112,7 @@ flowchart TD
 - Agent 등록은 code/name/description과 최초 Version 계약을 함께 전송합니다.
 - 새 Version은 semver, endpoint, atomic price, network, asset, payTo와 응답 형식을 입력합니다. 기본값은 `JSON`입니다.
 - 응답 형식은 `TEXT`, `MARKDOWN`, `STRUCTURED`, `JSON`이며, Version 상세에서 선택한 형식을 확인할 수 있습니다.
-- `DRAFT` Version publish는 x402 paid certification을 통과한 뒤 ACTIVE로 전환합니다.
-- ACTIVE `UNVERIFIED` 또는 `UNAVAILABLE` Version은 개발자 화면의 `검증`에서만 다시 결제할 수 있습니다. dialog는
-  Base Sepolia USDC atomic amount, payTo와 실제 testnet 결제 사실을 보여줍니다. `UNKNOWN`은 재결제하지 않습니다.
+- `DRAFT` Version publish는 즉시 ACTIVE로 전환합니다. 공개 전 x402 인증·testnet 결제는 없습니다.
 - ACTIVE Version은 disable할 수 있습니다.
 - dependency는 대상 Agent, Python식 Version constraint(`==1.0.0`, `>=1.0.0,<2.0.0`, `*`), required 여부, 가격 상한,
   최대 호출 수를 가집니다.
@@ -196,7 +200,7 @@ SSE loop의 작은 규칙:
 
 ## 8. 수익 화면
 
-개발자 모드 진입 시 FE는 본문 없는 `POST /api/demo/access`를 한 번 호출하고, 서버가 발급한 365일 shared demo
+개발자 모드 진입 시 FE는 bodyless `POST /api/demo/access`를 한 번 호출하고, 서버가 발급한 6시간 shared demo
 Bearer access token과 `expiresAt`을 browser localStorage에 보관합니다. 유효한 token만
 `/api/developer/me`, owned Agent, revenue API의 `Authorization` header로 보냅니다. 만료·401·데모 종료 시 token을
 지우고 랜딩의 데모 CTA로 돌아갑니다. `VITE_DEMO_DEVELOPER_ID`, cookie, CSRF header와 `credentials: include`는 사용하지 않습니다.

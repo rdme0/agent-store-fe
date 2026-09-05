@@ -1,6 +1,6 @@
 # AgentStore FE 인수인계서
 
-최종 갱신: 2026-09-05 — 원클릭 365일 Bearer 전환 및 브라우저 E2E 완료
+최종 갱신: 2026-09-06 — provider readiness 제거와 즉시 공개 UX
 
 ## AgentCode/OpenAPI HIGH_RISK failure matrix
 
@@ -12,9 +12,9 @@
 | AC-FE-06 | 새 Dependency와 Version별 Quote는 Python식 comparator를 전송하며 `^` 문법을 새로 만들지 않는다. | `features/dependencies/DependencyEditor.test.tsx`, `features/dependencies/QuotePanel.test.tsx` |
 | AC-FE-04 | execution snapshot의 Root·dependency·provider candidate `agentCode`를 새로고침/SSE refetch 뒤에도 표시하며 stale replay가 되돌리지 않는다. | `pages/ExecutionPage.test.tsx`, `features/execution/ExecutionJourney.test.tsx`, `features/execution/useExecutionEvents.test.ts` |
 | AC-FE-05 | atomic payment 값은 string으로 유지하고 code 전환이 금액·결제 UI 계산을 바꾸지 않는다. | `entities/agent/model.test.ts`, `features/execution/paymentPresentation.test.ts` |
-| DA-FE-01 | 개발자 모드 진입은 랜딩의 원클릭 `POST /api/demo/access` → localStorage Bearer → `/api/developer/me` 순서로 identity를 확정한다. 중복 클릭·실패 재시도·unmount가 현재 dashboard identity를 덮지 않는다. | `src/shared/api/generatedClient.integration.test.ts`, `pages/DeveloperDashboardPage.test.tsx`, `e2e/public-browser.spec.ts`의 local HTTP API fixture 브라우저 검증 |
-| DA-FE-02 | verify는 Version·Base Sepolia USDC atomic amount·payTo·실제 testnet 결제 경고를 보인 명시적 confirm 뒤 한 번만 전송하며, completion 뒤 marketplace/Agent/dashboard query를 함께 갱신한다. | `DeveloperDashboardPage.test.tsx` confirmation/same-tick guard/error-refresh와 BE HTTP verify E2E |
-| DA-FE-03 | demo access 존재와 화면 모드는 분리한다. 새 데모 시작은 developer를 기본으로 하고, 쉬운 사용 전환은 공통 route를 유지하되 개발자 전용 route에서는 Marketplace로 이동한다. | `router.test.tsx`, `LandingPage.test.tsx`, `e2e/public-browser.spec.ts` |
+| DA-FE-01 | 개발자 모드 진입은 랜딩의 bodyless `POST /api/demo/access` → localStorage Bearer → `/api/developer/me` 순서로 identity를 확정한다. 중복 클릭·실패 재시도·만료·unmount가 현재 dashboard identity를 덮지 않으며 오류 시 다음 행동을 안내한다. | `src/pages/LandingPage.test.tsx`, `src/shared/api/generatedClient.integration.test.ts`, `pages/DeveloperDashboardPage.test.tsx`, `e2e/public-browser.spec.ts`의 local HTTP API fixture 브라우저 검증 |
+| DA-FE-02 | 개발자 화면은 DRAFT/ACTIVE/DISABLED 공개 상태만 보여 주며 DRAFT publish 뒤 Marketplace를 갱신한다. 공개 전 x402 결제·verification action은 없다. | `DeveloperDashboardPage.test.tsx`, `RegistryPages.test.tsx`, browser publish/Marketplace regression |
+| DA-FE-03 | demo access 존재와 화면 모드는 분리한다. 새 데모 시작은 easy를 기본으로 하고, 공통 route는 선택 모드를 유지하되 개발자 전용 route는 access 뒤 developer로 열며 easy 전환 시 Marketplace로 이동한다. | `router.test.tsx`, `LandingPage.test.tsx`, `e2e/public-browser.spec.ts` |
 
 ## Function Contract Marketplace
 
@@ -23,6 +23,7 @@
 - DRAFT dependency는 `pinned`·`allowlist`·`marketplace` 공급자 범위와 `lowest_price`·`latest_version`·`highest_reliability`·`fastest` 선택 전략을 지원한다.
 - 개발자 Quote는 후보 상태, 관측 수·신뢰도·p95, 선택된 공급자·Version·가격·payTo를 보여주며 Execution API의 `quoteSnapshot`으로 새로고침 뒤에도 graph label을 복원한다.
 - 쉬운 사용 모드는 function contract, Schema, 후보 정책과 wallet을 노출하지 않는다.
+- 쉬운 사용 모드는 목적·비용·실행 전 확인을 먼저 보여 주고, 기술 증거는 개발자 모드에서만 펼친다.
 
 ## 저장소와 역할
 
@@ -35,43 +36,50 @@
 
 - 실행 상세은 쉬운 사용·개발자 모드 모두 Quote snapshot의 예정 graph와 실제 execution step/SSE refetch를 합친 세로 카드 여정을 먼저 보여준다. 예정·준비·확인·완료·실패·결제 확인·미사용 상태를 구분하고 반복 호출은 횟수와 atomic 비용을 한 카드에 합친다.
 - 완료 뒤 쉬운 사용 모드는 최종 답변 다음에 여정을 펼쳐 두며 기술 증거를 숨긴다. 개발자 모드는 Version·호출·결제 상태를 카드에 표시하고 기존 graph·provider proof·payment hash는 접힌 `거래 상세 보기`에 둔다.
+- root step의 `output`이 `null` 또는 `undefined`이면 최종 결과 카드를 렌더링하지 않는다. 실제 완료된 output만 `ExecutionResult`로 전달하며 `executionOutput.ts` 순수 테스트로 null/구체값 경계를 검증한다.
 - 현재 분석 경로의 root와 활성 하위 카드만 전용 progress ring을 움직이고, 준비 중인 sibling은 정적인 대기 상태로 둔다. 연결선은 관계만 표현하는 정적 요소다. 모션은 terminal·비가시 탭·reduced-motion에서 정지하며 700px 이하에서는 기술 graph를 렌더링하지 않고 세로 여정만 유지한다.
 - SSE replay는 cursor/dedupe와 current execution query refetch만 담당한다. 화면은 영속된 `ExecutionDto + quoteSnapshot`을 유일한 상태 원본으로 사용한다.
 
-- 밝은 상단 헤더와 모바일 접근성 drawer를 사용한다. `/`는 원클릭 데모 랜딩이고 Marketplace는 `/marketplace`이며 `/agents`는 `/marketplace`로 redirect한다.
+- 밝은 상단 헤더와 모바일 접근성 drawer를 사용한다. `/`는 bodyless access 발급 데모 랜딩이고 Marketplace는 `/marketplace`이며 `/agents`는 `/marketplace`로 redirect한다.
 - Marketplace는 검색, 정렬, cursor 기반 `더 보기`, loading/empty/error 상태를 갖는다.
-- Agent 등록은 기본 정보·endpoint/Version·결제 정보 세 구역으로 나뉘며, 사람이 읽는 USDC 입력을 atomic 값으로 변환한다.
+- 쉬운 사용 Marketplace 카드에는 목적·예상 비용·Base Sepolia USDC (x402) 결제 방식을 표시하고, access 발급·만료·401 상태를 `aria-live`로 안내한다.
+- Agent 등록은 기본 정보·실행/기능 계약·결제 정보·최종 확인 네 단계이며, 사람이 읽는 USDC 입력을 atomic 값으로 변환한다.
 - Agent 상세의 Publish/Disable은 확인 dialog, query invalidation, 중복 action 차단을 갖는다.
 - 실행 화면은 SSE 상태와 결제·복구 안내를 표시하며, 개발자 대시보드는 Bearer principal의 owned Agent/version,
-  readiness, verification failure와 revenue를 함께 표시한다.
+  공개 상태와 revenue를 함께 표시한다.
 - Agent 등록과 새 Version 생성에서 응답 형식(TEXT, MARKDOWN, STRUCTURED, JSON)을 선택하며 기본값은 JSON이다. Version 상세에도 선택값을 표시한다.
 - 실행 결과는 step의 `responseFormat`으로 렌더링한다. Markdown은 `react-markdown`/GFM/rehype-sanitize를 사용하고, STRUCTURED만 제목·요약·섹션 카드로 해석하며 나머지 JSON은 generic viewer로 표시한다.
 - public JSON 응답은 Spring `CommonResponse<T>` envelope을 entity adapter에서 unwrap한다.
 - external invocation 상태 조회와 SSE는 `X-AgentStore-Invocation-Receipt` header가 필수이며, generated
   client 타입도 이 required 계약으로 동기화했다.
 
-### Demo cookie 기반 개발자 화면 — 2026-09-04 (superseded historical note)
+### 개발자 공개 화면 — 2026-09-06
 
-- 이 절은 이전 cookie/CSRF 설계의 historical note다. 현재 구현은 `/api/demo/access`가 발급한 Bearer만 사용하며
-  `/api/demo/session`, cookie credential, CSRF header는 존재하지 않는다.
-- Dashboard는 owned Agent/version의 readiness, 마지막 인증 시각, failure code, 수익을 보여 준다. ACTIVE +
-  UNVERIFIED/UNAVAILABLE만 verify할 수 있고, confirmation에는 Agent/version, Base Sepolia USDC atomic amount,
-  payTo, 실제 testnet 결제 사실과 wallet/facilitator 부족 시 우회하지 않는다는 안내를 표시한다.
-- publish(DRAFT)와 verify(ACTIVE)를 별도 action으로 렌더링한다. mutation 뒤 Agent, Marketplace, dashboard Agent/revenue
-  query를 모두 invalidate한다. UI는 local fixture가 아닌 실제 wallet/facilitator가 없는 상태에서 VERIFIED를 표시하지 않는다.
-- 당시의 cookie 설계 기록은 현재 Bearer 계약을 대체하지 않는다. 최신 게이트 결과는 아래 검증 명령과
-  `docs/capability-marketplace-failure-matrix.md`의 DA-FE 행을 기준으로 한다.
+- 현재 구현은 Bearer access만 사용하며 cookie credential, CSRF header, 이전 세션 경로는 존재하지 않는다.
+- Dashboard는 owned Agent/version의 `초안`·`공개됨`·`비활성화됨` 상태와 수익을 보여 준다. DRAFT는 공개할 수 있고,
+  실제 x402 결제는 실행을 승인할 때에만 발생한다.
+- publish/disable 뒤 Agent, Marketplace, dashboard Agent/revenue query를 모두 invalidate한다. 최신 게이트 결과는 아래
+  검증 명령과 `docs/capability-marketplace-failure-matrix.md`의 DA-FE 행을 기준으로 한다.
+- 이번 readiness 제거 변경은 `npm run lint`, `npm run typecheck`, `npm run build`, unit test 122개와
+  Playwright 45개(desktop/mobile/narrow)를 통과했다. browser publish 회귀는 DRAFT가 공개된 뒤에만
+  Marketplace 카드가 나타나며 publish request가 정확히 한 번임을 local HTTP fixture로 확인한다.
 
-### 원클릭 landing·365일 Bearer access — 2026-09-05
+### Bodyless landing·6시간 Bearer access — 2026-09-05
 
-- `/`는 소개 랜딩이고 `/marketplace`가 catalog다. `데모 시작`은 본문 없는 `POST /api/demo/access`를 한 번 호출한다.
+- `/`는 소개 랜딩이고 `/marketplace`가 catalog다. `데모 시작`은 bodyless `POST /api/demo/access`를 한 번 호출한다.
 - access token과 expiry는 `agentstore.demo-access` localStorage record에만 보관한다. generated client와 legacy adapter는 유효 기간 내에만
   `Authorization: Bearer`를 붙이며 cookie/CSRF/credentials/Vite proxy를 사용하지 않는다. 401, 만료, 데모 종료는 record를 지우고 landing으로 돌린다.
-- 데모 시작은 developer mode의 `/marketplace`를 기본으로 열며, access 보유 중에는 header(모바일은 drawer)의 `쉬운 사용`/`개발자 모드`
-  토글이 mode를 보관한다. 개발자 전용 route에서 쉬운 사용을 선택하면 Marketplace로 이동한다.
+- 데모 시작은 easy mode의 `/marketplace`를 기본으로 열며, access 보유 중에는 header(모바일은 drawer)의 `쉬운 사용`/`개발자 모드`
+  토글이 선택을 보관한다. 개발자 전용 route는 access 뒤 developer로 열고, 쉬운 사용을 선택하면 Marketplace로 이동한다.
 - revenue query는 OpenAPI flat `cursor`/`limit` type으로 재생성했다. 수동 `request[limit]` serialization은 제거했다.
-- `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`, `npm run test:e2e` (Playwright desktop/mobile)를 이 전환 뒤 통과해야 한다.
-  Playwright는 로컬 HTTP API fixture로 결정성을 보장한다.
+- `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`, `npm run test:e2e` (Playwright desktop/mobile·130%·키보드)를 이 전환 뒤 통과해야 한다.
+  Playwright는 local HTTP API fixture로 bodyless access exchange를 결정적으로 검증한다.
+
+실제 local Spring/Go fixture 실행 `59b32eb0-43a8-47aa-9163-55d6e543a43a`는 `/runs/:id`에서 4/4 단계 완료와 root Markdown 결과를 표시했다. 결제 확인 중 또는 reconciliation 상태에서는
+최종 결과 영역을 숨기고 상태 안내를 표시한다.
+
+이번 UX 변경은 `npm run lint`, `npm run typecheck`, `npm test` (34 files, 123 tests), `npm run build`, local fixture Playwright (42 tests, 1440/390/320px)와
+전용 PostgreSQL + local x402 공급자 Spring browser gate를 실행했다. Spring `test`와 `integrationTest`도 통과했으며, 후자는 HTTP E2E 68개(그중 `PostgresMarketplaceHttpE2eIntegrationTest` 26개)를 실행했다. browser gate는 public browse → bodyless access → quote 승인 → 한 번의 execution → SSE → persisted result를 검증하고 Vite·provider를 `finally`에서 종료한다. 이후 fresh read-only verifier는 현재 diff·매트릭스·테스트 매핑을 독립 검토해 CAPTCHA/cookie/CSRF/proxy 재도입, mock framework 사용, generated client 수동 수정, access·quote·SSE·reconciliation·UNKNOWN 경계의 차단 결함이 없음을 확인하고 `PASS`를 기록했다.
 
 ## 현재 상태와 다음 순서
 
@@ -85,7 +93,7 @@ BE Flyway history checksum mismatch는 schema/data 변경 없이 Flyway `repair`
 
 - `AGENTS.md`, `AI.md`, `CLAUDE.md`, `README.md`, `scripts/`, `skills/`에는 기존 하네스 문서 변경이 있을 수 있다. 작업 시작 시 dirty path를 기록하고 관련 없는 변경은 보존한다.
 - DB, OpenAPI, SSE, 결제와 async lifecycle은 `HIGH_RISK`다. `AI.md`의 failure matrix와 developer → fresh verifier 절차를 지킨다.
-- UI에서 가짜 client-side 검색·정렬, 가짜 health 상태, 가짜 실행 이력을 만들지 않는다.
+- UI에서 가짜 client-side 검색·정렬, 가짜 health 상태, 가짜 실행 이력을 만들지 않는다. E2E의 fixture Agent/API는 실제 production 경로를 검증하기 위한 명시적 local HTTP fixture다.
 - 일반 UI는 밝은 neutral + cobalt, 한국어 중심, 8px spacing grid를 유지한다. 불필요한 gradient, 장식 이미지, 중첩 card를 추가하지 않는다.
 
 ## 검증 명령
