@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useState, type SyntheticEvent } from 'react'
 import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { disableAgentVersion, getAgentByCode, publishAgentVersion } from '../entities/agent/api'
-import { getActiveVersion, type AgentVersionModel } from '../entities/agent/model'
+import { formatApproximateKrw, getActiveVersion, type AgentVersionModel } from '../entities/agent/model'
 import { DependencyEditor } from '../features/dependencies/DependencyEditor'
 import { QuotePanel } from '../features/dependencies/QuotePanel'
 import { useDisplayMode } from '../app/DisplayModeContext'
@@ -123,18 +123,22 @@ export function AgentDetailPage() {
   return (
     <section className="agent-detail-page" aria-labelledby="agent-detail-title">
       <div className="agent-detail-page__summary">
-        <div>
-          <Link className="back-link" to={backTo}>← Marketplace</Link>
-          <h1 id="agent-detail-title">{agent.name}</h1>
-          <p className="agent-detail-page__identity">{agent.developerName} · /{agent.code}</p>
-          <p className="detail-description">{agent.description}</p>
-        </div>
-        <aside className="agent-detail-page__pricing" aria-label="현재 Agent 정보">
-          <span>현재 호출 비용</span>
-          <strong>{activeVersion?.priceLabel ?? '공개 Version 없음'}</strong>
-          <small>{activeVersion ? `v${activeVersion.semver} · ${activeVersion.network}` : '실행하려면 Version을 공개하세요.'}</small>
-          {readyVersion ? <a className="button button--primary" href="#quote-panel">실행 준비</a> : null}
-        </aside>
+        <Link className="back-link" to={backTo}>← Marketplace</Link>
+        <h1 id="agent-detail-title">{agent.name}</h1>
+        <p className="agent-detail-page__identity">{agent.developerName} · /{agent.code}</p>
+        <p className="detail-description">{agent.description}</p>
+        <dl aria-label="공개 Version 정보" className="agent-detail-page__facts">
+          <div>
+            <dt>기본 호출 비용</dt>
+            <dd>
+              {activeVersion ? <><strong>{activeVersion.priceLabel}</strong>{' '}<span>({formatApproximateKrw(activeVersion.priceAtomic)})</span></> : '공개 Version 없음'}
+            </dd>
+          </div>
+          <div>
+            <dt>공개 Version</dt>
+            <dd>{activeVersion ? `v${activeVersion.semver} · ${activeVersion.network}` : '실행하려면 Version을 공개하세요.'}</dd>
+          </div>
+        </dl>
       </div>
       <div aria-atomic="true" aria-live="polite" className="visually-hidden">{actionNotice}</div>
       {actionNotice ? <p className="agent-detail-page__notice" role="status">{actionNotice}</p> : null}
@@ -212,7 +216,7 @@ function VersionRow({ actionPending, onDisable, onPublish, version }: VersionRow
           <strong>v{version.semver}</strong>
         </div>
         <p className="version-row__endpoint">{version.endpoint}</p>
-        <p className="version-row__meta">{version.priceLabel} · {version.network} · {version.asset}</p>
+        <p className="version-row__meta">{version.network} · {version.asset}</p>
         <p className="version-row__meta">응답 형식: {version.responseFormat ?? 'JSON'}</p>
         <p className="version-row__meta">PayTo: {version.payTo}</p>
       </div>

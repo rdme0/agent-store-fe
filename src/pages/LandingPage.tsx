@@ -19,7 +19,7 @@ export function LandingPage() {
   const requestedReturnTo = params.get('returnTo')
   const returnTo = requestedReturnTo?.startsWith('/') && !requestedReturnTo.startsWith('//') && !requestedReturnTo.includes('\\') ? requestedReturnTo : undefined
   const reason = params.get('reason')
-  const entryNotice = reason === 'expired' ? '데모 이용 시간이 끝났어요. 다시 시작하면 이어서 확인할 수 있어요.' : reason === 'unauthorized' ? '데모 이용 정보를 다시 확인해야 해요. 진행 중이던 결제는 자동으로 재시도하지 않아요.' : '로그인 없이 시작하고, 6시간 동안 이용할 수 있어요.'
+  const entryNotice = reason === 'expired' ? '데모 이용 시간이 끝났어요. 다시 시작하면 이어서 확인할 수 있어요.' : reason === 'unauthorized' ? '데모 이용 정보를 다시 확인해야 해요. 진행 중이던 결제는 자동으로 재시도하지 않아요.' : undefined
   const [pending, setPending] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | undefined>()
   const mountedRef = useRef(true)
@@ -68,10 +68,10 @@ export function LandingPage() {
     <div className="landing-page__grid" aria-hidden="true" />
     <div className="landing-page__hero">
       <p className="landing-page__eyebrow">AGENT-TO-AGENT COMMERCE</p>
-      <h1 id="landing-title">AI 에이전트가 서로의 서비스를 고르고, 비용을 계산하고, 결제까지 한다면—<span>그건 진정한 자동화일까요?</span></h1>
+      <h1 id="landing-title">서비스는 AI가 고르는데, <span>결제는 왜 아직 사람이 해야 할까요?</span></h1>
       <p className="landing-page__lead">AgentStore는 사람의 카드·API key 흐름 대신, 계약·예산·x402 결제를 이해하는 AI Agent 간 거래를 만듭니다.</p>
       <div className="landing-page__actions"><button aria-busy={pending} className="button landing-page__cta" disabled={pending} onClick={() => void startDemo()} type="button">{pending ? '데모 입장 중…' : '데모 시작'} {!pending ? <ArrowRight aria-hidden="true" size={18} /> : null}</button></div>
-      <p aria-live="polite" className="landing-page__notice" role={errorMessage ? 'alert' : undefined}>{errorMessage ?? entryNotice}</p>
+      {errorMessage || entryNotice ? <p aria-live="polite" className="landing-page__notice" role={errorMessage ? 'alert' : undefined}>{errorMessage ?? entryNotice}</p> : null}
       <ol className="landing-page__steps" aria-label="이용 순서"><li>Agent 고르기</li><li>질문하고 비용 확인하기</li><li>분석 결과와 거래 확인하기</li></ol>
     </div>
     <section aria-labelledby="proof-title" className="landing-page__proof"><div><p className="landing-page__eyebrow">THE TRANSACTION PATH</p><h2 id="proof-title">자동화는 실행만이 아니라, 승인 가능한 비용과 정산까지 포함합니다.</h2></div><ol>{proof.map(([step, title, description]) => <li key={step}><span>{step}</span><div><h3>{title}</h3><p>{description}</p></div><CheckCircle2 aria-hidden="true" size={20} /></li>)}</ol></section>

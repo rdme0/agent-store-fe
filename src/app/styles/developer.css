@@ -69,13 +69,7 @@
 .home-flow > * { padding: 1.1rem; border-right: 1px solid var(--line); }
 .home-flow > *:last-child { border-right: 0; }
 
-.agent-detail-page__summary { display: grid; grid-template-columns: minmax(0, 1fr) minmax(230px, 0.42fr); gap: 1.5rem; }
 .agent-detail-page__summary h1 { margin: 0.8rem 0 0; }
-.agent-detail-page__pricing { padding: 1.15rem; border-radius: var(--radius-control); background: var(--surface-muted); }
-.agent-detail-page__pricing dl { display: grid; gap: 0.75rem; margin: 0 0 1rem; }
-.agent-detail-page__pricing div { display: flex; justify-content: space-between; gap: 1rem; }
-.agent-detail-page__pricing dt { color: var(--muted); }
-.agent-detail-page__pricing dd { margin: 0; font-weight: 800; }
 
 .version-list { overflow: hidden; }
 .version-list > .section-heading { padding: 1.2rem 1.3rem; border-bottom: 1px solid var(--line); }
@@ -176,7 +170,6 @@
   .developer-dashboard__table tr { display: grid; margin-bottom: 1rem; padding: 0.5rem; border: 1px solid var(--line); border-radius: 12px; }
   .developer-dashboard__table td { display: grid; grid-template-columns: 5rem minmax(0, 1fr); gap: 0.5rem; padding: 0.75rem; border: 0; }
   .developer-dashboard__table td::before { content: attr(data-label); color: var(--muted); font-weight: 600; }
-  .agent-detail-page__summary,
   .function-contract-layout,
   .function-contract-schema-grid,
   .form-grid,

@@ -30,6 +30,21 @@ export function formatAtomicUsdc(priceAtomic: string): string {
   return fraction.length > 0 ? `${whole}.${fraction} USDC` : `${whole} USDC`
 }
 
+const USDC_ATOMIC_SCALE = 1_000_000n
+const REFERENCE_KRW_PER_USDC = 1_400n
+
+/**
+ * Returns a display-only won estimate. It is intentionally kept separate from
+ * quote/payment values and uses integer arithmetic so the UI never changes the
+ * atomic amount sent to the API.
+ */
+export function formatApproximateKrw(priceAtomic: string): string {
+  const atomic = BigInt(priceAtomic)
+  if (atomic <= 0n) return '≈ 0원'
+  const roundedWon = (atomic * REFERENCE_KRW_PER_USDC + USDC_ATOMIC_SCALE / 2n) / USDC_ATOMIC_SCALE
+  return `≈ ${roundedWon.toLocaleString('ko-KR')}원`
+}
+
 export function toAgentModel(dto: AgentDto | AgentListItemDto): AgentModel {
   return {
     ...dto,
