@@ -1,11 +1,10 @@
 import { client } from '../../generated/client.gen'
 import { normalizeApiRequestError } from './client'
 import { clearDemoAccess, currentDemoAccess } from '../auth/demoAccess'
-
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim() || 'http://localhost:8080'
+import { API_BASE_URL } from '../config/apiBaseUrl'
 
 client.setConfig({
-  baseUrl: apiBaseUrl,
+  baseUrl: API_BASE_URL,
   headers: { Accept: 'application/json' },
 })
 
