@@ -347,7 +347,6 @@ summary:focus-visible {
 .dependency-graph,
 .provider-selection-proof,
 .function-contract-detail,
-.settings-list,
 .execution-page__output {
   min-width: 0;
   padding: 1.25rem;

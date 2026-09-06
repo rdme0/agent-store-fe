@@ -27,7 +27,6 @@ const DeveloperDashboardPage = lazy(() => import('../pages/DeveloperDashboardPag
 const ExecutionPage = lazy(() => import('../pages/ExecutionPage').then((module) => ({ default: module.ExecutionPage })))
 const NewAgentVersionPage = lazy(() => import('../pages/NewAgentVersionPage').then((module) => ({ default: module.NewAgentVersionPage })))
 const RegisterAgentPage = lazy(() => import('../pages/RegisterAgentPage').then((module) => ({ default: module.RegisterAgentPage })))
-const SettingsPage = lazy(() => import('../pages/SettingsPage').then((module) => ({ default: module.SettingsPage })))
 
 const navigationItems = [
   { label: 'Marketplace', to: '/marketplace', end: true },
@@ -43,7 +42,6 @@ function isDeveloperOnlyPath(pathname: string): boolean {
     || pathname === '/agent-manifests/new'
     || pathname === '/function-contracts'
     || pathname === '/developer/revenue'
-    || pathname === '/settings'
     || /^\/agents\/[^/]+\/versions\/new$/.test(pathname)
 }
 
@@ -178,7 +176,6 @@ function AppShell() {
                   {item.label}
                 </NavLink>
               ))}
-              {showsDeveloperChrome ? <NavLink className="mobile-navigation__link" onClick={() => closeMenu(false)} to="/settings">연결 정보</NavLink> : null}
             </nav>
           </div>
         ) : null}
@@ -198,9 +195,6 @@ function AppShell() {
                   {item.label}
                 </NavLink>
               ))}
-              <NavLink className={({ isActive }) => isActive ? 'developer-sidebar__link developer-sidebar__link--active' : 'developer-sidebar__link'} to="/settings">
-                연결 정보
-              </NavLink>
             </nav>
           </aside>
           <main className="app-main" id="main-content"><Suspense fallback={<p className="state-card" role="status">화면을 준비하는 중이에요.</p>}><Outlet /></Suspense></main>
@@ -267,7 +261,6 @@ export const routes: RouteObject[] = [
       { path: 'function-contracts', element: <DeveloperRoute><FunctionContractsPage /></DeveloperRoute> },
       { path: 'runs/:id', element: <DemoAccessRoute><ExecutionPage /></DemoAccessRoute> },
       { path: 'developer/revenue', element: <DeveloperRoute><DeveloperDashboardPage /></DeveloperRoute> },
-      { path: 'settings', element: <DeveloperRoute><SettingsPage /></DeveloperRoute> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },

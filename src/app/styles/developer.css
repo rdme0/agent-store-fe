@@ -31,7 +31,6 @@
 .dependency-editor,
 .function-contract-detail,
 .registry-form,
-.settings-list,
 .function-contract-layout,
 .quote-panel:not(.quote-panel--easy),
 .provider-selection-proof,
@@ -140,14 +139,6 @@
 .function-contract-detail { border: 0; border-radius: 0; box-shadow: none; }
 .function-contract-schema-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
 .function-provider-list { display: grid; }
-
-.settings-list { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 0; overflow: hidden; }
-.settings-list dt,
-.settings-list dd { margin: 0; padding: 0.85rem 1rem; border-bottom: 1px solid var(--line); }
-.settings-list dt { color: var(--muted); background: var(--surface-muted); font-weight: 800; }
-.settings-list dd { overflow-wrap: anywhere; font-family: var(--font-mono); font-size: 0.85rem; }
-.connection-indicator { display: inline-block; width: 0.5rem; height: 0.5rem; margin-right: 0.4rem; border-radius: 50%; vertical-align: middle; }
-.connection-indicator--online { background: var(--success); }
 
 .quote-panel:not(.quote-panel--easy) { display: grid; gap: 1.2rem; }
 .quote-panel__summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.8rem; margin: 0; }
