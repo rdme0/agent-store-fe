@@ -41,9 +41,10 @@ export const putApiAgentVersionsByIdManifest = <ThrowOnError extends boolean = f
 });
 
 /**
- * Pay and start an external x402 invocation
+ * Start an external agent invocation
  */
 export const postV1Invocations = <ThrowOnError extends boolean = false>(options: Options<PostV1InvocationsData, ThrowOnError>): RequestResult<PostV1InvocationsResponses, PostV1InvocationsErrors, ThrowOnError> => (options.client ?? client).post<PostV1InvocationsResponses, PostV1InvocationsErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/v1/invocations',
     ...options,
     headers: {
