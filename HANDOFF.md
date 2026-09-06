@@ -109,6 +109,33 @@ git diff --check
 
 최신 fresh verifier는 BE/FE/Go 변경과 local HTTP fixture 기반 브라우저 흐름을 재검증해야 한다.
 
+### Vercel GitHub 배포 구성 — 2026-09-06
+
+- 위험도는 `STANDARD`다. Spring API·OpenAPI·결제·SSE 계약은 변경하지 않고, Vite 배포 설정과
+  production API 환경변수 검증만 추가한다.
+- 개발자 소유 파일은 `vercel.json`, `vite.config.ts`, `src/shared/api/generatedClient.ts`,
+  `README.md`, 이 인수인계서다. 기존 dirty path인 `src/app/router.test.tsx`,
+  `src/app/router.tsx`, `src/app/styles/developer.css`, `src/app/styles/foundation.css`,
+  삭제 상태의 `src/features/system/ConnectionStatus.test.tsx`,
+  `src/features/system/ConnectionStatus.tsx`, `src/pages/SettingsPage.test.tsx`,
+  `src/pages/SettingsPage.tsx`는 보존한다.
+- Vercel은 저장소 루트에서 `npm ci` → `npm run build`를 실행하고 `dist`를 배포한다.
+  `vercel.json`은 BrowserRouter의 `/marketplace`, `/agents/:code`, `/runs/:id` 직접 접근을
+  `/index.html`로 rewrite한다. API proxy는 사용하지 않는다.
+- `VITE_API_BASE_URL`은 production build에서 필수이며 개발 모드의 localhost 기본값은 유지한다.
+  생성 OpenAPI client와 backend 계약 변경은 없다. `generatedClient.ts`는 공통
+  `API_BASE_URL`만 사용해 URL fallback을 중복 소유하지 않는다.
+- Vercel Production/Preview 환경에 public HTTPS Spring API 주소를 등록하고, 첫 Production
+  배포 후 확인한 Vercel origin을 backend `application-prod.yaml`의
+  `agent-store.cors-origins` 목록에 정확히 등록한다. Preview origin은 실제 사용 시에만
+  같은 목록에 추가한다.
+- 이번 검증은 `npm run lint`, `npm run typecheck`, `npm test`(32 files, 121 tests),
+  `npm run build`(API URL 주입), API URL 없는 production build의 의도된 실패,
+  `git diff --check`를 통과했다. `npm run test:e2e`는 기존 사용자 Vite 프로세스가
+  `127.0.0.1:4173`을 점유해 시작되지 않았으며 해당 프로세스는 건드리지 않았다.
+- 실제 Vercel 계정 Import/Production 배포와 배포 후 CORS 확인은 외부 계정과 실제 API·Vercel
+  도메인이 필요하므로 아직 실행하지 않았다.
+
 ### 랜딩 문구·상세 가격 정보 정리 — 2026-09-06
 
 - 위험도는 `STANDARD`다. 인증·quote·실행·결제 API와 lifecycle은 변경하지 않고 화면 문구와 정보 배치만 바꿨다.

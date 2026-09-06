@@ -27,7 +27,6 @@ flowchart LR
 | `/agents/:code/versions/new` | Version 등록 | endpoint, 가격, network, asset, payTo, 응답 형식 입력 |
 | `/runs/:id` | Execution | 초기 snapshot + SSE 실행 여정, 결과와 결제 표시 |
 | `/developer/revenue` | 개발자 대시보드 | owned Agent 공개 상태, 수익과 거래 참조 |
-| `/settings` | 연결 정보 | 적용 중인 API URL과 demo access 상태 |
 | 그 외 | 404 | Marketplace 복귀 링크 |
 
 ## 2. FE 구조
@@ -248,6 +247,35 @@ VITE_API_BASE_URL=http://localhost:8080
 
 환경 변수를 바꾸면 Vite를 다시 시작합니다. `VITE_` 변수는 브라우저 bundle에 공개되므로 private key, wallet secret, bridge secret, signed payment payload를 절대 넣지 마세요.
 
+### Vercel 배포
+
+GitHub의 `rdme0/agent-store-fe` 저장소를 Vercel에서 Import하고 프로젝트 이름을
+`agent-store-fe`로 지정합니다. Root Directory는 저장소 루트로 두고 다음 빌드 설정을
+사용합니다.
+
+```text
+Framework Preset: Vite
+Build Command: npm run build
+Output Directory: dist
+Install Command: npm ci
+Node.js: 24.x
+Production Branch: main
+```
+
+Vercel Project Settings의 `Environment Variables`에서 `VITE_API_BASE_URL`을 Production과
+Preview에 등록합니다. 값은 public HTTPS Spring API 주소이며, FE bundle에 포함되는 공개 설정입니다.
+secret이나 wallet 값을 Vercel에 넣지 않습니다. Production build에서 이 값이 없으면 Vite가
+빌드를 실패시켜 `localhost` API로 잘못 배포되는 상황을 막습니다.
+
+첫 배포가 끝나면 `Settings → Domains`에서 Production URL을 복사해 백엔드의
+`application-prod.yaml`에 있는 `agent-store.cors-origins` 목록에 정확히 등록합니다. Preview를
+브라우저에서 실제 사용할 때만 같은 목록에 해당 Preview origin을 추가합니다. wildcard CORS와
+Vercel proxy는 사용하지 않습니다.
+
+`createBrowserRouter`의 `/marketplace`, `/agents/:code`, `/runs/:id` 직접 접근을 유지하려면
+저장소 루트의 `vercel.json` SPA rewrite가 필요합니다. Vercel Project는 GitHub `main` push마다
+자동으로 새 배포를 생성합니다.
+
 ## 11. OpenAPI 타입 생성
 
 ```mermaid
@@ -291,7 +319,7 @@ npm run build
 git diff --check
 ```
 
-Vitest와 Testing Library가 adapter, page, 실행 여정, SSE reconnect 같은 로직을 검사합니다. Playwright/E2E script는 현재 구성되어 있지 않습니다.
+Vitest와 Testing Library가 adapter, page, 실행 여정, SSE reconnect 같은 로직을 검사합니다. Playwright는 `npm run test:e2e`로 local HTTP fixture 기반 브라우저 흐름을 검사합니다.
 
 ## 13. 자주 겪는 문제
 
@@ -301,7 +329,7 @@ FE 주소가 `http://localhost:5174`라면 BE `CORS_ORIGINS`에 정확한 주소
 
 ### API URL을 바꿨는데 그대로임
 
-Vite 환경 변수는 시작 때 bundle에 주입됩니다. `.env.local` 저장 후 dev server를 재시작하고 `/settings`에서 적용 주소를 확인합니다.
+Vite 환경 변수는 시작 때 bundle에 주입됩니다. `.env.local` 저장 후 dev server를 재시작하고 브라우저 Network 탭에서 요청 대상 API 주소를 확인합니다.
 
 ### Marketplace는 열리는데 Agent가 없음
 
