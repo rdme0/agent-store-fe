@@ -177,6 +177,23 @@ test('developer publishes a draft once and the Marketplace then shows the active
   expect(publishes[0].authorization).toBe('Bearer fixture-browser-access')
 })
 
+test('developer detail keeps version facts separate from the execution action', async ({ page }) => {
+  await start(page)
+  await developerMode(page)
+  await page.goto('/agents/browser-demo-agent')
+  await expect(page.getByText('기본 호출 비용')).toBeVisible()
+  await expect(page.getByText('0.01 USDC')).toBeVisible()
+  await expect(page.getByText('(≈ 14원)')).toBeVisible()
+  await expect(page.getByText('v1.0.0 · eip155:84532')).toBeVisible()
+  await expect(page.getByRole('link', { name: '실행 준비' })).toHaveCount(0)
+  await expect(page.getByText('0.01 USDC · eip155:84532 · USDC')).toHaveCount(0)
+  const summaryChildren = await page.locator('.agent-detail-page__summary > *').evaluateAll((elements) => elements.map((element) => {
+    const box = element.getBoundingClientRect()
+    return { top: box.top, bottom: box.bottom }
+  }))
+  expect(summaryChildren.every((child, index) => index === 0 || child.top >= summaryChildren[index - 1].bottom - 1)).toBe(true)
+})
+
 test('landing and question screen fit the viewport', async ({ page }) => {
   await page.goto('/')
   await page.screenshot({ path: test.info().outputPath('landing.png'), fullPage: true })

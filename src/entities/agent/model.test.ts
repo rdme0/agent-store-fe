@@ -1,11 +1,18 @@
 import { describe, expect, it } from 'vitest'
-import { formatAtomicUsdc, toAgentModel } from './model'
+import { formatApproximateKrw, formatAtomicUsdc, toAgentModel } from './model'
 
 describe('Agent UI mapping', () => {
   it('formats atomic USDC without floating point arithmetic', () => {
     expect(formatAtomicUsdc('10000')).toBe('0.01 USDC')
     expect(formatAtomicUsdc('1000000')).toBe('1 USDC')
     expect(formatAtomicUsdc('1000001')).toBe('1.000001 USDC')
+  })
+
+  it('formats a display-only won estimate with integer arithmetic', () => {
+    expect(formatApproximateKrw('900')).toBe('≈ 1원')
+    expect(formatApproximateKrw('10000')).toBe('≈ 14원')
+    expect(formatApproximateKrw('0')).toBe('≈ 0원')
+    expect(formatApproximateKrw('1000000000')).toBe('≈ 1,400,000원')
   })
 
   it('maps API DTO versions and derives a display price', () => {

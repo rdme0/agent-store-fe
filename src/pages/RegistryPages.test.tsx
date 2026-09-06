@@ -174,6 +174,17 @@ describe('Agent detail actions', () => {
     await act(async () => { release?.() })
     expect(screen.queryByRole('heading', { name: 'First Agent' })).not.toBeInTheDocument()
   })
+  it('shows the active version facts without a duplicate preparation action or row price', async () => {
+    renderPage(<AgentDetailPage />, '/agents/demo-agent', '/agents/:code')
+
+    expect(await screen.findByRole('heading', { name: 'Demo Agent' })).toBeInTheDocument()
+    expect(screen.getByText('기본 호출 비용')).toBeInTheDocument()
+    expect(screen.getByText('0.01 USDC')).toBeInTheDocument()
+    expect(screen.getByText('(≈ 14원)')).toBeInTheDocument()
+    expect(screen.getByText('v1.0.0 · eip155:84532')).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: '실행 준비' })).not.toBeInTheDocument()
+    expect(screen.queryByText('0.01 USDC · eip155:84532 · USDC')).not.toBeInTheDocument()
+  })
   it('confirms and serializes disable, invalidates cached lists, and returns focus', async () => {
     let release: (() => void) | undefined
     const fallback = handler
