@@ -63,6 +63,13 @@ describe('application routing', () => {
     expect(screen.getByRole('link', { name: 'Marketplace로 돌아가기' })).toBeInTheDocument()
   })
 
+  it('does not expose the removed connection settings screen', () => {
+    renderAt('/settings')
+
+    expect(screen.getByRole('heading', { name: '요청한 페이지를 찾을 수 없습니다' })).toBeInTheDocument()
+    expect(screen.queryByText('개발 환경 연결')).not.toBeInTheDocument()
+  })
+
   it('opens the mobile navigation as a keyboard-dismissible drawer and restores trigger focus', async () => {
     renderAt('/')
 
