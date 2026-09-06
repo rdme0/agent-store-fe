@@ -33,7 +33,7 @@ describe('application routing', () => {
   it('uses the demo landing as the root route', () => {
     renderAt('/')
 
-    expect(screen.getByRole('heading', { name: '서비스는 AI가 고르는데, 결제는 왜 아직 사람이 해야 할까요?' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '사람의 카드를 AI에게 넘기는 것만으로, Agent Economy가 완성될까요?' })).toBeInTheDocument()
 
     expect(screen.getByRole('button', { name: /데모 시작/ })).toBeInTheDocument()
     expect(screen.queryByText('로그인 없이 시작하고, 6시간 동안 이용할 수 있어요.')).not.toBeInTheDocument()

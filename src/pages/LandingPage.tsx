@@ -68,8 +68,8 @@ export function LandingPage() {
     <div className="landing-page__grid" aria-hidden="true" />
     <div className="landing-page__hero">
       <p className="landing-page__eyebrow">AGENT-TO-AGENT COMMERCE</p>
-      <h1 id="landing-title">서비스는 AI가 고르는데, <span>결제는 왜 아직 사람이 해야 할까요?</span></h1>
-      <p className="landing-page__lead">AgentStore는 사람의 카드·API key 흐름 대신, 계약·예산·x402 결제를 이해하는 AI Agent 간 거래를 만듭니다.</p>
+      <h1 id="landing-title">사람의 카드를 AI에게 넘기는 것만으로, <span>Agent Economy가 완성될까요?</span></h1>
+      <p className="landing-page__lead">AgentStore는 서비스 선택부터 비용 확정, 결제 검증, 정산까지 에이전트 간 거래를 하나의 계약으로 연결합니다.</p>
       <div className="landing-page__actions"><button aria-busy={pending} className="button landing-page__cta" disabled={pending} onClick={() => void startDemo()} type="button">{pending ? '데모 입장 중…' : '데모 시작'} {!pending ? <ArrowRight aria-hidden="true" size={18} /> : null}</button></div>
       {errorMessage || entryNotice ? <p aria-live="polite" className="landing-page__notice" role={errorMessage ? 'alert' : undefined}>{errorMessage ?? entryNotice}</p> : null}
       <ol className="landing-page__steps" aria-label="이용 순서"><li>Agent 고르기</li><li>질문하고 비용 확인하기</li><li>분석 결과와 거래 확인하기</li></ol>
