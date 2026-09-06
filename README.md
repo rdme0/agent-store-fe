@@ -55,7 +55,7 @@ TanStack Query가 서버 상태와 mutation을 관리합니다. React local stat
 
 랜딩의 데모 시작은 bodyless `POST /api/demo/access`를 호출해 서버가 발급한 6시간 Bearer를
 `localStorage`의 `agentstore.demo-access`에만 보관합니다. API secret이나 사용자 계정은
-프론트에 넣지 않습니다. 만료·401·데모 종료가 되면 저장값을 지우고 원래 목적지를 포함한
+프론트에 넣지 않습니다. 만료·401이 발생하면 저장값을 지우고 원래 목적지를 포함한
 랜딩으로 돌아갑니다. 브라우저 E2E는 local HTTP fixture로 같은 access 교환과 Bearer 요청
 경로를 검증합니다.
 
@@ -202,7 +202,7 @@ SSE loop의 작은 규칙:
 
 개발자 모드 진입 시 FE는 bodyless `POST /api/demo/access`를 한 번 호출하고, 서버가 발급한 6시간 shared demo
 Bearer access token과 `expiresAt`을 browser localStorage에 보관합니다. 유효한 token만
-`/api/developer/me`, owned Agent, revenue API의 `Authorization` header로 보냅니다. 만료·401·데모 종료 시 token을
+`/api/developer/me`, owned Agent, revenue API의 `Authorization` header로 보냅니다. 만료·401 시 token을
 지우고 랜딩의 데모 CTA로 돌아갑니다. `VITE_DEMO_DEVELOPER_ID`, cookie, CSRF header와 `credentials: include`는 사용하지 않습니다.
 
 데모 시작은 기본적으로 개발자 모드의 `/marketplace`를 엽니다. access가 있는 동안 header의 `쉬운 사용`/`개발자 모드`

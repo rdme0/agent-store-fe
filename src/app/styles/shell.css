@@ -109,8 +109,7 @@
 }
 
 .app-header__dashboard,
-.app-header__marketplace,
-.app-header__exit {
+.app-header__marketplace {
   min-height: 44px;
   color: var(--muted);
   font-size: 0.82rem;
@@ -118,28 +117,13 @@
   text-decoration: none;
 }
 
-.app-header__exit {
-  padding: 0;
-  background: transparent;
-  cursor: pointer;
-}
-
-.demo-access-status {
-  color: var(--muted);
-  font-size: 0.76rem;
-  font-weight: 700;
-  white-space: nowrap;
-}
-
 .app-shell--developer .app-header__dashboard,
-.app-shell--developer .app-header__marketplace,
-.app-shell--developer .app-header__exit {
+.app-shell--developer .app-header__marketplace {
   color: var(--muted);
 }
 
 .app-shell--developer .app-header__dashboard:hover,
-.app-shell--developer .app-header__marketplace:hover,
-.app-shell--developer .app-header__exit:hover {
+.app-shell--developer .app-header__marketplace:hover {
   color: var(--ink);
 }
 
@@ -333,9 +317,7 @@
   .app-navigation,
   .connection-status,
   .developer-sidebar,
-  .app-header__actions > .display-mode-toggle,
-  .app-header__actions > .demo-access-status,
-  .app-header__actions > .app-header__exit {
+  .app-header__actions > .display-mode-toggle {
     display: none;
   }
 
@@ -393,18 +375,6 @@
   .mobile-navigation__link--active {
     color: var(--accent-strong);
     background: var(--accent-soft);
-  }
-
-  .mobile-navigation__exit {
-    margin-top: 0.65rem;
-    padding: 0.75rem 0.6rem;
-    color: var(--danger);
-    border-top: 1px solid var(--line);
-    background: transparent;
-    cursor: pointer;
-    font-size: 0.94rem;
-    font-weight: 720;
-    text-align: left;
   }
 
   .app-main,

@@ -48,8 +48,8 @@ test('starts easy and preserves the chosen developer mode', async ({ page }) => 
   const mobile = (page.viewportSize()?.width ?? 0) <= 900
   if (mobile) await page.getByRole('button', { name: '메뉴 열기' }).click()
   const navigation = mobile ? page.getByRole('dialog', { name: '모바일 주요 탐색' }) : page
-  await expect(navigation.getByRole('button', { name: '데모 종료' })).toBeVisible()
-  await expect(navigation.getByRole('status', { name: '데모 이용 기간' })).toBeVisible()
+  await expect(navigation.getByRole('button', { name: '데모 종료' })).toHaveCount(0)
+  await expect(navigation.getByRole('status', { name: '데모 이용 기간' })).toHaveCount(0)
   await navigation.getByRole('button', { name: '개발자 모드', exact: true }).click()
   await expect(page.locator('.app-shell--developer')).toHaveCount(1)
   await page.reload()
@@ -186,10 +186,11 @@ test('landing and question screen fit the viewport', async ({ page }) => {
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1)).toBe(true)
 })
 
-test('explicit demo exit clears access in either mode', async ({ page }) => {
+test('keeps demo lifetime and exit controls out of the shell', async ({ page }) => {
   await start(page)
   if ((page.viewportSize()?.width ?? 0) <= 900) await page.getByRole('button', { name: '메뉴 열기' }).click()
-  await page.getByRole('button', { name: '데모 종료', exact: true }).click()
-  await expect(page.locator('.landing-page')).toBeVisible()
-  expect(await page.evaluate(() => localStorage.getItem('agentstore.demo-access'))).toBeNull()
+  const navigation = (page.viewportSize()?.width ?? 0) <= 900 ? page.getByRole('dialog', { name: '모바일 주요 탐색' }) : page
+  await expect(navigation.getByRole('button', { name: '데모 종료', exact: true })).toHaveCount(0)
+  await expect(navigation.getByRole('status', { name: '데모 이용 기간' })).toHaveCount(0)
+  expect(await page.evaluate(() => localStorage.getItem('agentstore.demo-access'))).toContain('fixture-browser-access')
 })

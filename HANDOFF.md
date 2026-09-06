@@ -68,7 +68,8 @@
 
 - `/`는 소개 랜딩이고 `/marketplace`가 catalog다. `데모 시작`은 bodyless `POST /api/demo/access`를 한 번 호출한다.
 - access token과 expiry는 `agentstore.demo-access` localStorage record에만 보관한다. generated client와 legacy adapter는 유효 기간 내에만
-  `Authorization: Bearer`를 붙이며 cookie/CSRF/credentials/Vite proxy를 사용하지 않는다. 401, 만료, 데모 종료는 record를 지우고 landing으로 돌린다.
+  `Authorization: Bearer`를 붙이며 cookie/CSRF/credentials/Vite proxy를 사용하지 않는다. 401·만료는 record를 지우고 landing으로 돌린다.
+- 헤더와 모바일 drawer에는 남은 이용 시간이나 데모 종료 컨트롤을 노출하지 않는다. access 정리는 만료·401 같은 시스템 이벤트로만 수행한다.
 - 데모 시작은 easy mode의 `/marketplace`를 기본으로 열며, access 보유 중에는 header(모바일은 drawer)의 `쉬운 사용`/`개발자 모드`
   토글이 선택을 보관한다. 개발자 전용 route는 access 뒤 developer로 열고, 쉬운 사용을 선택하면 Marketplace로 이동한다.
 - revenue query는 OpenAPI flat `cursor`/`limit` type으로 재생성했다. 수동 `request[limit]` serialization은 제거했다.

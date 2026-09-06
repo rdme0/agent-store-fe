@@ -18,7 +18,7 @@ import { NotFoundPage } from '../pages/NotFoundPage'
 import { LandingPage } from '../pages/LandingPage'
 import { ErrorBoundary } from './ErrorBoundary'
 import { useDisplayMode } from './DisplayModeContext'
-import { clearDemoAccess, currentDemoAccess, formatDemoAccessRemaining } from '../shared/auth/demoAccess'
+import { currentDemoAccess } from '../shared/auth/demoAccess'
 
 const AgentDetailPage = lazy(() => import('../pages/AgentDetailPage').then((module) => ({ default: module.AgentDetailPage })))
 const AgentManifestPage = lazy(() => import('../pages/AgentManifestPage').then((module) => ({ default: module.AgentManifestPage })))
@@ -149,8 +149,6 @@ function AppShell() {
           ) : null}
           <div className="app-header__actions">
             {hasDemoAccess && !isLandingPage ? <DisplayModeToggle displayMode={displayMode} onChange={changeDisplayMode} /> : null}
-            {hasDemoAccess && !isLandingPage && access ? <DemoAccessStatus access={access} /> : null}
-            {hasDemoAccess && !isLandingPage ? <button className="app-header__exit" onClick={() => clearDemoAccess()} type="button">데모 종료</button> : null}
             <button
               aria-controls={menuId}
               aria-expanded={isMenuOpen}
@@ -169,7 +167,6 @@ function AppShell() {
             <button aria-label="메뉴 닫기" className="mobile-drawer-layer__backdrop" onClick={() => closeMenu(true)} type="button" />
             <nav aria-label="모바일 주요 탐색" aria-modal="true" className="mobile-navigation" id={menuId} onKeyDown={handleDrawerKeyDown} ref={drawerRef} role="dialog">
               {hasDemoAccess && !isLandingPage ? <DisplayModeToggle displayMode={displayMode} onChange={(mode) => { changeDisplayMode(mode); closeMenu(true) }} /> : null}
-              {hasDemoAccess && !isLandingPage && access ? <DemoAccessStatus access={access} /> : null}
               {visibleNavigationItems.map((item) => (
                 <NavLink
                   className={({ isActive }) => isActive ? 'mobile-navigation__link mobile-navigation__link--active' : 'mobile-navigation__link'}
@@ -182,7 +179,6 @@ function AppShell() {
                 </NavLink>
               ))}
               {showsDeveloperChrome ? <NavLink className="mobile-navigation__link" onClick={() => closeMenu(false)} to="/settings">연결 정보</NavLink> : null}
-              {hasDemoAccess && !isLandingPage ? <button className="mobile-navigation__exit" onClick={() => { closeMenu(false); clearDemoAccess() }} type="button">데모 종료</button> : null}
             </nav>
           </div>
         ) : null}
@@ -221,17 +217,6 @@ function DisplayModeToggle({ displayMode, onChange }: { displayMode: 'easy' | 'd
       <button aria-pressed={displayMode === 'developer'} className={displayMode === 'developer' ? 'display-mode-toggle__button display-mode-toggle__button--active' : 'display-mode-toggle__button'} onClick={() => onChange('developer')} type="button">개발자 모드</button>
     </div>
   )
-}
-
-function DemoAccessStatus({ access }: { access: NonNullable<ReturnType<typeof currentDemoAccess>> }) {
-  const [now, setNow] = useState(() => Date.now())
-
-  useEffect(() => {
-    const timer = window.setInterval(() => setNow(Date.now()), 60_000)
-    return () => window.clearInterval(timer)
-  }, [])
-
-  return <span aria-label="데모 이용 기간" className="demo-access-status" role="status">데모 · {formatDemoAccessRemaining(access, now)}</span>
 }
 
 function RouteErrorPage() {

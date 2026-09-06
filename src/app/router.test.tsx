@@ -86,7 +86,8 @@ describe('application routing', () => {
     expect(screen.getByLabelText('개발자 탐색')).toBeInTheDocument()
     const modeToggle = screen.getByRole('group', { name: '화면 모드' })
     expect(within(modeToggle).getByRole('button', { name: '개발자 모드' })).toHaveAttribute('aria-pressed', 'true')
-    expect(screen.getByRole('button', { name: '데모 종료' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '데모 종료' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('status', { name: '데모 이용 기간' })).not.toBeInTheDocument()
     expect(screen.queryByText('연결됨')).not.toBeInTheDocument()
 
     fireEvent.click(within(modeToggle).getByRole('button', { name: '쉬운 사용' }))
