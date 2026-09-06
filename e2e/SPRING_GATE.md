@@ -7,14 +7,14 @@ Run from the backend repository with the dedicated PostgreSQL database available
 $env:RUN_POSTGRES_INTEGRATION_TESTS='true'
 $env:SPRING_EXCLUSIVE_MAINTENANCE='true'
 $env:RUN_SPRING_BROWSER_E2E='true'
-$env:INTEGRATION_DATASOURCE_URL='jdbc:postgresql://localhost:5432/agent_store_integration?currentSchema=public'
+$env:INTEGRATION_DATASOURCE_URL='jdbc:postgresql://localhost:15432/agent_store_integration?currentSchema=public'
 $env:INTEGRATION_DATASOURCE_PASSWORD='<integration database password>'
 .\gradlew.bat integrationTest --tests '*PostgresMarketplaceHttpE2eIntegrationTest.browser*' --no-daemon
 ```
 
 Prerequisites: sibling `../agent-store-fe` checkout, installed npm dependencies and Playwright Chromium, Node on PATH.
 The JUnit test rejects any database other than `agent_store_integration`, starts real Spring on a random port,
-creates only tracked PostgreSQL fixtures and starts a local HTTP x402 provider. No OpenAI, facilitator, or
+creates only tracked PostgreSQL fixtures and starts a local HTTP x402 provider for outbound settlement. No OpenAI, facilitator, or
 blockchain is contacted. The provider is an explicit deterministic test fixture, not a production payment mode.
 
 The Node runner starts Vite on a random localhost port with the actual Spring API URL (no proxy), then checks:

@@ -108,3 +108,12 @@ git diff --check
 ```
 
 최신 fresh verifier는 BE/FE/Go 변경과 local HTTP fixture 기반 브라우저 흐름을 재검증해야 한다.
+
+### 랜딩 문구·상세 가격 정보 정리 — 2026-09-06
+
+- 위험도는 `STANDARD`다. 인증·quote·실행·결제 API와 lifecycle은 변경하지 않고 화면 문구와 정보 배치만 바꿨다.
+- 랜딩 Hero는 `서비스는 AI가 고르는데, 결제는 왜 아직 사람이 해야 할까요?`로 교체했다.
+- 개발자 Agent 상세의 중복 `실행 준비` 링크와 우측 가격 카드를 제거하고, 설명 아래 기본 호출 비용·근사 원화·활성 Version/네트워크를 배치했다. Version 행에는 가격을 반복하지 않는다.
+- `formatApproximateKrw`는 결제에 사용하지 않는 표시 전용 값이며 `BigInt`와 `1 USDC ≈ 1,400원` 참고값만 사용한다. API/OpenAPI/generated client/DB 계약 변경은 없다.
+- 회귀 매핑: `src/entities/agent/model.test.ts`의 atomic→원화 경계, `src/pages/RegistryPages.test.tsx`의 상세 정보·중복 액션 제거, `e2e/public-browser.spec.ts`의 desktop/mobile/narrow 상세 화면 검증.
+- 검증 결과: `npm run lint`, `npm run typecheck`, `npm test`(34 files, 124 tests), `npm run build`, `npm run test:e2e`(48 tests), `git diff --check` 통과. Playwright 결과 폴더는 생성 artifact로 커밋하지 않는다.

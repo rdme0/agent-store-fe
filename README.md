@@ -19,7 +19,7 @@ flowchart LR
 
 | URL | 화면 | 중요한 동작 |
 |---|---|---|
-| `/` | Landing | 데모 시작 → 6시간 Bearer 발급 → Function Contract → Quote → x402 증명 |
+| `/` | Landing | 데모 시작 → 6시간 Bearer 발급 → Marketplace → Quote → 실행 |
 | `/marketplace` | Marketplace | 서버 검색·정렬, cursor pagination, ACTIVE Agent 카드 |
 | `/agents` | redirect | `/marketplace`로 이동 |
 | `/agents/new` | Agent 등록 | Agent와 최초 Version, 응답 형식 입력 |
