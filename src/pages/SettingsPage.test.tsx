@@ -6,11 +6,13 @@ import { describe, expect, it } from 'vitest'
 import { SettingsPage } from './SettingsPage'
 
 describe('SettingsPage', () => {
-  it('describes the six-hour demo access requirement', () => {
+  it('describes the public connection without exposing demo lifetime details', () => {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     render(<QueryClientProvider client={client}><MemoryRouter><SettingsPage /></MemoryRouter></QueryClientProvider>)
 
-    expect(screen.getByText('랜딩에서 데모를 시작해 주세요.')).toBeInTheDocument()
+    expect(screen.getByText('API 연결')).toBeInTheDocument()
+    expect(screen.queryByText('데모 이용')).not.toBeInTheDocument()
+    expect(screen.queryByText(/시간|까지/)).not.toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Developer Dashboard 열기' })).toHaveAttribute('href', '/developer/revenue')
   })
 })
